@@ -467,19 +467,24 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
 };
 
 const MeetingNotesModal = ({ meeting, onClose, onSave }) => {
-  const [html, setHtml] = useState(meeting?.notes || "");
-  useEffect(() => setHtml(meeting?.notes || ""), [meeting]);
+  const editorRef = useRef(null);
   const exec = (cmd) => document.execCommand(cmd, false);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.innerHTML = meeting?.notes || "";
+    }
+  }, [meeting]);
 
   return (
     <div className="form-overlay fade-in">
       <div className="premium-form" style={{ maxWidth: 800 }}>
         <div className="form-header">
-           <div className="header-content">
-             <div className="header-meta"><span className="meta-text">SESSION SCRIPTER</span></div>
-             <h2>Live Notes: {meeting?.title}</h2>
-           </div>
-           <button className="close-btn" onClick={onClose}>×</button>
+          <div className="header-content">
+            <div className="header-meta"><span className="meta-text">SESSION SCRIPTER</span></div>
+            <h2>Live Notes: {meeting?.title}</h2>
+          </div>
+          <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="form-body">
           <div className="flex gap-2 mb-4">
@@ -488,17 +493,19 @@ const MeetingNotesModal = ({ meeting, onClose, onSave }) => {
             <button className="status-tag absent active" onClick={() => exec('underline')}>UNDERLINE</button>
           </div>
           <div
+            ref={editorRef}
             contentEditable
             suppressContentEditableWarning
-            onInput={(e) => setHtml(e.currentTarget.innerHTML)}
             className="notes-editor"
             style={{ minHeight: 400, padding: 24, background: '#fff', borderRadius: 24, border: '1px solid rgba(0,0,0,0.05)', fontSize: 16, outline: 'none' }}
-            dangerouslySetInnerHTML={{ __html: html }}
           />
         </div>
         <div className="form-footer-premium">
           <button className="btn-tertiary" onClick={onClose}>Discard</button>
-          <button className="btn-primary-premium ripple" onClick={() => { onSave(meeting.id, html); onClose(); }}>Save Meeting Notes</button>
+          <button className="btn-primary-premium ripple" onClick={() => {
+            onSave(meeting.id, editorRef.current.innerHTML);
+            onClose();
+          }}>Save Meeting Notes</button>
         </div>
       </div>
     </div>
@@ -513,7 +520,7 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
     setIsGenerating(true);
     const present = Object.entries(meeting?.attendance || {}).filter(([_, s]) => s === 'present' || s === 'late').map(([k]) => k);
     const notesTxt = meeting?.notes?.replace(/<[^>]*>/g, '\n') || "No notes available.";
-    
+
     // Simulating AI generation logic for LaTeX
     const latex = `
 \\documentclass{article}
@@ -556,48 +563,48 @@ ${present.map(n => `  \\item ${n}`).join('\n')}
     <div className="form-overlay fade-in">
       <div className="premium-form" style={{ maxWidth: 700 }}>
         <div className="form-header">
-           <div className="header-content">
-             <div className="header-meta"><span className="meta-text">REPORT CENTER</span></div>
-             <h2>{meeting?.title}</h2>
-           </div>
-           <button className="close-btn" onClick={onClose}>×</button>
+          <div className="header-content">
+            <div className="header-meta"><span className="meta-text">REPORT CENTER</span></div>
+            <h2>{meeting?.title}</h2>
+          </div>
+          <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="form-body">
-           <p className="sub-text mb-8">Choose to upload an existing PDF or generate a professional LaTeX report using meeting notes.</p>
-           
-           <div className="mgmt-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }} onClick={simulateUpload}>
-                 <div className="option-icon email"><FileText size={20} /></div>
-                 <h4 className="mt-4">Upload PDF</h4>
-                 <p style={{ fontSize: 12 }}>{reportData.type === 'pdf' ? reportData.fileName : 'Attach existing report'}</p>
-              </div>
-              <div className={`premium-card ${reportData.type === 'latex' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'latex' ? '2px solid var(--apple-blue)' : '' }} onClick={generateLatex}>
-                 <div className="option-icon meet"><Layout size={20} /></div>
-                 <h4 className="mt-4">{isGenerating ? 'Generating...' : 'Generate LaTeX'}</h4>
-                 <p style={{ fontSize: 12 }}>Create report from notes</p>
-              </div>
-           </div>
+          <p className="sub-text mb-8">Choose to upload an existing PDF or generate a professional LaTeX report using meeting notes.</p>
 
-           {reportData.content && (
-             <div className="mt-8">
-               <label className="section-label">Generated LaTeX Code</label>
-               <textarea 
-                 readOnly 
-                 className="notes-editor w-full" 
-                 style={{ height: 200, fontFamily: 'monospace', fontSize: 12, padding: 16, background: '#f5f5f7' }}
-                 value={reportData.content}
-               />
-               <button className="pill-btn mt-4" onClick={() => { navigator.clipboard.writeText(reportData.content); alert("LaTeX Copied!"); }}>Copy LaTeX</button>
-             </div>
-           )}
+          <div className="mgmt-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }} onClick={simulateUpload}>
+              <div className="option-icon email"><FileText size={20} /></div>
+              <h4 className="mt-4">Upload PDF</h4>
+              <p style={{ fontSize: 12 }}>{reportData.type === 'pdf' ? reportData.fileName : 'Attach existing report'}</p>
+            </div>
+            <div className={`premium-card ${reportData.type === 'latex' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'latex' ? '2px solid var(--apple-blue)' : '' }} onClick={generateLatex}>
+              <div className="option-icon meet"><Layout size={20} /></div>
+              <h4 className="mt-4">{isGenerating ? 'Generating...' : 'Generate LaTeX'}</h4>
+              <p style={{ fontSize: 12 }}>Create report from notes</p>
+            </div>
+          </div>
 
-           {reportData.type === 'pdf' && reportData.fileName && (
-              <div className="mt-8 p-6" style={{ background: '#f0f9ff', borderRadius: 24, textAlign: 'center', border: '1px dashed #0071e3' }}>
-                 <FileText size={48} color="#0071e3" style={{ margin: '0 auto 12px' }} />
-                 <h3 style={{ fontSize: 18 }}>{reportData.fileName}</h3>
-                 <p className="sub-text">PDF Document Linked Successfully</p>
-              </div>
-           )}
+          {reportData.content && (
+            <div className="mt-8">
+              <label className="section-label">Generated LaTeX Code</label>
+              <textarea
+                readOnly
+                className="notes-editor w-full"
+                style={{ height: 200, fontFamily: 'monospace', fontSize: 12, padding: 16, background: '#f5f5f7' }}
+                value={reportData.content}
+              />
+              <button className="pill-btn mt-4" onClick={() => { navigator.clipboard.writeText(reportData.content); alert("LaTeX Copied!"); }}>Copy LaTeX</button>
+            </div>
+          )}
+
+          {reportData.type === 'pdf' && reportData.fileName && (
+            <div className="mt-8 p-6" style={{ background: '#f0f9ff', borderRadius: 24, textAlign: 'center', border: '1px dashed #0071e3' }}>
+              <FileText size={48} color="#0071e3" style={{ margin: '0 auto 12px' }} />
+              <h3 style={{ fontSize: 18 }}>{reportData.fileName}</h3>
+              <p className="sub-text">PDF Document Linked Successfully</p>
+            </div>
+          )}
         </div>
         <div className="form-footer-premium">
           <button className="btn-tertiary" onClick={onClose}>Close</button>
@@ -799,7 +806,7 @@ const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
   );
 };
 
-const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onDeleteTechCard, onSaveMeetingNotes, onSaveMeetingAttendance }) => {
+const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onDeleteTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport }) => {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -972,10 +979,11 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                 <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
               </div>
             ) : (
-              meetings.map(m => {
+              meetings.map((m, idx) => {
                 const dateObj = new Date(m.date);
                 const month = dateObj.toLocaleString('en-US', { month: 'short' });
                 const day = m.date?.split('-')[2] || '--';
+                const isGold = idx % 2 !== 0;
 
                 return (
                   <div className="premium-card fade-in" key={m.id}>
@@ -983,7 +991,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                       <div className="status-badge-floating pulsate">Attendance Taken</div>
                     )}
 
-                    <div className="date-visual-square">
+                    <div className={`date-visual-square ${isGold ? 'gold-theme' : ''}`}>
                       <span className="dv-month">{month}</span>
                       <span className="dv-day">{day}</span>
                       <span className="dv-time">{m.time} AM</span>
@@ -1001,8 +1009,8 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                       <div className="stat-item" title="Notes">
                         <Clipboard size={14} /> <span>{m.notes ? 'Saved' : '0'}</span>
                       </div>
-                      <div className="stat-item" title="Duration">
-                        <Hash size={14} /> <span>1h</span>
+                      <div className="stat-item" title="Report Status">
+                        <FileText size={14} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
                       </div>
                     </div>
 
@@ -1013,6 +1021,9 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                       </button>
                       <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
                         <Clipboard size={14} />
+                      </button>
+                      <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
+                        <FileText size={14} /> Report
                       </button>
                       <button className="footer-delete-btn" onClick={() => {
                         if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
@@ -1044,46 +1055,49 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                 <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
               </div>
             ) : (
-              techCards.map(tc => (
-                <div className="premium-card fade-in" key={tc.id}>
-                  <div className={`date-visual-square ${tc.isSponsored ? 'orange-theme' : 'tech-theme'}`}>
-                    <span className="dv-month">REF</span>
-                    <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
-                    <span className="dv-time">EBEC • 2026</span>
-                  </div>
-
-                  <div className="card-info-block">
-                    <h3>{tc.title}</h3>
-                    <p>{tc.theme} • {tc.duration}</p>
-                  </div>
-
-                  <div className="stats-summary-row">
-                    <div className="stat-item" title="Sponsor">
-                      <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+              techCards.map((tc, idx) => {
+                const isGoldTheme = idx % 2 === 0;
+                return (
+                  <div className="premium-card fade-in" key={tc.id}>
+                    <div className={`date-visual-square ${isGoldTheme ? 'gold-theme' : ''}`}>
+                      <span className="dv-month">REF</span>
+                      <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
+                      <span className="dv-time">EBEC • 2026</span>
                     </div>
-                    <div className="stat-item" title="Agenda">
-                      <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+
+                    <div className="card-info-block">
+                      <h3>{tc.title}</h3>
+                      <p>{tc.theme} • {tc.duration}</p>
+                    </div>
+
+                    <div className="stats-summary-row">
+                      <div className="stat-item" title="Sponsor">
+                        <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+                      </div>
+                      <div className="stat-item" title="Agenda">
+                        <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                      </div>
+                    </div>
+
+                    <div className="premium-card-footer">
+                      <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
+                        <Clipboard size={16} /> Agenda
+                      </button>
+                      <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                        <Package size={16} /> Materials
+                      </button>
+                      <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
+                        <FileText size={16} />
+                      </button>
+                      <button className="footer-delete-btn" onClick={() => {
+                        if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
+                      }}>
+                        <Trash size={20} />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="premium-card-footer">
-                    <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
-                      <Clipboard size={16} /> Agenda
-                    </button>
-                    <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
-                      <Package size={16} /> Materials
-                    </button>
-                    <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
-                      <FileText size={16} />
-                    </button>
-                    <button className="footer-delete-btn" onClick={() => {
-                      if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
-                    }}>
-                      <Trash size={20} />
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -1106,6 +1120,14 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
           meeting={meetings.find(m => m.id === openAttendanceFor)}
           onClose={() => setOpenAttendanceFor(null)}
           onSave={onSaveMeetingAttendance}
+        />
+      )}
+
+      {openReportFor && (
+        <MeetingReportModal
+          meeting={meetings.find(m => m.id === openReportFor)}
+          onClose={() => setOpenReportFor(null)}
+          onSave={onSaveMeetingReport}
         />
       )}
     </>
