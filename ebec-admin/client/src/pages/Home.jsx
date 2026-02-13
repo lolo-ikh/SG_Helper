@@ -1179,7 +1179,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
         <p className="description">What's on the mind of the SG today?</p>
 
-        <div className="carousel-container">
+        <div className="carousel-carousel-container">
           <button className="nav-arrow" onClick={prevCard}><ChevronLeft size={32} /></button>
 
           <div className="main-focus-card">
@@ -1206,7 +1206,6 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
           ))}
         </div>
 
-        {/* Quick summary / actions under the main card for faster UX */}
         <div className="quick-summary">
           <div className="stat-card">
             <div className="stat-value">{meetings.length}</div>
@@ -1236,7 +1235,6 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
         </div>
       </div>
 
-      {/* Dynamic Meetings Section */}
       <section className="mgmt-section">
         <div className="mgmt-content">
           <div className="mgmt-header-block flex-between" style={{ alignItems: 'center' }}>
@@ -1255,205 +1253,202 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                   onChange={(e) => setMeetingSearch(e.target.value)}
                 />
               </div>
-              <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
-                <Plus size={18} /> Create New Meeting
-              </button>
             </div>
+            <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
+              <Plus size={18} /> Create New Meeting
+            </button>
+          </div>
 
-            <div className="mgmt-grid">
-              {meetings.length === 0 ? (
-                <div className="empty-state">
-                  <p>No meetings scheduled yet.</p>
-                  <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
-                </div>
-              ) : (
-                [...meetings]
-                  .filter(m =>
-                    m.title.toLowerCase().includes(meetingSearch.toLowerCase()) ||
-                    m.date.includes(meetingSearch)
-                  )
-                  .sort((a, b) => new Date(b.date) - new Date(a.date)).map((m, idx) => {
-                    const dateObj = new Date(m.date);
-                    const month = dateObj.toLocaleString('en-US', { month: 'short' });
-                    const day = m.date?.split('-')[2] || '--';
-                    const isGold = idx % 2 !== 0;
+          <div className="mgmt-grid">
+            {meetings.length === 0 ? (
+              <div className="empty-state">
+                <p>No meetings scheduled yet.</p>
+                <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
+              </div>
+            ) : (
+              [...meetings]
+                .filter(m =>
+                  m.title.toLowerCase().includes(meetingSearch.toLowerCase()) ||
+                  m.date.includes(meetingSearch)
+                )
+                .sort((a, b) => new Date(b.date) - new Date(a.date)).map((m, idx) => {
+                  const dateObj = new Date(m.date);
+                  const month = dateObj.toLocaleString('en-US', { month: 'short' });
+                  const day = m.date?.split('-')[2] || '--';
+                  const isGold = idx % 2 !== 0;
 
-                    return (
-                      <div className="premium-card fade-in" key={m.id}>
-                        {m.attendance && Object.keys(m.attendance).length > 0 && (
-                          <div className="status-badge-floating pulsate">Attendance Taken</div>
-                        )}
+                  return (
+                    <div className="premium-card fade-in" key={m.id}>
+                      {m.attendance && Object.keys(m.attendance).length > 0 && (
+                        <div className="status-badge-floating pulsate">Attendance Taken</div>
+                      )}
 
-                        <div className={`date-visual-square ${isGold ? 'gold-theme' : ''}`}>
-                          <span className="dv-month">{month}</span>
-                          <span className="dv-day">{day}</span>
-                          <span className="dv-time">{m.time} AM</span>
+                      <div className={`date-visual-square ${isGold ? 'gold-theme' : ''}`}>
+                        <span className="dv-month">{month}</span>
+                        <span className="dv-day">{day}</span>
+                        <span className="dv-time">{m.time} AM</span>
+                      </div>
+
+                      <div className="card-info-block">
+                        <h3>{m.title}</h3>
+                        <p>{m.description?.slice(0, 60) || 'Official board gathering'}</p>
+                      </div>
+
+                      <div className="stats-summary-row">
+                        <div className="stat-item" title="Attendees">
+                          <UserCheck size={16} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
                         </div>
-
-                        <div className="card-info-block">
-                          <h3>{m.title}</h3>
-                          <p>{m.description?.slice(0, 60) || 'Official board gathering'}</p>
+                        <div className="stat-item" title="Notes">
+                          <Clipboard size={16} /> <span>{m.notes ? 'Saved' : '0'}</span>
                         </div>
-
-                        <div className="stats-summary-row">
-                          <div className="stat-item" title="Attendees">
-                            <UserCheck size={16} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
-                          </div>
-                          <div className="stat-item" title="Notes">
-                            <Clipboard size={16} /> <span>{m.notes ? 'Saved' : '0'}</span>
-                          </div>
-                          <div className="stat-item" title="Report Status">
-                            <FileText size={16} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
-                          </div>
-                        </div>
-
-                        <div className="premium-card-footer">
-                          <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
-                            <UserCheck size={16} />
-                            {m.attendance ? 'Verify' : 'Take'}
-                          </button>
-                          <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
-                            <Clipboard size={16} />
-                          </button>
-                          <button className="footer-action-btn" onClick={() => openEdit(m)}>
-                            <Edit3 size={16} />
-                          </button>
-                          <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
-                            <FileText size={16} /> Report
-                          </button>
-                          <button className="footer-delete-btn" onClick={() => {
-                            if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
-                          }}>
-                            <Trash size={20} />
-                          </button>
+                        <div className="stat-item" title="Report Status">
+                          <FileText size={16} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
                         </div>
                       </div>
-                    );
-                  })
-              )}
+
+                      <div className="premium-card-footer">
+                        <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
+                          <UserCheck size={16} />
+                          {m.attendance ? 'Verify' : 'Take'}
+                        </button>
+                        <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
+                          <Clipboard size={16} />
+                        </button>
+                        <button className="footer-action-btn" onClick={() => openEdit(m)}>
+                          <Edit3 size={16} />
+                        </button>
+                        <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
+                          <FileText size={16} /> Report
+                        </button>
+                        <button className="footer-delete-btn" onClick={() => {
+                          if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
+                        }}>
+                          <Trash size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+
+          {/* Technical Card Tracking Section */}
+          <div className="mgmt-header-block flex-between mt-12" style={{ alignItems: 'center' }}>
+            <div>
+              <h2 className="mgmt-heading">Technical Logistics</h2>
+              <p className="mgmt-sub">Manage activity references and materials</p>
             </div>
+            <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
+              <Plus size={18} /> Create New Card
+            </button>
+          </div>
 
-            {/* Technical Card Tracking Section */}
-            <div className="mgmt-header-block flex-between mt-12">
-              <div className="mgmt-header-block flex-between mt-12" style={{ alignItems: 'center' }}>
-                <div>
-                  <h2 className="mgmt-heading">Technical Logistics</h2>
-                  <p className="mgmt-sub">Manage activity references and materials</p>
-                </div>
-                <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
-                  <Plus size={18} /> Create New Card
-                </button>
+          <div className="mgmt-grid">
+            {techCards.length === 0 ? (
+              <div className="empty-state">
+                <p>No technical cards active.</p>
+                <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
               </div>
+            ) : (
+              techCards.map((tc, idx) => {
+                const isGoldTheme = idx % 2 === 0;
+                return (
+                  <div className="premium-card fade-in" key={tc.id}>
+                    <div className={`date-visual-square ${isGoldTheme ? 'gold-theme' : ''}`}>
+                      <span className="dv-month">REF</span>
+                      <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
+                      <span className="dv-time">EBEC • 2026</span>
+                    </div>
 
-              <div className="mgmt-grid">
-                {techCards.length === 0 ? (
-                  <div className="empty-state">
-                    <p>No technical cards active.</p>
-                    <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
+                    <div className="card-info-block">
+                      <h3>{tc.title}</h3>
+                      <p>{tc.theme} • {tc.duration}</p>
+                    </div>
+
+                    <div className="stats-summary-row">
+                      <div className="stat-item" title="Sponsor">
+                        <Package size={16} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+                      </div>
+                      <div className="stat-item" title="Agenda">
+                        <Clipboard size={16} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                      </div>
+                    </div>
+
+                    <div className="premium-card-footer">
+                      <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
+                        <Clipboard size={16} /> Agenda
+                      </button>
+                      <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                        <Package size={16} /> Materials
+                      </button>
+                      <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
+                        <FileText size={16} />
+                      </button>
+                      <button className="footer-delete-btn" onClick={() => {
+                        if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
+                      }}>
+                        <Trash size={20} />
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  techCards.map((tc, idx) => {
-                    const isGoldTheme = idx % 2 === 0;
-                    return (
-                      <div className="premium-card fade-in" key={tc.id}>
-                        <div className={`date-visual-square ${isGoldTheme ? 'gold-theme' : ''}`}>
-                          <span className="dv-month">REF</span>
-                          <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
-                          <span className="dv-time">EBEC • 2026</span>
-                        </div>
+                );
+              })
+            )}
+          </div>
 
-                        <div className="card-info-block">
-                          <h3>{tc.title}</h3>
-                          <p>{tc.theme} • {tc.duration}</p>
-                        </div>
+          <div className="action-row" style={{ marginTop: '40px' }}>
+            <button className="mgmt-btn secondary">Sync Google Drive</button>
+            <button className="mgmt-btn primary" onClick={() => setPage('archive')}>Full Archive</button>
+          </div>
+        </div>
+      </section>
 
-                        <div className="stats-summary-row">
-                          <div className="stat-item" title="Sponsor">
-                            <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
-                          </div>
-                          <div className="stat-item" title="Agenda">
-                            <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
-                          </div>
-                        </div>
+      {openNotesFor && (
+        <MeetingNotesModal
+          meeting={meetings.find(m => m.id === openNotesFor)}
+          onClose={() => setOpenNotesFor(null)}
+          onSave={onSaveMeetingNotes}
+        />
+      )}
 
-                        <div className="premium-card-footer">
-                          <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
-                            <Clipboard size={16} /> Agenda
-                          </button>
-                          <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
-                            <Package size={16} /> Materials
-                          </button>
-                          <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
-                            <FileText size={16} />
-                          </button>
-                          <button className="footer-delete-btn" onClick={() => {
-                            if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
-                          }}>
-                            <Trash size={20} />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+      {openAttendanceFor && (
+        <MeetingAttendanceModal
+          meeting={meetings.find(m => m.id === openAttendanceFor)}
+          onClose={() => setOpenAttendanceFor(null)}
+          onSave={onSaveMeetingAttendance}
+        />
+      )}
 
-              <div className="action-row" style={{ marginTop: '40px' }}>
-                <button className="mgmt-btn secondary">Sync Google Drive</button>
-                <button className="mgmt-btn primary" onClick={() => setPage('archive')}>Full Archive</button>
-              </div>
-            </div>
-          </section >
-          {openNotesFor && (
-            <MeetingNotesModal
-              meeting={meetings.find(m => m.id === openNotesFor)}
-              onClose={() => setOpenNotesFor(null)}
-              onSave={onSaveMeetingNotes}
-            />
-          )
-          }
+      {openReportFor && (
+        <MeetingReportModal
+          meeting={meetings.find(m => m.id === openReportFor)}
+          onClose={() => setOpenReportFor(null)}
+          onSave={onSaveMeetingReport}
+        />
+      )}
 
-          {
-            openAttendanceFor && (
-              <MeetingAttendanceModal
-                meeting={meetings.find(m => m.id === openAttendanceFor)}
-                onClose={() => setOpenAttendanceFor(null)}
-                onSave={onSaveMeetingAttendance}
-              />
-            )
-          }
-
-          {
-            openReportFor && (
-              <MeetingReportModal
-                meeting={meetings.find(m => m.id === openReportFor)}
-                onClose={() => setOpenReportFor(null)}
-                onSave={onSaveMeetingReport}
-              />
-            )
-          }
-
-          {
-            editMeeting && (
-              <EditMeetingModal
-                meeting={editMeeting}
-                onCancel={() => setEditMeeting(null)}
-                onSubmit={(data) => {
-                  onUpdateMeeting(data);
-                  setEditMeeting(null);
-                }}
-              />
-            )
-          }
+      {editMeeting && (
+        <EditMeetingModal
+          meeting={editMeeting}
+          onCancel={() => setEditMeeting(null)}
+          onSubmit={(data) => {
+            onUpdateMeeting(data);
+            setEditMeeting(null);
+          }}
+        />
+      )}
+    </>
+  );
+};
         </>
         );
 };
 
-        const AttendancePredictor = ({meetings}) => {
+const AttendancePredictor = ({ meetings }) => {
   const [date, setDate] = useState("");
-        const [time, setTime] = useState("18:00");
-        const [duration, setDuration] = useState(2);
-        const [predictions, setPredictions] = useState(null);
+  const [time, setTime] = useState("18:00");
+  const [duration, setDuration] = useState(2);
+  const [predictions, setPredictions] = useState(null);
 
   const predict = () => {
     if (!date) return alert("Please select a date first!");
@@ -1464,446 +1459,446 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
       let probability = history.length > 0 ? (presentCount / history.length) * 100 : 75; // Base prob or fallback
 
-        // Time Heuristic: Late night or early morning usually lower attendance
-        const hour = parseInt(time.split(":")[0]);
-        if (hour < 10) probability -= 10;
+      // Time Heuristic: Late night or early morning usually lower attendance
+      const hour = parseInt(time.split(":")[0]);
+      if (hour < 10) probability -= 10;
       if (hour > 20) probability -= 5;
 
       // Duration Heuristic: Long meetings (Diva fatigue)
       if (duration > 3) probability -= 15;
 
-        // Confidence Heuristic: More data = More confidence
-        const confidence = Math.min(history.length * 20 + 20, 95);
+      // Confidence Heuristic: More data = More confidence
+      const confidence = Math.min(history.length * 20 + 20, 95);
 
-        return {
-          name: member.name,
+      return {
+        name: member.name,
         role: member.role,
         probability: Math.max(Math.min(probability, 99), 5),
         confidence
       };
     });
 
-        setPredictions(results);
+    setPredictions(results);
   };
 
-        return (
-        <div className="premium-card" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', padding: 32, borderRadius: 32 }}>
-          <div className="flex-between" style={{ alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 30 }}>
-            <div>
-              <h3 style={{ color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ padding: 8, background: 'var(--ebec-gold)', borderRadius: 10, color: '#000' }}><Layout size={20} /></div>
-                Diva AI Attendance Predictor
-              </h3>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8 }}>Predict attendance probability based on historical patterns</p>
-            </div>
-            <button className="btn-primary-premium ripple" onClick={predict} style={{ minWidth: 150 }}>Run Simulation</button>
-          </div>
-
-          <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 30 }}>
-            <div className="input-group">
-              <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Date</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
-            </div>
-            <div className="input-group">
-              <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Proposed Time</label>
-              <input type="time" value={time} onChange={e => setTime(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
-            </div>
-            <div className="input-group">
-              <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Duration (Hours)</label>
-              <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
-            </div>
-          </div>
-
-          {predictions && (
-            <div className="prediction-results fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-              {predictions.sort((a, b) => b.probability - a.probability).map(p => (
-                <div key={p.name} className="list-item" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0, padding: 16 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{p.name}</span>
-                      <span style={{ color: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), fontWeight: 800 }}>{Math.round(p.probability)}%</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{p.role}</div>
-
-                    <div className="mt-3" style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${p.probability}%`, background: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), transition: 's 0.8s ease-out' }}></div>
-                    </div>
-                    <div className="mt-2" style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>Confidence: {p.confidence}%</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+  return (
+    <div className="premium-card" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', padding: 32, borderRadius: 32 }}>
+      <div className="flex-between" style={{ alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 30 }}>
+        <div>
+          <h3 style={{ color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: 8, background: 'var(--ebec-gold)', borderRadius: 10, color: '#000' }}><Layout size={20} /></div>
+            Diva AI Attendance Predictor
+          </h3>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8 }}>Predict attendance probability based on historical patterns</p>
         </div>
-        );
+        <button className="btn-primary-premium ripple" onClick={predict} style={{ minWidth: 150 }}>Run Simulation</button>
+      </div>
+
+      <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 30 }}>
+        <div className="input-group">
+          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Date</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+        </div>
+        <div className="input-group">
+          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Proposed Time</label>
+          <input type="time" value={time} onChange={e => setTime(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+        </div>
+        <div className="input-group">
+          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Duration (Hours)</label>
+          <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+        </div>
+      </div>
+
+      {predictions && (
+        <div className="prediction-results fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          {predictions.sort((a, b) => b.probability - a.probability).map(p => (
+            <div key={p.name} className="list-item" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0, padding: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{p.name}</span>
+                  <span style={{ color: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), fontWeight: 800 }}>{Math.round(p.probability)}%</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{p.role}</div>
+
+                <div className="mt-3" style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${p.probability}%`, background: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), transition: 's 0.8s ease-out' }}></div>
+                </div>
+                <div className="mt-2" style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>Confidence: {p.confidence}%</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
-        const Archive = ({meetings = [], onUpdateMeeting}) => {
+const Archive = ({ meetings = [], onUpdateMeeting }) => {
   const [editMeeting, setEditMeeting] = useState(null);
-        const totalMeetings = meetings.length;
+  const totalMeetings = meetings.length;
   const completedWithAttendance = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0);
 
-        // Calculate Avg Attendance
-        let totalCap = 0;
-        let totalAttended = 0;
+  // Calculate Avg Attendance
+  let totalCap = 0;
+  let totalAttended = 0;
   completedWithAttendance.forEach(m => {
-          totalCap += m.attendees.length;
+    totalCap += m.attendees.length;
     totalAttended += Object.values(m.attendance).filter(s => s === 'present' || s === 'late').length;
   });
   const avgAttendance = totalCap > 0 ? Math.round((totalAttended / totalCap) * 100) : 0;
 
-        // Find Star Attendee (Diva)
-        const attendanceCounts = { };
+  // Find Star Attendee (Diva)
+  const attendanceCounts = {};
   completedWithAttendance.forEach(m => {
-          Object.entries(m.attendance).forEach(([name, status]) => {
-            if (status === 'present' || status === 'late') {
-              attendanceCounts[name] = (attendanceCounts[name] || 0) + 1;
-            }
-          });
+    Object.entries(m.attendance).forEach(([name, status]) => {
+      if (status === 'present' || status === 'late') {
+        attendanceCounts[name] = (attendanceCounts[name] || 0) + 1;
+      }
+    });
   });
   const starMember = Object.entries(attendanceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "None";
 
-        return (
-        <div className="dashboard-content fade-in">
-          <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Secretariat Hub</h2>
+  return (
+    <div className="dashboard-content fade-in">
+      <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Secretariat Hub</h2>
 
-          {/* Secretariat Analytics Suite */}
-          <div className="mgmt-grid mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 60 }}>
-            <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <span className="stat-label" style={{ color: 'var(--ebec-gold)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Total Meetings</span>
-              <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{totalMeetings}</div>
-            </div>
-            <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <span className="stat-label" style={{ color: 'var(--apple-blue)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Avg Engagement</span>
-              <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{avgAttendance}%</div>
-            </div>
-            <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <span className="stat-label" style={{ color: '#34c759', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Diva of the Month</span>
-              <div className="stat-value" style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginTop: 10 }}>{starMember}</div>
-            </div>
-          </div>
+      {/* Secretariat Analytics Suite */}
+      <div className="mgmt-grid mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 60 }}>
+        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <span className="stat-label" style={{ color: 'var(--ebec-gold)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Total Meetings</span>
+          <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{totalMeetings}</div>
+        </div>
+        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <span className="stat-label" style={{ color: 'var(--apple-blue)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Avg Engagement</span>
+          <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{avgAttendance}%</div>
+        </div>
+        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <span className="stat-label" style={{ color: '#34c759', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Diva of the Month</span>
+          <div className="stat-value" style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginTop: 10 }}>{starMember}</div>
+        </div>
+      </div>
 
-          <AttendancePredictor meetings={meetings} />
+      <AttendancePredictor meetings={meetings} />
 
-          <div className="glass-panel-wide" style={{ marginTop: 60 }}>
-            <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px', fontWeight: 600 }}>Historical Secretariat Records</p>
-            <div className="archive-list" style={{ display: 'grid', gap: 12 }}>
-              {meetings.length === 0 ? (
-                <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
-              ) : (
-                [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date)).map((m) => (
-                  <div className="list-item" key={m.id} style={{ marginBottom: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                      <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: 12, textAlign: 'center', minWidth: 60 }}>
-                        <span style={{ fontSize: 10, color: 'var(--ebec-gold)', display: 'block' }}>{new Date(m.date).toLocaleString('en-US', { month: 'short' })}</span>
-                        <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{m.date.split('-')[2]}</span>
-                      </div>
-                      <div>
-                        <p className="meet-title" style={{ fontSize: 18, fontWeight: 700 }}>{m.title}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-                            {Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length} Attendees • EBEC-ADM-2026-{m.id.toString().slice(-4)}
-                          </span>
-                          <button
-                            onClick={() => setEditMeeting(m)}
-                            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                          >
-                            <Edit3 size={10} /> Edit Info
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="tag" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>Archived</div>
+      <div className="glass-panel-wide" style={{ marginTop: 60 }}>
+        <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px', fontWeight: 600 }}>Historical Secretariat Records</p>
+        <div className="archive-list" style={{ display: 'grid', gap: 12 }}>
+          {meetings.length === 0 ? (
+            <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
+          ) : (
+            [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date)).map((m) => (
+              <div className="list-item" key={m.id} style={{ marginBottom: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: 12, textAlign: 'center', minWidth: 60 }}>
+                    <span style={{ fontSize: 10, color: 'var(--ebec-gold)', display: 'block' }}>{new Date(m.date).toLocaleString('en-US', { month: 'short' })}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{m.date.split('-')[2]}</span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {editMeeting && (
-            <EditMeetingModal
-              meeting={editMeeting}
-              onCancel={() => setEditMeeting(null)}
-              onSubmit={(data) => {
-                onUpdateMeeting(data);
-                setEditMeeting(null);
-              }}
-            />
+                  <div>
+                    <p className="meet-title" style={{ fontSize: 18, fontWeight: 700 }}>{m.title}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                        {Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length} Attendees • EBEC-ADM-2026-{m.id.toString().slice(-4)}
+                      </span>
+                      <button
+                        onClick={() => setEditMeeting(m)}
+                        style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <Edit3 size={10} /> Edit Info
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="tag" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>Archived</div>
+              </div>
+            ))
           )}
         </div>
-        );
+      </div>
+
+      {editMeeting && (
+        <EditMeetingModal
+          meeting={editMeeting}
+          onCancel={() => setEditMeeting(null)}
+          onSubmit={(data) => {
+            onUpdateMeeting(data);
+            setEditMeeting(null);
+          }}
+        />
+      )}
+    </div>
+  );
 };
 
-        const AttendanceTracking = ({meetings}) => {
+const AttendanceTracking = ({ meetings }) => {
   const attendedMeetings = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        return (
-        <div className="dashboard-content fade-in" style={{ maxWidth: '95vw' }}>
-          <div className="flex-between items-center mb-8">
-            <div>
-              <h2 className="section-title" style={{ color: '#fff', fontSize: '36px', margin: 0 }}>Secretariat Attendance Portal</h2>
-              <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Bird's eye view of EBEC engagement across all sync sessions.</p>
-            </div>
-            <div className="stat-card" style={{ background: 'rgba(52, 199, 89, 0.1)', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
-              <div className="stat-value" style={{ color: '#34c759' }}>{attendedMeetings.length}</div>
-              <div className="stat-label">Tracked Sessions</div>
-            </div>
-          </div>
-
-          <div className="glass-panel-wide" style={{ padding: 0, overflow: 'hidden', borderRadius: 40 }}>
-            <div style={{ overflowX: 'auto', width: '100%' }}>
-              <table className="attendance-table">
-                <thead>
-                  <tr>
-                    <th className="sticky-col">TEAM MEMBER</th>
-                    {attendedMeetings.map(m => (
-                      <th key={m.id}>
-                        <div style={{ fontSize: 10, opacity: 0.6 }}>{m.date}</div>
-                        <div style={{ fontSize: 13, fontWeight: 800 }}>{m.title.slice(0, 15)}{m.title.length > 15 ? '...' : ''}</div>
-                      </th>
-                    ))}
-                    <th style={{ background: 'rgba(255,193,7,0.1)', color: 'var(--ebec-gold)' }}>ENGAGEMENT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {EBEC_TEAM.map(member => {
-                    let meetingsInvited = 0;
-                    let attendedCount = 0;
-
-                    return (
-                      <tr key={member.name}>
-                        <td className="sticky-col">
-                          <div style={{ fontWeight: 800 }}>{member.name}</div>
-                          <div style={{ fontSize: 10, opacity: 0.5 }}>{member.role}</div>
-                        </td>
-                        {attendedMeetings.map(m => {
-                          const status = m.attendance?.[member.name];
-                          const isOfficiallyInvited = (m.attendees || []).includes(member.name);
-                          const hasAttendanceRecord = status === 'present' || status === 'late' || status === 'absent';
-
-                          const isInvited = isOfficiallyInvited || hasAttendanceRecord;
-
-                          if (isInvited) meetingsInvited++;
-
-                          const displayStatus = status || (isOfficiallyInvited ? 'absent' : null);
-                          if (isInvited && (displayStatus === 'present' || displayStatus === 'late')) attendedCount++;
-
-                          return (
-                            <td key={m.id} style={{ textAlign: 'center' }}>
-                              {isInvited ? (
-                                <div className={`status-dot-cell ${displayStatus || 'absent'}`}>
-                                  {displayStatus === 'present' ? 'P' : (displayStatus === 'late' ? 'L' : 'A')}
-                                </div>
-                              ) : (
-                                <span style={{ opacity: 0.2 }}>-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td style={{ textAlign: 'center', fontWeight: 900, fontSize: 16 }}>
-                          {meetingsInvited > 0 ? Math.round((attendedCount / meetingsInvited) * 100) : 0}%
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+  return (
+    <div className="dashboard-content fade-in" style={{ maxWidth: '95vw' }}>
+      <div className="flex-between items-center mb-8">
+        <div>
+          <h2 className="section-title" style={{ color: '#fff', fontSize: '36px', margin: 0 }}>Secretariat Attendance Portal</h2>
+          <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Bird's eye view of EBEC engagement across all sync sessions.</p>
         </div>
-        );
+        <div className="stat-card" style={{ background: 'rgba(52, 199, 89, 0.1)', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
+          <div className="stat-value" style={{ color: '#34c759' }}>{attendedMeetings.length}</div>
+          <div className="stat-label">Tracked Sessions</div>
+        </div>
+      </div>
+
+      <div className="glass-panel-wide" style={{ padding: 0, overflow: 'hidden', borderRadius: 40 }}>
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table className="attendance-table">
+            <thead>
+              <tr>
+                <th className="sticky-col">TEAM MEMBER</th>
+                {attendedMeetings.map(m => (
+                  <th key={m.id}>
+                    <div style={{ fontSize: 10, opacity: 0.6 }}>{m.date}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800 }}>{m.title.slice(0, 15)}{m.title.length > 15 ? '...' : ''}</div>
+                  </th>
+                ))}
+                <th style={{ background: 'rgba(255,193,7,0.1)', color: 'var(--ebec-gold)' }}>ENGAGEMENT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {EBEC_TEAM.map(member => {
+                let meetingsInvited = 0;
+                let attendedCount = 0;
+
+                return (
+                  <tr key={member.name}>
+                    <td className="sticky-col">
+                      <div style={{ fontWeight: 800 }}>{member.name}</div>
+                      <div style={{ fontSize: 10, opacity: 0.5 }}>{member.role}</div>
+                    </td>
+                    {attendedMeetings.map(m => {
+                      const status = m.attendance?.[member.name];
+                      const isOfficiallyInvited = (m.attendees || []).includes(member.name);
+                      const hasAttendanceRecord = status === 'present' || status === 'late' || status === 'absent';
+
+                      const isInvited = isOfficiallyInvited || hasAttendanceRecord;
+
+                      if (isInvited) meetingsInvited++;
+
+                      const displayStatus = status || (isOfficiallyInvited ? 'absent' : null);
+                      if (isInvited && (displayStatus === 'present' || displayStatus === 'late')) attendedCount++;
+
+                      return (
+                        <td key={m.id} style={{ textAlign: 'center' }}>
+                          {isInvited ? (
+                            <div className={`status-dot-cell ${displayStatus || 'absent'}`}>
+                              {displayStatus === 'present' ? 'P' : (displayStatus === 'late' ? 'L' : 'A')}
+                            </div>
+                          ) : (
+                            <span style={{ opacity: 0.2 }}>-</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td style={{ textAlign: 'center', fontWeight: 900, fontSize: 16 }}>
+                      {meetingsInvited > 0 ? Math.round((attendedCount / meetingsInvited) * 100) : 0}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-        const SGProof = ({onVerify}) => {
+const SGProof = ({ onVerify }) => {
   const [answer, setAnswer] = useState("");
-        const [isError, setIsError] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   const handleSubmit = () => {
     if (answer.toLowerCase().trim() === 'momtaz') {
-          onVerify(true);
+      onVerify(true);
     } else {
-          setIsError(true);
+      setIsError(true);
       setTimeout(() => setIsError(false), 3000);
     }
   };
 
-        return (
-        <div className="proof-overlay bubble-theme fade-in">
-          <div className="bubble bubble-1"></div>
-          <div className="bubble bubble-2"></div>
-          <div className="bubble bubble-3"></div>
+  return (
+    <div className="proof-overlay bubble-theme fade-in">
+      <div className="bubble bubble-1"></div>
+      <div className="bubble bubble-2"></div>
+      <div className="bubble bubble-3"></div>
 
-          <div className={`glass-card-proof bubble-card ${isError ? 'shake' : ''}`}>
-            <h2 className="proof-heading">Are you the SG of EBEC?</h2>
-            <p className="proof-subtext">Proof that & gain access to the Secretary Portal.</p>
+      <div className={`glass-card-proof bubble-card ${isError ? 'shake' : ''}`}>
+        <h2 className="proof-heading">Are you the SG of EBEC?</h2>
+        <p className="proof-subtext">Proof that & gain access to the Secretary Portal.</p>
 
-            <div className="question-box">
-              <label>What is the famous word that the SG says?</label>
-              <div className="input-field-wrapper mt-4">
-                <input
-                  type="text"
-                  placeholder="Your answer..."
-                  className="premium-input proof-input classy-input"
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            {isError && (
-              <div className="error-message-sg fade-in">
-                <p className="big-error">YOU ARE NOOOT THE SG!!!!</p>
-                <p className="small-error">Why do you want to access the EBEC SG panel??</p>
-              </div>
-            )}
-
-            <button className="btn-primary-premium ripple w-full mt-8 classy-btn" onClick={handleSubmit}>
-              Verify Identity
-            </button>
+        <div className="question-box">
+          <label>What is the famous word that the SG says?</label>
+          <div className="input-field-wrapper mt-4">
+            <input
+              type="text"
+              placeholder="Your answer..."
+              className="premium-input proof-input classy-input"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              autoFocus
+            />
           </div>
         </div>
-        );
+
+        {isError && (
+          <div className="error-message-sg fade-in">
+            <p className="big-error">YOU ARE NOOOT THE SG!!!!</p>
+            <p className="small-error">Why do you want to access the EBEC SG panel??</p>
+          </div>
+        )}
+
+        <button className="btn-primary-premium ripple w-full mt-8 classy-btn" onClick={handleSubmit}>
+          Verify Identity
+        </button>
+      </div>
+    </div>
+  );
 };
 
 const Footer = () => (
-        <footer className="footer-premium">
-          <div className="footer-glass">
-            <div className="footer-content">
-              <div className="footer-top">
-                <div className="footer-brand">
-                  <div className="logo-circle small-logo">
-                    <img src={ebecLogo} alt="Logo" className="footer-logo-img" />
-                  </div>
-                  <span className="brand-name">EBEC Admin Hub</span>
-                </div>
-                <div className="footer-links">
-                  <span>Help Center</span>
-                  <span>Privacy Policy</span>
-                  <span>Contact Tech Team</span>
-                </div>
-              </div>
-              <div className="footer-bottom">
-                <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
-                <div className="social-dots">
-                  <div className="social-dot"></div>
-                  <div className="social-dot"></div>
-                  <div className="social-dot"></div>
-                </div>
-              </div>
+  <footer className="footer-premium">
+    <div className="footer-glass">
+      <div className="footer-content">
+        <div className="footer-top">
+          <div className="footer-brand">
+            <div className="logo-circle small-logo">
+              <img src={ebecLogo} alt="Logo" className="footer-logo-img" />
             </div>
+            <span className="brand-name">EBEC Admin Hub</span>
           </div>
-        </footer>
-        );
+          <div className="footer-links">
+            <span>Help Center</span>
+            <span>Privacy Policy</span>
+            <span>Contact Tech Team</span>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
+          <div className="social-dots">
+            <div className="social-dot"></div>
+            <div className="social-dot"></div>
+            <div className="social-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+);
 
-        const API_URL = "http://localhost:5000/api";
+const API_URL = "http://localhost:5000/api";
 
-        export default function App() {
+export default function App() {
   const [page, setPage] = useState('home');
-        const [refCounter, setRefCounter] = useState(1);
-        const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
+  const [refCounter, setRefCounter] = useState(1);
+  const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
 
-        const [meetings, setMeetings] = useState([]);
-        const [techCards, setTechCards] = useState([]);
+  const [meetings, setMeetings] = useState([]);
+  const [techCards, setTechCards] = useState([]);
 
   // Load initial data
   useEffect(() => {
-          fetch(`${API_URL}/data`)
-            .then(res => res.json())
-            .then(data => {
-              setMeetings(data.meetings || []);
-              setTechCards(data.techCards || []);
-              setRefCounter(data.refCounter || 1);
-            });
+    fetch(`${API_URL}/data`)
+      .then(res => res.json())
+      .then(data => {
+        setMeetings(data.meetings || []);
+        setTechCards(data.techCards || []);
+        setRefCounter(data.refCounter || 1);
+      });
   }, []);
 
   const handleAddMeeting = (newMeeting) => {
-          fetch(`${API_URL}/meetings`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newMeeting)
-          })
-            .then(res => res.json())
-            .then(saved => {
-              setMeetings([saved, ...meetings]);
-              setPage('home');
-            });
+    fetch(`${API_URL}/meetings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newMeeting)
+    })
+      .then(res => res.json())
+      .then(saved => {
+        setMeetings([saved, ...meetings]);
+        setPage('home');
+      });
   };
 
   const handleAddTechCard = (newCard) => {
-          fetch(`${API_URL}/tech-cards`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newCard)
-          })
-            .then(res => res.json())
-            .then(saved => {
-              setTechCards([saved, ...techCards]);
-              setRefCounter(prev => prev + 1);
-              setPage('home');
-            });
+    fetch(`${API_URL}/tech-cards`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newCard)
+    })
+      .then(res => res.json())
+      .then(saved => {
+        setTechCards([saved, ...techCards]);
+        setRefCounter(prev => prev + 1);
+        setPage('home');
+      });
   };
 
   const handleDeleteMeeting = (id) => {
-          fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
-            .then(() => {
-              setMeetings(prev => prev.filter(m => m.id !== id));
-              console.log("Deleted from database successfully");
-            });
+    fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
+      .then(() => {
+        setMeetings(prev => prev.filter(m => m.id !== id));
+        console.log("Deleted from database successfully");
+      });
   };
 
   const handleDeleteTechCard = (id) => {
-          fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
-            .then(() => {
-              setTechCards(prev => prev.filter(tc => tc.id !== id));
-              console.log("Deleted from database successfully");
-            });
+    fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
+      .then(() => {
+        setTechCards(prev => prev.filter(tc => tc.id !== id));
+        console.log("Deleted from database successfully");
+      });
   };
 
   const handleUpdateMeeting = (updatedMeeting) => {
-          fetch(`${API_URL}/meetings/${updatedMeeting.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedMeeting)
-          })
-            .then(res => res.json())
-            .then(saved => {
-              setMeetings(prev => prev.map(m => m.id === saved.id ? saved : m));
-            });
+    fetch(`${API_URL}/meetings/${updatedMeeting.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedMeeting)
+    })
+      .then(res => res.json())
+      .then(saved => {
+        setMeetings(prev => prev.map(m => m.id === saved.id ? saved : m));
+      });
   };
 
   const handleSaveMeetingReport = (meetingId, report) => {
-          fetch(`${API_URL}/meetings/${meetingId}/report`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ report })
-          })
-            .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m)));
+    fetch(`${API_URL}/meetings/${meetingId}/report`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report })
+    })
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m)));
   };
 
   const handleSaveMeetingNotes = (meetingId, html) => {
-          fetch(`${API_URL}/meetings/${meetingId}/notes`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ notes: html })
-          })
-            .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m)));
+    fetch(`${API_URL}/meetings/${meetingId}/notes`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: html })
+    })
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m)));
   };
 
   const handleSaveMeetingAttendance = (meetingId, attendance) => {
-          fetch(`${API_URL}/meetings/${meetingId}/attendance`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ attendance })
-          })
-            .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m)));
+    fetch(`${API_URL}/meetings/${meetingId}/attendance`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attendance })
+    })
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m)));
   };
 
-        return (
-        <div className="apple-bg">
-          <style>{`
+  return (
+    <div className="apple-bg">
+      <style>{`
         :root {
           --apple-blue: #0071e3;
           --google-blue: #4285f4;
@@ -2428,60 +2423,60 @@ const Footer = () => (
 
       `}</style>
 
-          <nav className="glass-nav">
-            <div className="logo-circle" onClick={() => setPage('home')}>
-              <img src={ebecLogo} alt="EBEC" className="header-logo" />
-            </div>
-            <div className="nav-links">
-              <span className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}>Home</span>
-              <span>Activities</span>
-              <span className={page === 'attendance-tracking' ? 'active' : ''} onClick={() => setPage('attendance-tracking')}>Attendance</span>
-              <span className={page === 'archive' ? 'active' : ''} onClick={() => setPage('archive')}>Archive</span>
-            </div>
-            <button className="sign-out-btn" onClick={() => setPage('proving-sg')}>Sign Out</button>
-          </nav>
-
-          {page === 'home' && (
-            <Home
-              setPage={setPage}
-              refNum={currentRef}
-              setRefNum={(val) => setRefCounter(parseInt(val) || refCounter)}
-              meetings={meetings}
-              techCards={techCards}
-              onDeleteMeeting={handleDeleteMeeting}
-              onUpdateMeeting={handleUpdateMeeting}
-              onDeleteTechCard={handleDeleteTechCard}
-              onSaveMeetingNotes={handleSaveMeetingNotes}
-              onSaveMeetingAttendance={handleSaveMeetingAttendance}
-              onSaveMeetingReport={handleSaveMeetingReport}
-            />
-          )}
-
-          {page === 'new-meeting' && (
-            <NewMeetingForm onCancel={() => setPage('home')} onSubmit={handleAddMeeting} />
-          )}
-
-          {page === 'new-tech-card' && (
-            <NewTechnicalCardForm
-              onCancel={() => setPage('home')}
-              onSubmit={handleAddTechCard}
-              currentRef={currentRef}
-            />
-          )}
-
-          {page === 'archive' && <Archive meetings={meetings} onUpdateMeeting={handleUpdateMeeting} />}
-
-          {page === 'attendance-tracking' && <AttendanceTracking meetings={meetings} />}
-
-          {page === 'proving-sg' && (
-            <SGProof onVerify={(success) => {
-              if (success) {
-                setPage('home');
-              }
-            }} />
-          )}
-
-          <Footer />
+      <nav className="glass-nav">
+        <div className="logo-circle" onClick={() => setPage('home')}>
+          <img src={ebecLogo} alt="EBEC" className="header-logo" />
         </div>
-        );
+        <div className="nav-links">
+          <span className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}>Home</span>
+          <span>Activities</span>
+          <span className={page === 'attendance-tracking' ? 'active' : ''} onClick={() => setPage('attendance-tracking')}>Attendance</span>
+          <span className={page === 'archive' ? 'active' : ''} onClick={() => setPage('archive')}>Archive</span>
+        </div>
+        <button className="sign-out-btn" onClick={() => setPage('proving-sg')}>Sign Out</button>
+      </nav>
+
+      {page === 'home' && (
+        <Home
+          setPage={setPage}
+          refNum={currentRef}
+          setRefNum={(val) => setRefCounter(parseInt(val) || refCounter)}
+          meetings={meetings}
+          techCards={techCards}
+          onDeleteMeeting={handleDeleteMeeting}
+          onUpdateMeeting={handleUpdateMeeting}
+          onDeleteTechCard={handleDeleteTechCard}
+          onSaveMeetingNotes={handleSaveMeetingNotes}
+          onSaveMeetingAttendance={handleSaveMeetingAttendance}
+          onSaveMeetingReport={handleSaveMeetingReport}
+        />
+      )}
+
+      {page === 'new-meeting' && (
+        <NewMeetingForm onCancel={() => setPage('home')} onSubmit={handleAddMeeting} />
+      )}
+
+      {page === 'new-tech-card' && (
+        <NewTechnicalCardForm
+          onCancel={() => setPage('home')}
+          onSubmit={handleAddTechCard}
+          currentRef={currentRef}
+        />
+      )}
+
+      {page === 'archive' && <Archive meetings={meetings} onUpdateMeeting={handleUpdateMeeting} />}
+
+      {page === 'attendance-tracking' && <AttendanceTracking meetings={meetings} />}
+
+      {page === 'proving-sg' && (
+        <SGProof onVerify={(success) => {
+          if (success) {
+            setPage('home');
+          }
+        }} />
+      )}
+
+      <Footer />
+    </div>
+  );
 }
