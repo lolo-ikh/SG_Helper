@@ -1179,7 +1179,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
         <p className="description">What's on the mind of the SG today?</p>
 
-        <div className="carousel-carousel-container">
+        <div className="carousel-container">
           <button className="nav-arrow" onClick={prevCard}><ChevronLeft size={32} /></button>
 
           <div className="main-focus-card">
@@ -1225,10 +1225,10 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
             <div className="stat-note">Create meeting or card</div>
             <div className="quick-actions">
               <button className="quick-btn" onClick={() => setPage('new-meeting')}>
-                <Plus size={18} /> New Meeting
+                <Plus size={14} /> New Meeting
               </button>
               <button className="quick-btn secondary" onClick={() => setPage('new-tech-card')}>
-                <Plus size={18} /> New Card
+                <Plus size={14} /> New Card
               </button>
             </div>
           </div>
@@ -1242,7 +1242,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
               <h2 className="mgmt-heading" style={{ margin: 0 }}>My meetings</h2>
               <div className="premium-search-container" style={{ minWidth: 320 }}>
                 <div className="search-icon-wrapper">
-                  <Search size={16} />
+                  <Search size={14} />
                 </div>
                 <input
                   type="text"
@@ -1255,7 +1255,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
               </div>
             </div>
             <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
-              <Plus size={18} /> Create New Meeting
+              <Plus size={14} /> Create New Meeting
             </button>
           </div>
 
@@ -1296,34 +1296,34 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
                       <div className="stats-summary-row">
                         <div className="stat-item" title="Attendees">
-                          <UserCheck size={16} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
+                          <UserCheck size={14} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
                         </div>
                         <div className="stat-item" title="Notes">
-                          <Clipboard size={16} /> <span>{m.notes ? 'Saved' : '0'}</span>
+                          <Clipboard size={14} /> <span>{m.notes ? 'Saved' : '0'}</span>
                         </div>
                         <div className="stat-item" title="Report Status">
-                          <FileText size={16} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
+                          <FileText size={14} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
                         </div>
                       </div>
 
                       <div className="premium-card-footer">
                         <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
-                          <UserCheck size={16} />
+                          <UserCheck size={14} />
                           {m.attendance ? 'Verify' : 'Take'}
                         </button>
                         <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
-                          <Clipboard size={16} />
+                          <Clipboard size={14} />
                         </button>
                         <button className="footer-action-btn" onClick={() => openEdit(m)}>
-                          <Edit3 size={16} />
+                          <Edit3 size={14} />
                         </button>
                         <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
-                          <FileText size={16} /> Report
+                          <FileText size={14} /> Report
                         </button>
                         <button className="footer-delete-btn" onClick={() => {
                           if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
                         }}>
-                          <Trash size={20} />
+                          <Trash size={18} />
                         </button>
                       </div>
                     </div>
@@ -1339,7 +1339,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
               <p className="mgmt-sub">Manage activity references and materials</p>
             </div>
             <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
-              <Plus size={18} /> Create New Card
+              <Plus size={14} /> Create New Card
             </button>
           </div>
 
@@ -1367,27 +1367,27 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
                     <div className="stats-summary-row">
                       <div className="stat-item" title="Sponsor">
-                        <Package size={16} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+                        <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
                       </div>
                       <div className="stat-item" title="Agenda">
-                        <Clipboard size={16} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                        <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
                       </div>
                     </div>
 
                     <div className="premium-card-footer">
                       <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
-                        <Clipboard size={16} /> Agenda
+                        <Clipboard size={14} /> Agenda
                       </button>
                       <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
-                        <Package size={16} /> Materials
+                        <Package size={14} /> Materials
                       </button>
                       <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
-                        <FileText size={16} />
+                        <FileText size={14} />
                       </button>
                       <button className="footer-delete-btn" onClick={() => {
                         if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
                       }}>
-                        <Trash size={20} />
+                        <Trash size={18} />
                       </button>
                     </div>
                   </div>
@@ -1439,9 +1439,6 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
       )}
     </>
   );
-};
-        </>
-        );
 };
 
 const AttendancePredictor = ({ meetings }) => {
@@ -1630,8 +1627,35 @@ const Archive = ({ meetings = [], onUpdateMeeting }) => {
 };
 
 const AttendanceTracking = ({ meetings }) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const attendedMeetings = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0)
     .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Analytics Logic
+  const neverAbsent = [];
+  const neverAttended = [];
+
+  EBEC_TEAM.forEach(member => {
+    let invitations = 0;
+    let attendances = 0;
+    let absences = 0;
+
+    attendedMeetings.forEach(m => {
+      const status = m.attendance?.[member.name];
+      const isInvited = (m.attendees || []).includes(member.name) || (status && status !== 'absent');
+
+      if (isInvited) {
+        invitations++;
+        if (status === 'present' || status === 'late') attendances++;
+        if (status === 'absent' || !status) absences++;
+      }
+    });
+
+    if (invitations > 0) {
+      if (absences === 0) neverAbsent.push(member);
+      if (attendances === 0) neverAttended.push(member);
+    }
+  });
 
   return (
     <div className="dashboard-content fade-in" style={{ maxWidth: '95vw' }}>
@@ -1643,6 +1667,49 @@ const AttendanceTracking = ({ meetings }) => {
         <div className="stat-card" style={{ background: 'rgba(52, 199, 89, 0.1)', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
           <div className="stat-value" style={{ color: '#34c759' }}>{attendedMeetings.length}</div>
           <div className="stat-label">Tracked Sessions</div>
+        </div>
+      </div>
+
+      {/* Critical Analysis Section */}
+      <div className="mgmt-grid mb-10" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+        <div className="premium-card" style={{ background: 'rgba(52, 199, 89, 0.05)', border: '1px solid rgba(52, 199, 89, 0.14)', padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ background: '#34c759', color: '#fff', borderRadius: 8, padding: 6 }}><UserCheck size={16} /></div>
+            <h3 style={{ margin: 0, color: '#fff', fontSize: 16 }}>The Elites (Never Absent)</h3>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {neverAbsent.length > 0 ? neverAbsent.map(m => (
+              <span key={m.name} className="pill-btn mini" style={{ background: 'rgba(52, 199, 89, 0.2)', color: '#34c759', border: 'none', fontSize: 11 }}>{m.name}</span>
+            )) : <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>No perfect records yet.</span>}
+          </div>
+        </div>
+
+        <div className="premium-card" style={{ background: 'rgba(255, 59, 48, 0.05)', border: '1px solid rgba(255, 59, 48, 0.14)', padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <div style={{ background: '#ff3b30', color: '#fff', borderRadius: 8, padding: 6 }}><Trash size={16} /></div>
+            <h3 style={{ margin: 0, color: '#fff', fontSize: 16 }}>Critical (Never Attended)</h3>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {neverAttended.length > 0 ? neverAttended.map(m => (
+              <span key={m.name} className="pill-btn mini" style={{ background: 'rgba(255, 59, 48, 0.2)', color: '#ff3b30', border: 'none', fontSize: 11 }}>{m.name}</span>
+            )) : <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>All members have attended at least once!</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* Spacing & Search Bar */}
+      <div style={{ marginTop: 60, marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p style={{ color: '#fff', opacity: 0.8, fontWeight: 700, margin: 0, fontSize: 18 }}>Raw Attendance Ledger</p>
+        <div className="premium-search-container" style={{ width: 350 }}>
+          <div className="search-icon-wrapper"><Search size={14} /></div>
+          <input
+            type="text"
+            placeholder="Filter member by name or role..."
+            className="cute-search-input"
+            style={{ width: '100%' }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
 
@@ -1662,7 +1729,10 @@ const AttendanceTracking = ({ meetings }) => {
               </tr>
             </thead>
             <tbody>
-              {EBEC_TEAM.map(member => {
+              {EBEC_TEAM.filter(m =>
+                m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                m.role.toLowerCase().includes(searchTerm.toLowerCase())
+              ).map(member => {
                 let meetingsInvited = 0;
                 let attendedCount = 0;
 
@@ -1893,7 +1963,7 @@ export default function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ attendance })
     })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m)));
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance } : m)));
   };
 
   return (
@@ -2007,9 +2077,30 @@ export default function App() {
         .dv-day { font-size: 52px; font-weight: 900; line-height: 1; margin: 2px 0; letter-spacing: -3px; }
         .dv-time { font-size: 11px; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px; }
 
-        .card-info-block { margin-bottom: 16px; }
-        .card-info-block h3 { font-size: 20px; font-weight: 800; color: #1d1d1f; margin: 0; letter-spacing: -0.5px; }
-        .card-info-block p { font-size: 13.5px; color: #666; margin: 6px 0 0 0; font-weight: 500; }
+        .card-info-block { margin-bottom: 12px; }
+        .card-info-block h3 { 
+            font-size: 18px; 
+            font-weight: 800; 
+            color: #1d1d1f; 
+            margin: 0; 
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-info-block p { 
+            font-size: 13px; 
+            color: #666; 
+            margin: 6px 0 0 0; 
+            font-weight: 500; 
+            line-height: 1.4;
+            height: 38px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
         .stats-summary-row {
             display: flex;
@@ -2078,7 +2169,7 @@ export default function App() {
         }
 
         /* --- Custom Designed Buttons --- */
-        .btn-icon-plus, .quick-btn {
+        .btn-icon-plus {
             background: linear-gradient(135deg, #0071e3 0%, #00c6fb 100%);
             color: #fff;
             border: none;
@@ -2093,13 +2184,50 @@ export default function App() {
             transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 10px 30px rgba(0, 113, 227, 0.25);
         }
-        .btn-icon-plus:hover, .quick-btn:hover {
+        .btn-icon-plus:hover {
             transform: translateY(-4px) scale(1.03);
             box-shadow: 0 20px 40px rgba(0, 113, 227, 0.35);
         }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+            width: 100%;
+        }
+
+        .quick-btn {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+            flex: 1;
+        }
+        .quick-btn:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+        }
         .quick-btn.secondary {
-            background: linear-gradient(135deg, #1D355E 0%, #2a4b82 100%);
-            box-shadow: 0 10px 30px rgba(29, 53, 94, 0.25);
+            background: transparent;
+            border-color: rgba(255,255,255,0.15);
+        }
+        .quick-btn.secondary:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: #fff;
         }
         .quick-btn.secondary:hover {
             box-shadow: 0 20px 40px rgba(29, 53, 94, 0.35);
