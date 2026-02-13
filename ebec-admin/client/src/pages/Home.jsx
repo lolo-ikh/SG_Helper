@@ -41,6 +41,18 @@ const Package = ({ size = 16 }) => (
 const Trash = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
 );
+const Copy = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+);
+const ExternalLink = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+);
+const Layout = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+);
+const Edit3 = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+);
 
 const getInitials = (name) => {
   if (!name) return '';
@@ -52,30 +64,31 @@ const getInitials = (name) => {
 // --- Constants ---
 const EBEC_TEAM = [
   { name: "Enzo Chaabnia", role: "President" },
-  { name: "Boucekkine Oumaima", role: "VP" },
+  { name: "Oumaima Boucekkine", role: "Vice President" },
   { name: "Berbaoui Ashref Abderrahmane", role: "Vice President" },
-  { name: "Leena IKHLEF", role: "SG" },
-  { name: "Salah Badreddin", role: "HR Manager" },
-  { name: "Oussama Bouziane", role: "HR Co-manager" },
+  { name: "Leena IKHLEF", role: "Secretary General" },
+  { name: "Dorsaf Messaoudi", role: "Relations and Communications" },
+  { name: "Maissa Lakel", role: "Relex department" },
   { name: "Khoumari Aya", role: "Co-Manager in Relex" },
-  { name: "TOUTAH Sanaa", role: "Logistics Manager" },
-  { name: "Mouhoun Cilia", role: "Events Logistics Co-manager" },
-  { name: "Wissal Oulem", role: "Project Manager" },
-  { name: "Zineb Bouchaib", role: "Media & Marketing" },
-  { name: "AHSATAL Imed Eddine", role: "Media & Marketing" },
+  { name: "Mouhsine Abdelhakim Alouit", role: "Finance department" },
+  { name: "Benzergua Djihene Chaimaa", role: "Finance & Legal Manager" },
+  { name: "HACENE Serine Nour el Imane", role: "Finance & Legal Manager" },
+  { name: "Youcef Belaib", role: "Co-manager Finance" },
+  { name: "Takoua", role: "Co-design manager" },
   { name: "Maria Ines Raheb", role: "Design Co-manager" },
   { name: "Sara BENALI", role: "Design Co-manager" },
   { name: "BEKHEDDA Asma", role: "Co-ManagerDesign" },
-  { name: "LAKEL Maissa", role: "Co-Manager Relex" },
-  { name: "MESSAOUDI Dorsaf", role: "Co-manger in Relex" },
-  { name: "Bouzira Maroua", role: "Event Manager" },
-  { name: "Tazgart Kaouther", role: "Event Co-manager" },
-  { name: "Benzergua Djihene Chaimaa", role: "Finance & Legal Manager" },
-  { name: "ALOUIT Mouhsine Abdelhakim", role: "Finance & Legal Manager" },
-  { name: "HACENE Serine Nour el Imane", role: "Finance & Legal Manager" },
-  { name: "Youcef Belaib", role: "Co-manager Finance" },
-  { name: "DJOUBANI Sarah", role: "Marketing Co-Manager" },
   { name: "AMEZIANE Yani", role: "IT Manager" },
+  { name: "Zineb Bouchaib", role: "Media & Marketing" },
+  { name: "AHSATAL Imed Eddine", role: "Media & Marketing" },
+  { name: "DJOUBANI Sarah", role: "Marketing Co-Manager" },
+  { name: "Oussama Bouzaine", role: "HR" },
+  { name: "Salah Badreddin", role: "HR Manager" },
+  { name: "Sanna toutah", role: "Logistic Department" },
+  { name: "Maroua Bouzira", role: "Events and logistics" },
+  { name: "Mouhoun Cilia", role: "Events Logistics Co-manager" },
+  { name: "Tazgart Kaouther", role: "Event Co-manager" },
+  { name: "Wissal Oulem", role: "Project Manager" },
   { name: "BOULEFAA Mustapha", role: "Events" }
 ];
 
@@ -298,6 +311,7 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
     useMeet: true,
     sendEmail: true
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleAttendee = (name) => {
     setFormData(prev => ({
@@ -308,7 +322,7 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
     }));
   };
 
-  const sortedTeam = [...EBEC_TEAM].sort((a, b) => a.name.localeCompare(b.name));
+  const teamList = EBEC_TEAM;
 
   return (
     <div className="form-overlay fade-in">
@@ -371,16 +385,30 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
             <div className="flex-between items-center mb-4">
               <div className="section-info">
                 <label className="section-label mb-0">Team Invitation</label>
-                <p className="sub-text">{formData.attendees.length} members selected</p>
+                <div className="premium-search-container mt-2">
+                  <div className="search-icon-wrapper">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search name or role..."
+                    className="cute-search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="selection-actions">
-                <button className="pill-btn" onClick={() => setFormData({ ...formData, attendees: sortedTeam.map(t => t.name) })}>All EBEC</button>
+                <button className="pill-btn" onClick={() => setFormData({ ...formData, attendees: teamList.map(t => t.name) })}>All EBEC</button>
                 <button className="pill-btn secondary" onClick={() => setFormData({ ...formData, attendees: [] })}>Clear</button>
               </div>
             </div>
 
             <div className="modern-attendee-grid">
-              {sortedTeam.map(member => (
+              {teamList.filter(member =>
+                member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.role.toLowerCase().includes(searchQuery.toLowerCase())
+              ).map(member => (
                 <div
                   key={member.name}
                   className={`attendee-item ${formData.attendees.includes(member.name) ? 'selected' : ''}`}
@@ -480,66 +508,176 @@ const MeetingNotesModal = ({ meeting, onClose, onSave }) => {
   );
 };
 
-// Attendance modal: show selected attendees and allow marking present/absent
+// Attendance modal: show selected attendees and allow marking present/absent/late
 const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
   const initialList = meeting?.attendees || [];
+  const [view, setView] = useState(meeting?.attendance && Object.keys(meeting.attendance).length > 0 ? "options" : "edit");
+  const [searchQuery, setSearchQuery] = useState("");
   const [attendance, setAttendance] = useState(() => {
     const map = {};
-    initialList.forEach(n => { map[n] = meeting?.attendance?.[n] || false; });
+    initialList.forEach(n => { map[n] = meeting?.attendance?.[n] || 'absent'; });
     return map;
   });
 
   useEffect(() => {
-    const map = {}; (meeting?.attendees || []).forEach(n => map[n] = meeting?.attendance?.[n] || false);
+    const map = {};
+    (meeting?.attendees || []).forEach(n => map[n] = meeting?.attendance?.[n] || 'absent');
     setAttendance(map);
   }, [meeting]);
 
-  const togglePresent = (name) => {
-    setAttendance(prev => ({ ...prev, [name]: !prev[name] }));
+  const setStatus = (name, status) => {
+    setAttendance(prev => ({ ...prev, [name]: status }));
+  };
+
+  const copyAsText = () => {
+    const present = Object.entries(attendance).filter(([_, v]) => v === 'present').map(([k, _]) => k);
+    const late = Object.entries(attendance).filter(([_, v]) => v === 'late').map(([k, _]) => k);
+    const absent = Object.entries(attendance).filter(([_, v]) => v === 'absent').map(([k, _]) => k);
+
+    const text = `Attendance — ${meeting.title}\nDate: ${meeting.date}\n\nPresent: ${present.join(', ') || 'None'}\nLate: ${late.join(', ') || 'None'}\nAbsent: ${absent.join(', ') || 'None'}`;
+    navigator.clipboard.writeText(text);
+    alert("Copied as plain text!");
+  };
+
+  const copyAsSpreadsheet = () => {
+    const rows = [["Attendee", "Status"]];
+    Object.entries(attendance).forEach(([name, status]) => rows.push([name, status]));
+    const tsv = rows.map(r => r.join("\t")).join("\n");
+    navigator.clipboard.writeText(tsv);
+    alert("Copied as Spreadsheet (TSV)!");
   };
 
   return (
-    <div className="form-overlay">
-      <div className="google-style-form" style={{ maxWidth: 700 }}>
+    <div className="form-overlay fade-in">
+      <div className="premium-form" style={{ maxWidth: view === 'options' ? 540 : 800 }}>
         <div className="form-header">
-          <h3>Attendance — {meeting?.title}</h3>
+          <div className="header-content">
+            <div className="header-meta">
+              <span className="meta-text">{view === 'options' ? 'ATTENDANCE ACTIONS' : 'QUICK ATTENDANCE'}</span>
+            </div>
+            <h2>{meeting?.title}</h2>
+          </div>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
-        <div className="form-body">
-          <p className="sub-hint">Toggle present attendees and save.</p>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-            <button className="quick-btn" onClick={() => {
-              const all = {};
-              (meeting?.attendees || []).forEach(n => all[n] = true);
-              setAttendance(all);
-            }}>Mark All Present</button>
-            <button className="quick-btn secondary" onClick={() => {
-              const none = {};
-              (meeting?.attendees || []).forEach(n => none[n] = false);
-              setAttendance(none);
-            }}>Clear</button>
-          </div>
 
-          <div style={{ display: 'grid', gap: 8, maxHeight: 320, overflow: 'auto' }}>
-            {(meeting?.attendees || []).map(name => (
-              <label key={name} className="attendee-pill" style={{ justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 6, background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {attendance[name] ? <Check /> : <span style={{ opacity: 0.4 }}>—</span>}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{name}</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>{(EBEC_TEAM.find(t => t.name === name)?.role) || ''}</div>
-                  </div>
+        <div className="form-body">
+          {view === 'options' ? (
+            <div className="options-panel">
+              <div className="option-row" onClick={copyAsText}>
+                <div className="option-icon email"><Clipboard size={20} /></div>
+                <div className="option-content">
+                  <span className="option-title">Copy as Plain Text</span>
+                  <span className="option-desc">Formatted list for Discord/WhatsApp</span>
                 </div>
-                <input type="checkbox" checked={!!attendance[name]} onChange={() => togglePresent(name)} />
-              </label>
-            ))}
-          </div>
+                <Copy size={20} color="#888" />
+              </div>
+              <div className="option-row" onClick={copyAsSpreadsheet}>
+                <div className="option-icon meet"><Layout size={20} /></div>
+                <div className="option-content">
+                  <span className="option-title">Copy for Spreadsheet</span>
+                  <span className="option-desc">Export data in TSV format</span>
+                </div>
+                <ExternalLink size={20} color="#888" />
+              </div>
+              <div className="option-row" onClick={() => setView('edit')}>
+                <div className="option-icon" style={{ background: '#f5f5f7', color: '#1d1d1f' }}><Edit3 size={20} /></div>
+                <div className="option-content">
+                  <span className="option-title">Edit Attendance</span>
+                  <span className="option-desc">Modify details or mark late arrivals</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex-between items-center mb-6">
+                <div>
+                  <label className="section-label mb-0">Member Status</label>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#888' }}>Tap status to toggle state.</p>
+                </div>
+                <div className="action-row">
+                  <button className="pill-btn" onClick={() => {
+                    const all = {}; (meeting?.attendees || []).forEach(n => all[n] = 'present'); setAttendance(all);
+                  }}>All Present</button>
+                  <button className="pill-btn" style={{ background: 'rgba(255,193,7,0.1)', color: '#d68100' }} onClick={() => {
+                    const all = {}; (meeting?.attendees || []).forEach(n => all[n] = 'late'); setAttendance(all);
+                  }}>All Late</button>
+                </div>
+              </div>
+
+              <div className="premium-search-container mb-6" style={{ maxWidth: '300px' }}>
+                <div className="search-icon-wrapper">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search attendee..."
+                  className="cute-search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              <div className="modern-attendee-grid" style={{ maxHeight: '450px' }}>
+                {(meeting?.attendees || []).filter(name => {
+                  const member = EBEC_TEAM.find(t => t.name === name);
+                  return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (member && member.role.toLowerCase().includes(searchQuery.toLowerCase()));
+                }).sort((a, b) => {
+                  const indexA = EBEC_TEAM.findIndex(t => t.name === a);
+                  const indexB = EBEC_TEAM.findIndex(t => t.name === b);
+                  return indexA - indexB;
+                }).map(name => {
+                  const status = attendance[name];
+                  const cycleStatus = (e) => {
+                    if (e.target.tagName === 'BUTTON') return;
+                    const states = ['absent', 'present', 'late'];
+                    const nextIndex = (states.indexOf(status) + 1) % states.length;
+                    setStatus(name, states[nextIndex]);
+                  };
+
+                  return (
+                    <div
+                      key={name}
+                      className={`attendee-item status-${status}`}
+                      onClick={cycleStatus}
+                    >
+                      <div className="member-avatar">
+                        {getInitials(name)}
+                        <div className="selection-check" style={{
+                          background: status === 'late' ? 'var(--ebec-gold)' : status === 'present' ? '#34c759' : '#888',
+                          opacity: status === 'absent' ? 0 : 1,
+                          transform: status === 'absent' ? 'scale(0.5)' : 'scale(1) translateY(38px) translateX(4px)'
+                        }}>
+                          {status === 'absent' ? null : <Check size={12} />}
+                        </div>
+                      </div>
+                      <div className="member-info">
+                        <span className="member-name">{name}</span>
+                        <div className="attendance-toggles mt-2">
+                          {['present', 'late', 'absent'].map(s => (
+                            <button
+                              key={s}
+                              className={`status-tag ${status === s ? 'active' : ''} ${s}`}
+                              onClick={(e) => { e.stopPropagation(); setStatus(name, s); }}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
-        <div className="form-footer">
-          <button className="btn-form-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-form-primary" onClick={() => { onSave(meeting.id, attendance); onClose(); }}>Save Attendance</button>
+
+        <div className="form-footer-premium">
+          <button className="btn-tertiary" onClick={onClose}>Discard</button>
+          <button className="btn-primary-premium ripple" onClick={() => { onSave(meeting.id, attendance); onClose(); }}>
+            {view === 'options' ? 'Close Panel' : 'Save Attendance'}
+          </button>
         </div>
       </div>
     </div>
@@ -692,114 +830,140 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
       {/* Dynamic Meetings Section */}
       <section className="mgmt-section">
         <div className="mgmt-content">
-          <div className="mgmt-header-block flex-between">
-            <div>
-              <h2 className="mgmt-heading">Upcoming & Recent Meetings</h2>
-              <p className="mgmt-sub">Manage documentation and attendance</p>
-            </div>
+          <div className="mgmt-header-block flex-between" style={{ alignItems: 'center' }}>
+            <h2 className="mgmt-heading">My meetings</h2>
+            <nav className="mgmt-tabs">
+              <button className="tab-btn active">
+                Upcoming <span className="tab-count">{meetings.length}</span>
+              </button>
+              <button className="tab-btn">
+                Logistics <span className="tab-count">{techCards.length}</span>
+              </button>
+              <button className="tab-btn">
+                Completed <span className="tab-count">24</span>
+              </button>
+            </nav>
             <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
-              <Plus size={20} /> New Meeting
+              <Plus size={20} /> Create New
             </button>
           </div>
 
-          <div className="meetings-list">
+          <div className="mgmt-grid">
             {meetings.length === 0 ? (
               <div className="empty-state">
                 <p>No meetings scheduled yet.</p>
                 <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
               </div>
             ) : (
-              meetings.map(m => (
-                <div className="meeting-card fade-in" key={m.id}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                    <div className="meeting-main-info">
-                      <div className="meeting-date-pill">
-                        <span className="m-day">{m.date?.split('-')[2] || '--'}</span>
-                        <span className="m-month">{m.date?.split('-')[1] || '??'}</span>
+              meetings.map(m => {
+                const dateObj = new Date(m.date);
+                const month = dateObj.toLocaleString('en-US', { month: 'short' });
+                const day = m.date?.split('-')[2] || '--';
+
+                return (
+                  <div className="premium-card fade-in" key={m.id}>
+                    {m.attendance && Object.keys(m.attendance).length > 0 && (
+                      <div className="status-badge-floating pulsate">Attendance Taken</div>
+                    )}
+
+                    <div className="date-visual-square">
+                      <span className="dv-month">{month}</span>
+                      <span className="dv-day">{day}</span>
+                      <span className="dv-time">{m.time} AM</span>
+                    </div>
+
+                    <div className="card-info-block">
+                      <h3>{m.title}</h3>
+                      <p>{m.description?.slice(0, 60) || 'Official board gathering'}</p>
+                    </div>
+
+                    <div className="stats-summary-row">
+                      <div className="stat-item" title="Attendees">
+                        <UserCheck size={14} /> <span>{m.attendees.length}</span>
                       </div>
-                      <div className="meeting-details">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <h3 style={{ margin: 0 }}>{m.title}</h3>
-                          <div className="card-actions-inline">
-                            <button className="action-btn" onClick={() => openAttendance(m.id)} title="Attendance"><UserCheck size={14} /> <span style={{ fontSize: 12 }}>Attendance</span></button>
-                            <button className="action-btn" onClick={() => openNotes(m.id)} title="Notes"><Clipboard size={14} /> <span style={{ fontSize: 12 }}>Notes</span></button>
-                            <button className="action-btn report" onClick={() => alert(`Report for ${m.title}`)} title="Report"><FileText size={14} /> <span style={{ fontSize: 12 }}>Report</span></button>
-                          </div>
-                        </div>
-                        <p>{m.time} • {m.attendees.length} Attendees {m.attendance ? `• ${Object.values(m.attendance).filter(Boolean).length} present` : ''}</p>
-                        {(m.description || m.notes) && <p className="meet-desc">{(m.description || '').slice(0, 140)}{m.notes ? ' — (notes saved)' : ''}</p>}
-                        <div className="avatar-list">
-                          {(m.attendees || []).slice(0, 4).map(a => (
-                            <div className="avatar" title={a} key={a}>{getInitials(a)}</div>
-                          ))}
-                          {(m.attendees || []).length > 4 && <div className="avatar">+{(m.attendees || []).length - 4}</div>}
-                        </div>
+                      <div className="stat-item" title="Notes">
+                        <Clipboard size={14} /> <span>{m.notes ? 'Saved' : '0'}</span>
+                      </div>
+                      <div className="stat-item" title="Duration">
+                        <Hash size={14} /> <span>1h</span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <button className="action-btn danger" onClick={() => {
-                        if (window.confirm(`Delete meeting \"${m.title}\"? This cannot be undone.`)) {
-                          onDeleteMeeting && onDeleteMeeting(m.id);
-                        }
-                      }} title="Delete"><Trash size={14} /> <span style={{ fontSize: 12 }}>Delete</span></button>
+                    <div className="premium-card-footer">
+                      <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
+                        <UserCheck size={14} />
+                        {m.attendance ? 'Verify' : 'Take'}
+                      </button>
+                      <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
+                        <Clipboard size={14} />
+                      </button>
+                      <button className="footer-delete-btn" onClick={() => {
+                        if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
+                      }}>
+                        <Trash size={18} />
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* Technical Card Tracking Section */}
           <div className="mgmt-header-block flex-between mt-12">
             <div>
-              <h2 className="mgmt-heading">Technical Card Tracking</h2>
-              <p className="mgmt-sub">Activity agendas, objectives, and sponsors</p>
+              <h2 className="mgmt-heading">Technical Logistics</h2>
+              <p className="mgmt-sub">Manage activity references and materials</p>
             </div>
             <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
               <Plus size={20} /> New Card
             </button>
           </div>
 
-          <div className="tech-cards-list">
+          <div className="mgmt-grid">
             {techCards.length === 0 ? (
               <div className="empty-state">
-                <p>No technical cards active. Start tracking an activity!</p>
+                <p>No technical cards active.</p>
                 <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
               </div>
             ) : (
               techCards.map(tc => (
-                <div className="meeting-card tech-card-item fade-in" key={tc.id}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                    <div className="meeting-main-info">
-                      <div className="meeting-date-pill tech-pill">
-                        <Hash size={16} />
-                        <span className="m-month" style={{ fontSize: '9px' }}>{tc.reference}</span>
-                      </div>
-                      <div className="meeting-details">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <h3 style={{ margin: 0 }}>{tc.title}</h3>
-                          <span className={`status-pill ${tc.isSponsored ? 'gold' : ''}`}>
-                            {tc.isSponsored ? 'Sponsored' : 'General'}
-                          </span>
-                          <div className="card-actions-inline">
-                            <button className="action-btn" onClick={() => alert(`Reviewing agenda for: ${tc.agenda}`)} title="Agenda"><Clipboard size={14} /> <span style={{ fontSize: 12 }}>Agenda</span></button>
-                            <button className="action-btn" onClick={() => alert(`Resources needed: ${tc.needs}`)} title="Needs"><Package size={14} /> <span style={{ fontSize: 12 }}>Needs</span></button>
-                            <button className="action-btn report" onClick={() => alert(`Reference Doc for ${tc.reference}`)} title="Full Doc"><FileText size={14} /> <span style={{ fontSize: 12 }}>Full Doc</span></button>
-                          </div>
-                        </div>
-                        <p className="theme-text">Theme: {tc.theme} • {tc.duration}</p>
-                        <div className="meet-desc">{tc.agenda?.slice(0, 120)}</div>
-                      </div>
-                    </div>
+                <div className="premium-card fade-in" key={tc.id}>
+                  <div className={`date-visual-square ${tc.isSponsored ? 'orange-theme' : 'tech-theme'}`}>
+                    <span className="dv-month">REF</span>
+                    <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
+                    <span className="dv-time">EBEC • 2026</span>
+                  </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <button className="action-btn danger" onClick={() => {
-                        if (window.confirm(`Delete technical card \"${tc.title}\"? This cannot be undone.`)) {
-                          onDeleteTechCard && onDeleteTechCard(tc.id);
-                        }
-                      }} title="Delete"><Trash size={14} /> <span style={{ fontSize: 12 }}>Delete</span></button>
+                  <div className="card-info-block">
+                    <h3>{tc.title}</h3>
+                    <p>{tc.theme} • {tc.duration}</p>
+                  </div>
+
+                  <div className="stats-summary-row">
+                    <div className="stat-item" title="Sponsor">
+                      <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
                     </div>
+                    <div className="stat-item" title="Agenda">
+                      <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                    </div>
+                  </div>
+
+                  <div className="premium-card-footer">
+                    <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
+                      <Clipboard size={16} /> Agenda
+                    </button>
+                    <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                      <Package size={16} /> Materials
+                    </button>
+                    <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
+                      <FileText size={16} />
+                    </button>
+                    <button className="footer-delete-btn" onClick={() => {
+                      if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
+                    }}>
+                      <Trash size={20} />
+                    </button>
                   </div>
                 </div>
               ))
@@ -831,20 +995,24 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
   );
 };
 
-const Archive = () => (
+const Archive = ({ meetings = [] }) => (
   <div className="dashboard-content fade-in">
     <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Meeting Archive</h2>
     <div className="glass-panel-wide">
-      <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px' }}>Historical records synced from drive...</p>
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div className="list-item" key={i}>
-          <div>
-            <span className="date">Feb {10 - i}, 2026</span>
-            <p className="meet-title">Executive Board Sync Session {i}</p>
+      <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px' }}>Historical records synced from database...</p>
+      {meetings.length === 0 ? (
+        <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
+      ) : (
+        meetings.map((m) => (
+          <div className="list-item" key={m.id}>
+            <div>
+              <span className="date">{m.date}</span>
+              <p className="meet-title">{m.title}</p>
+            </div>
+            <span className="tag">#EBEC-2026-ADM-{m.id.toString().slice(-4)}</span>
           </div>
-          <span className="tag">#EBEC-2026-ADM-02{i}</span>
-        </div>
-      ))}
+        ))
+      )}
     </div>
   </div>
 );
@@ -920,7 +1088,7 @@ const Footer = () => (
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 EBEC Secretary General Administration. Built for Excellence.</p>
+          <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
           <div className="social-dots">
             <div className="social-dot"></div>
             <div className="social-dot"></div>
@@ -982,12 +1150,18 @@ export default function App() {
 
   const handleDeleteMeeting = (id) => {
     fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
-      .then(() => setMeetings(prev => prev.filter(m => m.id !== id)));
+      .then(() => {
+        setMeetings(prev => prev.filter(m => m.id !== id));
+        console.log("Deleted from database successfully");
+      });
   };
 
   const handleDeleteTechCard = (id) => {
     fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
-      .then(() => setTechCards(prev => prev.filter(tc => tc.id !== id)));
+      .then(() => {
+        setTechCards(prev => prev.filter(tc => tc.id !== id));
+        console.log("Deleted from database successfully");
+      });
   };
 
   const handleSaveMeetingNotes = (meetingId, html) => {
@@ -1068,43 +1242,149 @@ export default function App() {
         .stat-note { font-size:12px; color:rgba(255,255,255,0.6); margin-top:6px; }
 
         /* --- Management Sections --- */
-        .mgmt-section { width: 100%; background: var(--off-white); padding: 80px 40px; border-radius: 60px 60px 0 0; display: flex; justify-content: center; }
-        .mgmt-content { max-width: 1200px; width: 100%; }
-        .mgmt-header-block { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
-        .mgmt-heading { font-size: 32px; font-weight: 800; color: var(--ebec-navy); margin: 0; }
-        .mgmt-sub { font-size: 18px; color: #666; margin: 5px 0 0 0; }
-        .btn-icon-plus { background: var(--ebec-navy); color: #fff; border: none; padding: 14px 28px; border-radius: 100px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
-        .btn-icon-plus:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(29, 53, 94, 0.2); }
+        .mgmt-section { width: 100%; background: #fff; padding: 100px 40px; border-radius: 64px 64px 0 0; display: flex; justify-content: center; }
+        .mgmt-content { max-width: 1300px; width: 100%; }
+        .mgmt-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); 
+            gap: 40px; 
+            margin-top: 48px;
+        }
 
-        /* --- Card Lists --- */
-        .meetings-list, .tech-cards-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 24px; }
-        .meeting-card { background: #fff; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap:16px; border: 1px solid rgba(0,0,0,0.05); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .meeting-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-        
-        .meeting-main-info { display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 0; }
-        .meeting-date-pill { background: #f0f4f8; border-radius: 18px; padding: 12px; width: 64px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
-        .meeting-date-pill.tech-pill { background: #fff8e1; }
-        .m-day { font-size: 22px; font-weight: 900; color: var(--ebec-navy); }
-        .m-month { font-size: 11px; font-weight: 800; color: var(--apple-blue); text-transform: uppercase; }
-        
-        .meeting-details { flex: 1; min-width: 0; }
-        .meeting-details h3 { margin: 0; font-size: 19px; color: #1d1d1f; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .meeting-details p { margin: 6px 0 0 0; font-size: 14px; color: #666; }
-        .meet-desc { color:#555; font-size:14px; line-height: 1.5; margin-top: 10px; }
+        .premium-card {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.04);
+            border-radius: 40px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+        }
+        .premium-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.08);
+            border-color: rgba(0,113,227,0.1);
+        }
 
-        .avatar-list { display:flex; gap:8px; margin-top:12px; }
-        .avatar { width:34px; height:34px; border-radius:10px; background:#f0f0f2; display:flex; align-items:center; justify-content:center; font-weight:800; color: #1d1d1f; font-size:11px; border: 1px solid rgba(0,0,0,0.05); }
-        .theme-text { color: var(--apple-blue); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin: 4px 0; }
+        .date-visual-square {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+        }
+        .date-visual-square.tech-theme {
+            background: linear-gradient(135deg, #34d399 0%, #0d9488 100%);
+            box-shadow: 0 20px 40px rgba(52, 211, 153, 0.15);
+        }
+        .date-visual-square.orange-theme {
+            background: linear-gradient(135deg, #fb923c 0%, #f43f5e 100%);
+            box-shadow: 0 20px 40px rgba(251, 146, 60, 0.15);
+        }
 
-        .card-actions-inline { display:flex; flex-wrap: wrap; gap:8px; margin-top: 12px; padding-top: 16px; border-top: 1px solid rgba(0,0,0,0.04); }
-        .action-btn { background: #f5f5f7; border: none; padding: 8px 14px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #555; cursor: pointer; transition: 0.2s; }
-        .action-btn:hover { background: #e8e8ed; color: #000; }
-        .action-btn.report { background: rgba(255, 193, 7, 0.1); color: #d68100; }
-        .action-btn.danger { color: #ff3b30; background: rgba(255, 59, 48, 0.05); }
-        .action-btn.danger:hover { background: #ff3b30; color: #fff; }
+        .dv-month { font-size: 22px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 3px; }
+        .dv-day { font-size: 88px; font-weight: 900; line-height: 1; margin: 8px 0; letter-spacing: -4px; color: #fff; }
+        .dv-time { font-size: 14px; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px; }
 
-        .status-pill { padding: 4px 10px; border-radius: 100px; font-size: 10px; font-weight: 800; background: #eee; color: #888; text-transform: uppercase; }
-        .status-pill.gold { background: var(--ebec-gold); color: #000; }
+        .card-info-block { margin-bottom: 24px; }
+        .card-info-block h3 { font-size: 24px; font-weight: 800; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; line-height: 1.2; }
+        .card-info-block p { font-size: 15px; color: #666; margin: 10px 0 0 0; font-weight: 500; line-height: 1.5; }
+
+        .stats-summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            color: #888;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+            margin-bottom: 24px;
+        }
+        .stat-item { display: flex; align-items: center; gap: 8px; }
+        .stat-item span { font-size: 14px; font-weight: 700; color: #444; }
+
+        .premium-card-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+            align-items: center;
+        }
+        .footer-action-btn {
+            flex: 1;
+            background: #f5f5f7;
+            border: none;
+            padding: 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #1d1d1f;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .footer-action-btn:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            transform: scale(1.02);
+        }
+        .footer-action-btn.report {
+            background: rgba(255, 193, 7, 0.08);
+            color: #d68100;
+        }
+        .footer-delete-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 20px;
+            background: #fff5f5;
+            color: #ff3b30;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+        .footer-delete-btn:hover {
+            background: #ff3b30;
+            color: #fff;
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        .status-badge-floating {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+            color: var(--ebec-gold);
+            z-index: 2;
+        }
+
+        .mgmt-tabs { display: flex; align-items: center; gap: 32px; color: #999; font-weight: 600; font-size: 15px; }
+        .tab-btn { background: none; border: none; padding: 0; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; position: relative; padding-bottom: 8px; }
+        .tab-btn.active { color: #1d1d1f; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: #6366f1; border-radius: 50%; }
+        .tab-count { background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 100px; font-size: 11px; }
+        .tab-btn.active .tab-count { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
 
         .empty-state { text-align: center; padding: 60px; background: #fff; border-radius: 32px; border: 2px dashed rgba(0,0,0,0.05); grid-column: 1 / -1; }
         .empty-state p { font-size: 18px; color: #888; margin-bottom: 24px; font-weight: 600; }
@@ -1116,6 +1396,21 @@ export default function App() {
         .mgmt-btn.primary { background: #000; color: #fff; }
         .mgmt-btn.secondary { background: #fff; color: #000; border: 2px solid #000; }
         .mgmt-btn:hover { transform: translateY(-3px); }
+
+        .pulsate { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .attendance-toggles { display: flex; gap: 4px; }
+        .status-tag { border: 1px solid rgba(0,0,0,0.05); background: transparent; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.2s; color: #888; }
+        .status-tag.present.active { background: #34c759; color: #fff; border-color: #34c759; }
+        .status-tag.late.active { background: var(--ebec-gold); color: #000; border-color: var(--ebec-gold); }
+        .status-tag.absent.active { background: #ff3b30; color: #fff; border-color: #ff3b30; }
+
+        .premium-search-container { position: relative; display: flex; align-items: center; }
+        .search-icon-wrapper { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none; }
+        .cute-search-input { background: rgba(0,0,0,0.04); border: 1.5px solid transparent; border-radius: 14px; padding: 10px 14px 10px 38px; font-size: 13px; font-weight: 600; color: #1d1d1f; outline: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); min-width: 240px; }
+        .cute-search-input:focus { background: #fff; border-color: var(--apple-blue); box-shadow: 0 4px 12px rgba(0, 113, 227, 0.08); width: 280px; }
+        .cute-search-input::placeholder { color: #aaa; }
 
         /* --- Global Form Styles (Premium) --- */
         .form-overlay {
@@ -1201,16 +1496,31 @@ export default function App() {
         .btn-primary-premium { background: #000; color: #fff; border: none; padding: 14px 28px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
         .btn-primary-premium:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
 
-        .modern-attendee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; max-height: 280px; overflow-y: auto; padding-right: 10px; }
-        .attendee-item { background: #fff; border: 1px solid rgba(0,0,0,0.05); padding: 12px; border-radius: 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all 0.2s; }
-        .attendee-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .attendee-item.selected { border-color: var(--apple-blue); background: rgba(0, 113, 227, 0.04); }
-        .member-avatar { width: 40px; height: 40px; border-radius: 14px; background: #f0f0f2; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #1d1d1f; position: relative; }
-        .selection-check { position: absolute; bottom: -4px; right: -4px; background: var(--apple-blue); color: #fff; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-        .selected .selection-check { opacity: 1; transform: scale(1); }
-        .member-info { display: flex; flex-direction: column; overflow: hidden; }
-        .member-name { font-size: 14px; font-weight: 800; color: #1d1d1f; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-        .member-role { font-size: 11px; color: #888; font-weight: 600; }
+        .modern-attendee-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 480px; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.015); border-radius: 32px; }
+        .attendee-item { background: #fff; border: 1.5px solid rgba(0,0,0,0.03); padding: 20px; border-radius: 28px; display: flex; align-items: center; gap: 20px; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .attendee-item:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        
+        .attendee-item.status-present { 
+            background: rgba(52, 199, 89, 0.04); 
+            border-color: rgba(52, 199, 89, 0.4); 
+            box-shadow: 0 10px 30px rgba(52, 199, 89, 0.08);
+        }
+        .attendee-item.status-late { 
+            background: rgba(255, 193, 7, 0.06); 
+            border-color: rgba(255, 193, 7, 0.4); 
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.1);
+        }
+        .attendee-item.status-absent {
+            opacity: 0.8;
+        }
+
+        .member-avatar { width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #f0f0f2, #e5e5e7); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #1d1d1f; position: relative; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.03); flex-shrink: 0; transition: transform 0.3s; }
+        .attendee-item:active .member-avatar { transform: scale(0.9); }
+        .selection-check { position: absolute; -top: 8px; -right: 8px; background: #34c759; color: #fff; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #fff; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; box-shadow: 0 4px 10px rgba(52, 199, 89, 0.2); }
+        .selected .selection-check { opacity: 1; transform: scale(1) translateY(38px) translateX(4px); }
+        .member-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .member-name { font-size: 13.5px; font-weight: 700; color: #1d1d1f; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; letter-spacing: -0.2px; }
+        .member-role { font-size: 11px; color: #999; font-weight: 600; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
         .pill-btn { background: rgba(0,0,0,0.05); border: none; padding: 8px 16px; border-radius: 100px; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .pill-btn:hover { background: #000; color: #fff; }
 
@@ -1370,7 +1680,7 @@ export default function App() {
         />
       )}
 
-      {page === 'archive' && <Archive />}
+      {page === 'archive' && <Archive meetings={meetings} />}
 
       {page === 'proving-sg' && (
         <SGProof onVerify={(success) => {
