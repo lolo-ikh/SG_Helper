@@ -1,82 +1,822 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const Home = () => {
-  // Logic for the Reference Number Card
-  const [refNum, setRefNum] = useState("EBEC-2026-ADM-024");
-  const [isEditingRef, setIsEditingRef] = useState(false);
+// --- Custom SVG Icons ---
+const ChevronLeft = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+);
+const ChevronRight = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+);
+const Plus = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+);
+const Hash = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
+);
+const ArchiveIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+);
+const Check = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+);
+const Mail = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+);
+const Video = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+);
+const UserCheck = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+);
+const FileText = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+);
+const Clipboard = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+);
+const Package = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+);
+
+// --- Constants ---
+const EBEC_TEAM = [
+  { name: "Enzo Chaabnia", role: "President" },
+  { name: "Boucekkine Oumaima", role: "VP" },
+  { name: "Berbaoui Ashref Abderrahmane", role: "Vice President" },
+  { name: "Leena IKHLEF", role: "SG" },
+  { name: "Salah Badreddin", role: "HR Manager" },
+  { name: "Oussama Bouziane", role: "HR Co-manager" },
+  { name: "Khoumari Aya", role: "External Relations & Comm Co-Manager" },
+  { name: "TOUTAH Sanaa", role: "Logistics Manager" },
+  { name: "Mouhoun Cilia", role: "Events Logistics Co-manager" },
+  { name: "Wissal Oulem", role: "Project Manager" },
+  { name: "Zineb Bouchaib", role: "Media & Marketing" },
+  { name: "AHSATAL Imed Eddine", role: "Media & Marketing" },
+  { name: "Maria Ines Raheb", role: "Design Co-manager" },
+  { name: "Sara BENALI", role: "Design Co-manager" },
+  { name: "ARBAOUI KHEDIDJA", role: "Design Manager" },
+  { name: "BEKHEDDA Asma", role: "Design" },
+  { name: "LAKEL Maissa", role: "Co-Manager Relex" },
+  { name: "MESSAOUDI Dorsaf", role: "Co-manger in Relex" },
+  { name: "Bouzira Maroua", role: "Event Manager" },
+  { name: "Tazgart Kaouther", role: "Event Co-manager" },
+  { name: "Benzergua Djihene Chaimaa", role: "Finance & Legal Manager" },
+  { name: "ALOUIT Mouhsine Abdelhakim", role: "Finance & Legal Manager" },
+  { name: "HACENE Serine Nour el Imane", role: "Finance & Legal Manager" },
+  { name: "Youcef Belaib", role: "Co-manager Finance" },
+  { name: "DJOUBANI Sarah", role: "Marketing Co-Manager" },
+  { name: "AMEZIANE Yani", role: "IT Manager" },
+  { name: "MANAA Mohaned", role: "IT Manager" },
+  { name: "BOULEFAA Mustapha", role: "Events" }
+];
+
+// --- Components ---
+
+const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    theme: "",
+    duration: "One Day", // One Day, Multi-Day, Hours
+    startTime: "",
+    endTime: "",
+    objectives: "",
+    agenda: "",
+    isSponsored: false,
+    sponsorName: "",
+    needs: "",
+    attendeeType: "School", // School, Outside, Mixed
+    externalAttendees: [],
+    reference: currentRef
+  });
+
+  const [externalInput, setExternalInput] = useState({ name: "", info: "" });
+
+  const addExternal = () => {
+    if (externalInput.name) {
+      setFormData({
+        ...formData,
+        externalAttendees: [...formData.externalAttendees, { ...externalInput, id: Date.now() }]
+      });
+      setExternalInput({ name: "", info: "" });
+    }
+  };
 
   return (
-    <div className="dashboard">
-      {/* Top Header - Apple Style */}
-      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div>
-          <span style={{ color: 'var(--ebec-gold)', fontWeight: 'bold', letterSpacing: '1px', fontSize: '12px' }}>SECRETARY GENERAL</span>
-          <h1 style={{ margin: 0, fontSize: '36px', color: 'var(--ebec-navy)', fontWeight: '700' }}>SG Helper.</h1>
+    <div className="form-overlay fade-in">
+      <div className="google-style-form tech-card-form">
+        <div className="form-header">
+          <div>
+            <h2>New Technical Card</h2>
+            <span className="ref-badge">REF: {formData.reference}</span>
+          </div>
+          <button className="close-btn" onClick={onCancel}>×</button>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>Friday, Feb 13</p>
-          <p style={{ margin: 0, fontWeight: '600' }}>Welcome, Amine</p>
-        </div>
-      </header>
-
-      <div className="bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
         
-        {/* Card 1: Reference Number (The Administration Hook) */}
-        <div className="glass-card" style={{ gridColumn: 'span 1', borderTop: '4px solid var(--ebec-gold)' }}>
-          <h4 style={{ margin: '0 0 10px 0', fontSize: '12px', opacity: 0.6 }}>CURRENT REF NUMBER</h4>
-          {isEditingRef ? (
-            <input 
-              className="ref-input"
-              value={refNum} 
-              onChange={(e) => setRefNum(e.target.value)}
-              onBlur={() => setIsEditingRef(false)}
-              autoFocus
+        <div className="form-body">
+          <input 
+            type="text" 
+            placeholder="Activity Title" 
+            className="form-input-title"
+            value={formData.title}
+            onChange={(e) => setFormData({...formData, title: e.target.value})}
+          />
+          
+          <input 
+            type="text" 
+            placeholder="Activity Theme (e.g., Sustainability, AI, Engineering)" 
+            className="form-input-full"
+            value={formData.theme}
+            onChange={(e) => setFormData({...formData, theme: e.target.value})}
+          />
+
+          <div className="form-section">
+            <label className="section-label">Duration & Time</label>
+            <div className="duration-toggle">
+              {["Hours", "One Day", "Multi-Day"].map(d => (
+                <button 
+                  key={d} 
+                  className={`toggle-btn ${formData.duration === d ? 'active' : ''}`}
+                  onClick={() => setFormData({...formData, duration: d})}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className="form-row mt-2">
+              <div className="input-group">
+                <span>Start</span>
+                <input type="datetime-local" value={formData.startTime} onChange={(e) => setFormData({...formData, startTime: e.target.value})} />
+              </div>
+              <div className="input-group">
+                <span>End</span>
+                <input type="datetime-local" value={formData.endTime} onChange={(e) => setFormData({...formData, endTime: e.target.value})} />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="input-block">
+              <label>Objectives</label>
+              <textarea placeholder="Key goals..." value={formData.objectives} onChange={(e) => setFormData({...formData, objectives: e.target.value})} />
+            </div>
+            <div className="input-block">
+              <label>Activity Agenda</label>
+              <textarea placeholder="Step by step timeline..." value={formData.agenda} onChange={(e) => setFormData({...formData, agenda: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="form-section">
+            <label className="section-label">Sponsorship</label>
+            <div className="toggle-item" onClick={() => setFormData({...formData, isSponsored: !formData.isSponsored})}>
+              <div className={`toggle-switch ${formData.isSponsored ? 'on' : ''}`}></div>
+              <span>Is this activity sponsored?</span>
+            </div>
+            {formData.isSponsored && (
+              <input 
+                type="text" 
+                placeholder="Name of Sponsor" 
+                className="form-input-full mt-2"
+                value={formData.sponsorName}
+                onChange={(e) => setFormData({...formData, sponsorName: e.target.value})}
+              />
+            )}
+          </div>
+
+          <div className="form-section">
+            <label className="section-label">Activity Needs</label>
+            <textarea 
+              placeholder="Materials, Logistics, Technical requirements..." 
+              className="form-textarea"
+              value={formData.needs}
+              onChange={(e) => setFormData({...formData, needs: e.target.value})}
             />
-          ) : (
-            <h2 style={{ margin: '0 0 15px 0', fontSize: '22px' }}>{refNum}</h2>
-          )}
-          <button onClick={() => setIsEditingRef(!isEditingRef)} className="btn-secondary">
-            {isEditingRef ? "Save Reference" : "Update Number"}
-          </button>
-        </div>
+          </div>
 
-        {/* Card 2: Primary Actions (The "Add" Section) */}
-        <div className="glass-card" style={{ gridColumn: 'span 2', background: 'var(--ebec-navy)', color: 'white' }}>
-          <h3 style={{ marginTop: 0 }}>Administrative Actions</h3>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <button className="action-pill gold">＋ New Meeting Report</button>
-            <button className="action-pill white">👤 Take Attendance</button>
-          </div>
-        </div>
+          <div className="form-section">
+            <label className="section-label">Attendance Tracking</label>
+            <select 
+              className="form-input-full" 
+              value={formData.attendeeType} 
+              onChange={(e) => setFormData({...formData, attendeeType: e.target.value})}
+            >
+              <option value="School">Internal Only (School)</option>
+              <option value="Outside">External Only (Outside)</option>
+              <option value="Mixed">Mixed (Internal + External)</option>
+            </select>
 
-        {/* Card 3: History & Archive (Linked to Google) */}
-        <div className="glass-card" style={{ gridColumn: 'span 2' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h3 style={{ margin: 0 }}>Recent Reports History</h3>
-            <a href="#" style={{ fontSize: '12px', color: 'var(--ebec-navy)', textDecoration: 'none', fontWeight: 'bold' }}>VIEW ALL IN SHEETS →</a>
-          </div>
-          <div className="report-row">
-            <span>#023 - Weekly Sync</span>
-            <span className="status-tag">Google Doc</span>
-          </div>
-          <div className="report-row">
-            <span>#022 - Marketing Dept Meeting</span>
-            <span className="status-tag">Google Doc</span>
-          </div>
-        </div>
-
-        {/* Card 4: Quick Stats */}
-        <div className="glass-card" style={{ background: '#f0f2f5' }}>
-          <h4 style={{ margin: 0, opacity: 0.6 }}>SHEET STATUS</h4>
-          <p style={{ fontSize: '14px', margin: '10px 0' }}>All attendance records are <b>Synced</b></p>
-          <div style={{ width: '100%', height: '6px', background: '#ddd', borderRadius: '10px' }}>
-            <div style={{ width: '100%', height: '100%', background: '#4CAF50', borderRadius: '10px' }}></div>
+            {(formData.attendeeType === 'Outside' || formData.attendeeType === 'Mixed') && (
+              <div className="external-list-builder mt-2">
+                <p className="sub-hint">Add External Guests / Speakers</p>
+                <div className="add-external-row">
+                  <input placeholder="Name" value={externalInput.name} onChange={e => setExternalInput({...externalInput, name: e.target.value})} />
+                  <input placeholder="Info/Institution" value={externalInput.info} onChange={e => setExternalInput({...externalInput, info: e.target.value})} />
+                  <button onClick={addExternal}><Plus size={16}/></button>
+                </div>
+                <div className="guest-pills">
+                  {formData.externalAttendees.map(g => (
+                    <span key={g.id} className="guest-pill">{g.name} <small>({g.info})</small></span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
+        <div className="form-footer">
+          <button className="btn-form-secondary" onClick={onCancel}>Cancel</button>
+          <button className="btn-form-primary" onClick={() => {
+            if(!formData.title) return alert("Title required");
+            onSubmit({...formData, id: Date.now()});
+          }}>Save Technical Card</button>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Home;
+const NewMeetingForm = ({ onCancel, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    date: "",
+    time: "",
+    description: "",
+    attendees: [],
+    useMeet: true,
+    sendEmail: true
+  });
+
+  const toggleAttendee = (name) => {
+    setFormData(prev => ({
+      ...prev,
+      attendees: prev.attendees.includes(name) 
+        ? prev.attendees.filter(a => a !== name)
+        : [...prev.attendees, name]
+    }));
+  };
+
+  const sortedTeam = [...EBEC_TEAM].sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <div className="form-overlay fade-in">
+      <div className="google-style-form">
+        <div className="form-header">
+          <h2>New Meeting</h2>
+          <button className="close-btn" onClick={onCancel}>×</button>
+        </div>
+        
+        <div className="form-body">
+          <input 
+            type="text" 
+            placeholder="Add title" 
+            className="form-input-title"
+            value={formData.title}
+            onChange={(e) => setFormData({...formData, title: e.target.value})}
+          />
+          
+          <div className="form-row">
+            <input 
+              type="date" 
+              className="form-input-half"
+              value={formData.date}
+              onChange={(e) => setFormData({...formData, date: e.target.value})}
+            />
+            <input 
+              type="time" 
+              className="form-input-half"
+              value={formData.time}
+              onChange={(e) => setFormData({...formData, time: e.target.value})}
+            />
+          </div>
+
+          <textarea 
+            placeholder="Add description or notes" 
+            className="form-textarea"
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+          />
+
+          <div className="attendee-section">
+            <label>Add Attendees ({formData.attendees.length} selected)</label>
+            <div className="attendee-grid">
+              {sortedTeam.map(member => (
+                <div 
+                  key={member.name} 
+                  className={`attendee-pill ${formData.attendees.includes(member.name) ? 'active' : ''}`}
+                  onClick={() => toggleAttendee(member.name)}
+                >
+                  <div className="check-circle">
+                    {formData.attendees.includes(member.name) && <Check />}
+                  </div>
+                  <div className="pill-text">
+                    <span className="pill-name">{member.name}</span>
+                    <span className="pill-role">{member.role}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-toggles">
+            <div className="toggle-item" onClick={() => setFormData({...formData, useMeet: !formData.useMeet})}>
+              <div className={`toggle-switch ${formData.useMeet ? 'on' : ''}`}></div>
+              <Video size={18} />
+              <span>Add Google Meet video conferencing</span>
+            </div>
+            <div className="toggle-item" onClick={() => setFormData({...formData, sendEmail: !formData.sendEmail})}>
+              <div className={`toggle-switch ${formData.sendEmail ? 'on' : ''}`}></div>
+              <Mail size={18} />
+              <span>Send email invitation to attendees</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-footer">
+          <button className="btn-form-secondary" onClick={onCancel}>Cancel</button>
+          <button className="btn-form-primary" onClick={() => {
+            if(!formData.title) return alert("Title required");
+            onSubmit({...formData, id: Date.now()});
+          }}>Save Meeting</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(150);
+  const [activeCard, setActiveCard] = useState(0);
+
+  const phrases = [
+    "SG? No, DIVA!",
+    "SG? No, QUEEN!",
+    "Ready to SG the world!",
+    "EBEC SG!",
+    "SG controlling the world",
+    "A7san SG",
+    "Administering with Elegance.",
+    "The Hub. The Heart. The SG.",
+    "Lead. Organize. Conquer.",
+    "SECRETARY GENERAL WHOOO",
+    "SG li al3alamyaaa!",
+    "Empire built on Reports."
+  ];
+
+  useEffect(() => {
+    const handleTyping = () => {
+      const currentPhrase = phrases[phraseIndex];
+      if (isDeleting) {
+        setDisplayText(currentPhrase.substring(0, displayText.length - 1));
+        setTypingSpeed(50);
+      } else {
+        setDisplayText(currentPhrase.substring(0, displayText.length + 1));
+        setTypingSpeed(150);
+      }
+      if (!isDeleting && displayText === currentPhrase) {
+        setTimeout(() => setIsDeleting(true), 2000);
+      } else if (isDeleting && displayText === "") {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      }
+    };
+    const timer = setTimeout(handleTyping, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, phraseIndex]);
+
+  const cards = [
+    {
+      title: "Add New Meeting",
+      subtitle: "Sync with board members",
+      icon: <Plus size={48} />,
+      action: () => setPage('new-meeting'),
+    },
+    {
+      title: "Add Technical Card",
+      subtitle: "Update logistics & materials",
+      icon: <Plus size={48} />,
+      action: () => setPage('new-tech-card'),
+    },
+    {
+      title: "Reference Tracker",
+      subtitle: `Next Ref: #${refNum}`,
+      icon: <Hash size={48} />,
+      action: () => setRefNum(prompt("Update Reference Number Basis (e.g. 01):", refNum.split('/')[0])),
+    },
+    {
+      title: "See Archive",
+      subtitle: "View past documentation",
+      icon: <ArchiveIcon size={48} />,
+      action: () => setPage('archive'),
+    }
+  ];
+
+  const nextCard = () => setActiveCard((prev) => (prev + 1) % cards.length);
+  const prevCard = () => setActiveCard((prev) => (prev - 1 + cards.length) % cards.length);
+
+  return (
+    <>
+      <div className="hero fade-in">
+        <div className="phrase-container">
+          <h1 className="typing-display">
+            {displayText}<span className="cursor">|</span>
+          </h1>
+        </div>
+
+        <p className="description">What's on the mind of the SG today?</p>
+
+        <div className="carousel-container">
+          <button className="nav-arrow" onClick={prevCard}><ChevronLeft size={32} /></button>
+          
+          <div className="main-focus-card">
+            <div className="card-content-wrap">
+              <h2 className="card-main-title">{cards[activeCard].title}</h2>
+              <p className="card-subtitle">{cards[activeCard].subtitle}</p>
+              
+              <button className="main-plus-btn" onClick={cards[activeCard].action}>
+                {cards[activeCard].icon}
+              </button>
+            </div>
+          </div>
+
+          <button className="nav-arrow" onClick={nextCard}><ChevronRight size={32} /></button>
+        </div>
+
+        <div className="card-indicators">
+          {cards.map((_, idx) => (
+            <button 
+              key={idx} 
+              className={`dot ${activeCard === idx ? 'active' : ''}`}
+              onClick={() => setActiveCard(idx)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Dynamic Meetings Section */}
+      <section className="mgmt-section">
+        <div className="mgmt-content">
+          <div className="mgmt-header-block flex-between">
+            <div>
+              <h2 className="mgmt-heading">Upcoming & Recent Meetings</h2>
+              <p className="mgmt-sub">Manage documentation and attendance</p>
+            </div>
+            <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
+              <Plus size={20} /> New Meeting
+            </button>
+          </div>
+          
+          <div className="meetings-list">
+            {meetings.length === 0 ? (
+              <div className="empty-state">
+                <p>No meetings scheduled yet.</p>
+              </div>
+            ) : (
+              meetings.map(m => (
+                <div className="meeting-card fade-in" key={m.id}>
+                  <div className="meeting-main-info">
+                    <div className="meeting-date-pill">
+                      <span className="m-day">{m.date?.split('-')[2] || '--'}</span>
+                      <span className="m-month">{m.date?.split('-')[1] || '??'}</span>
+                    </div>
+                    <div className="meeting-details">
+                      <h3>{m.title}</h3>
+                      <p>{m.time} • {m.attendees.length} Attendees</p>
+                    </div>
+                  </div>
+                  
+                  <div className="meeting-actions">
+                    <button className="action-btn" onClick={() => alert(`Attendance for ${m.title}`)}><UserCheck size={18} /> <span>Attendance</span></button>
+                    <button className="action-btn" onClick={() => alert(`Notes for ${m.title}`)}><Clipboard size={18} /> <span>Notes</span></button>
+                    <button className="action-btn report" onClick={() => alert(`Report for ${m.title}`)}><FileText size={18} /> <span>Report</span></button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Technical Card Tracking Section */}
+          <div className="mgmt-header-block flex-between mt-12">
+            <div>
+              <h2 className="mgmt-heading">Technical Card Tracking</h2>
+              <p className="mgmt-sub">Activity agendas, objectives, and sponsors</p>
+            </div>
+            <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
+              <Plus size={20} /> New Card
+            </button>
+          </div>
+
+          <div className="tech-cards-list">
+            {techCards.length === 0 ? (
+              <div className="empty-state">
+                <p>No technical cards active. Start tracking an activity!</p>
+              </div>
+            ) : (
+              techCards.map(tc => (
+                <div className="meeting-card tech-card-item fade-in" key={tc.id}>
+                  <div className="meeting-main-info">
+                    <div className="meeting-date-pill tech-pill">
+                      <Hash size={16} />
+                      <span className="m-month" style={{fontSize: '9px'}}>{tc.reference}</span>
+                    </div>
+                    <div className="meeting-details">
+                      <div className="flex-row items-center gap-2">
+                         <h3>{tc.title}</h3>
+                         <span className={`status-pill ${tc.isSponsored ? 'gold' : ''}`}>
+                            {tc.isSponsored ? 'Sponsored' : 'General'}
+                         </span>
+                      </div>
+                      <p className="theme-text">Theme: {tc.theme} • {tc.duration}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="meeting-actions">
+                    <button className="action-btn" onClick={() => alert(`Reviewing agenda for: ${tc.agenda}`)}>
+                      <Clipboard size={18} /> <span>Agenda</span>
+                    </button>
+                    <button className="action-btn" onClick={() => alert(`Resources needed: ${tc.needs}`)}>
+                      <Package size={18} /> <span>Needs</span>
+                    </button>
+                    <button className="action-btn report" onClick={() => alert(`Reference Doc for ${tc.reference}`)}>
+                      <FileText size={18} /> <span>Full Doc</span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="action-row" style={{marginTop: '40px'}}>
+            <button className="mgmt-btn secondary">Sync Google Drive</button>
+            <button className="mgmt-btn primary" onClick={() => setPage('archive')}>Full Archive</button>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+};
+
+const Archive = () => (
+  <div className="dashboard-content fade-in">
+    <h2 className="section-title" style={{color: '#fff', fontSize: '32px', marginBottom: '20px'}}>Meeting Archive</h2>
+    <div className="glass-panel-wide">
+      <p style={{opacity: 0.8, color: '#fff', marginBottom: '20px'}}>Historical records synced from drive...</p>
+      {[1,2,3,4,5,6].map((i) => (
+        <div className="list-item" key={i}>
+          <div>
+            <span className="date">Feb {10-i}, 2026</span>
+            <p className="meet-title">Executive Board Sync Session {i}</p>
+          </div>
+          <span className="tag">#EBEC-2026-ADM-02{i}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export default function App() {
+  const [page, setPage] = useState('home');
+  const [refCounter, setRefCounter] = useState(1);
+  const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
+
+  const [meetings, setMeetings] = useState([
+    {
+      id: 1,
+      title: "Board Weekly Sync",
+      date: "2026-02-15",
+      time: "18:00",
+      attendees: ["Enzo Chaabnia", "Boucekkine Oumaima", "Leena IKHLEF"],
+      description: "Standard weekly synchronization."
+    }
+  ]);
+
+  const [techCards, setTechCards] = useState([
+    {
+      id: 101,
+      title: "Arduino Workshop",
+      theme: "Electronics",
+      duration: "3 Hours",
+      reference: "01/26",
+      isSponsored: true,
+      sponsorName: "TechCorp",
+      agenda: "1. Intro, 2. Circuit building, 3. Coding",
+      needs: "20 Arduinos, 40 LEDs, Breadboards"
+    }
+  ]);
+
+  const handleAddMeeting = (newMeeting) => {
+    setMeetings([newMeeting, ...meetings]);
+    setPage('home');
+  };
+
+  const handleAddTechCard = (newCard) => {
+    setTechCards([newCard, ...techCards]);
+    setRefCounter(prev => prev + 1);
+    setPage('home');
+  };
+
+  return (
+    <div className="apple-bg">
+      <style>{`
+        :root {
+          --ebec-navy: #1D355E;
+          --ebec-gold: #FFC107;
+          --ebec-blue: #007AFF;
+          --glass-ultra: rgba(255, 255, 255, 0.25);
+          --system-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+          --off-white: #f5f5f7;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body, html {
+          margin: 0;
+          padding: 0;
+          min-height: 100%;
+          overflow-y: auto; 
+          overflow-x: hidden;
+          font-family: var(--system-font);
+        }
+
+        .apple-bg {
+          min-height: 100vh;
+          width: 100vw;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background-color: #0c1a33;
+          background-image: 
+            radial-gradient(at 0% 0%, rgba(255, 193, 7, 0.9) 0px, transparent 65%),
+            radial-gradient(at 100% 0%, rgba(0, 122, 255, 0.7) 0px, transparent 65%),
+            radial-gradient(at 50% 100%, rgba(29, 53, 94, 0.8) 0px, transparent 75%);
+          background-attachment: fixed;
+          background-size: cover;
+        }
+
+        .glass-nav {
+          background: var(--glass-ultra);
+          backdrop-filter: blur(40px);
+          -webkit-backdrop-filter: blur(40px);
+          padding: 6px 10px;
+          border-radius: 100px;
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          z-index: 2000;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          position: sticky;
+          top: 20px;
+          margin-top: 20px;
+        }
+
+        .logo-circle {
+          width: 38px; height: 38px; background: #fff; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+        }
+
+        .nav-links span {
+          font-size: 14px; font-weight: 600; color: #fff; margin: 0 15px;
+          cursor: pointer; transition: 0.2s;
+        }
+
+        .sign-out-btn {
+          background: #fff; color: var(--ebec-navy); border: none;
+          padding: 10px 22px; border-radius: 100px; font-size: 13px; font-weight: 700;
+          cursor: pointer;
+        }
+
+        .hero { margin-top: 2vh; text-align: center; width: 100%; padding-bottom: 60px; }
+        .phrase-container { height: 140px; display: flex; align-items: center; justify-content: center; }
+        .typing-display { font-size: 64px; font-weight: 800; letter-spacing: -3px; color: #fff; margin: 0; }
+        .cursor { color: var(--ebec-gold); animation: blink 0.8s infinite; }
+        .description { color: #fff; font-size: 22px; margin-bottom: 40px; }
+
+        .carousel-container { display: flex; align-items: center; gap: 30px; width: 100%; max-width: 900px; margin: 0 auto; justify-content: center; }
+        .nav-arrow { background: var(--glass-ultra); border: none; color: #fff; width: 60px; height: 60px; border-radius: 50%; cursor: pointer; }
+        .main-focus-card { background: var(--glass-ultra); backdrop-filter: blur(60px); padding: 60px; border-radius: 56px; width: 600px; min-height: 400px; box-shadow: 0 50px 100px rgba(0,0,0,0.3); border: 1px solid rgba(255, 255, 255, 0.15); }
+        .card-main-title { font-size: 48px; font-weight: 800; color: #fff; margin: 0; }
+        .card-subtitle { font-size: 20px; color: #fff; opacity: 0.7; margin: 15px 0 40px 0; }
+        .main-plus-btn { background: #fff; color: var(--ebec-navy); width: 100px; height: 100px; border-radius: 50%; border: none; cursor: pointer; display: block; margin: 0 auto; transition: 0.3s; }
+        .main-plus-btn:hover { transform: scale(1.1); background: var(--ebec-gold); }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); border: none; margin: 0 5px; cursor: pointer; }
+        .dot.active { background: #fff; width: 32px; border-radius: 10px; }
+
+        .mgmt-section { width: 100%; background: var(--off-white); padding: 80px 20px; border-radius: 60px 60px 0 0; display: flex; justify-content: center; }
+        .mgmt-content { max-width: 1000px; width: 100%; }
+        .mgmt-heading { font-size: 32px; font-weight: 800; color: var(--ebec-navy); margin: 0; }
+        .mgmt-sub { font-size: 18px; color: #666; margin: 5px 0 0 0; }
+        .btn-icon-plus { background: var(--ebec-navy); color: #fff; border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+        .meetings-list, .tech-cards-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .meeting-card { background: #fff; border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; transition: 0.2s; }
+        .meeting-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        .meeting-main-info { display: flex; align-items: center; gap: 20px; }
+        .meeting-date-pill { background: #f0f4f8; border-radius: 16px; padding: 10px; width: 60px; display: flex; flex-direction: column; align-items: center; }
+        .meeting-date-pill.tech-pill { background: #fff8e1; color: #f57f17; }
+        .m-day { font-size: 20px; font-weight: 800; color: var(--ebec-navy); }
+        .m-month { font-size: 11px; font-weight: 700; color: var(--ebec-blue); text-transform: uppercase; }
+        
+        .meeting-details h3 { margin: 0; font-size: 18px; color: #333; }
+        .meeting-details p { margin: 4px 0 0 0; font-size: 14px; color: #777; }
+        .theme-text { color: var(--ebec-blue) !important; font-weight: 600; }
+
+        .status-pill { padding: 4px 10px; border-radius: 100px; font-size: 10px; font-weight: 800; background: #eee; color: #888; text-transform: uppercase; }
+        .status-pill.gold { background: var(--ebec-gold); color: #000; }
+
+        .action-btn { background: #f5f5f7; border: none; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; }
+        .action-btn.report { background: rgba(255, 193, 7, 0.1); color: #d68100; }
+        
+        /* New Tech Form Styles */
+        .tech-card-form { max-width: 800px !important; }
+        .ref-badge { background: var(--ebec-navy); color: #fff; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; margin-top: 8px; display: inline-block; }
+        .form-section { border-top: 1px solid #f0f0f0; padding-top: 20px; }
+        .section-label { font-weight: 800; color: #333; display: block; margin-bottom: 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .duration-toggle { display: flex; gap: 10px; }
+        .toggle-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-weight: 600; color: #777; transition: 0.2s; }
+        .toggle-btn.active { background: var(--ebec-navy); color: #fff; border-color: var(--ebec-navy); }
+        .input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .input-group span { font-size: 12px; color: #888; font-weight: 600; }
+        .input-group input { padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+        .input-block { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .input-block label { font-size: 13px; font-weight: 700; color: #555; }
+        .input-block textarea { height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 12px; outline: none; }
+        
+        .external-list-builder { background: #f9f9f9; padding: 15px; border-radius: 16px; }
+        .sub-hint { font-size: 12px; color: #888; margin-bottom: 10px; font-weight: 600; }
+        .add-external-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .add-external-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .add-external-row button { background: var(--ebec-blue); color: #fff; border: none; width: 36px; border-radius: 8px; cursor: pointer; }
+        .guest-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+        .guest-pill { background: #fff; border: 1px solid #eee; padding: 4px 10px; border-radius: 100px; font-size: 12px; color: #555; }
+
+        .empty-state { padding: 40px; text-align: center; color: #aaa; border: 2px dashed #eee; border-radius: 20px; }
+        .mt-12 { margin-top: 48px; }
+        .mt-2 { margin-top: 8px; }
+        .flex-row { display: flex; }
+        .items-center { align-items: center; }
+        .gap-2 { gap: 8px; }
+
+        .form-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .google-style-form { background: #fff; width: 100%; max-width: 650px; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; max-height: 90vh; }
+        .form-header { padding: 24px 32px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .form-body { padding: 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+        .form-input-title { font-size: 28px; border: none; border-bottom: 2px solid #eee; padding-bottom: 10px; font-weight: 700; outline: none; }
+        .form-input-full { padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; font-size: 15px; }
+        .form-textarea { padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; height: 100px; font-family: inherit; }
+        .form-row { display: flex; gap: 15px; }
+        .form-footer { padding: 24px 32px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 15px; }
+
+        .toggle-item { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .toggle-switch { width: 36px; height: 20px; background: #ccc; border-radius: 20px; position: relative; transition: 0.3s; }
+        .toggle-switch::after { content: ''; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: 0.3s; }
+        .toggle-switch.on { background: var(--ebec-navy); }
+        .toggle-switch.on::after { left: 18px; }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes blink { 50% { opacity: 0; } }
+      `}</style>
+
+      <nav className="glass-nav">
+        <div className="logo-circle">
+            <span style={{fontSize: '10px', fontWeight: 'bold', color: 'var(--ebec-navy)'}}>EBEC</span>
+        </div>
+        <div className="nav-links">
+          <span onClick={() => setPage('home')}>Home</span>
+          <span>Activities</span>
+          <span>Attendance</span>
+          <span onClick={() => setPage('archive')}>Archive</span>
+        </div>
+        <button className="sign-out-btn">SG Profile</button>
+      </nav>
+
+      {page === 'home' && (
+        <Home 
+          setPage={setPage} 
+          refNum={currentRef} 
+          setRefNum={(val) => setRefCounter(parseInt(val) || refCounter)} 
+          meetings={meetings} 
+          techCards={techCards}
+        />
+      )}
+      
+      {page === 'new-meeting' && (
+        <NewMeetingForm onCancel={() => setPage('home')} onSubmit={handleAddMeeting} />
+      )}
+
+      {page === 'new-tech-card' && (
+        <NewTechnicalCardForm 
+          onCancel={() => setPage('home')} 
+          onSubmit={handleAddTechCard} 
+          currentRef={currentRef}
+        />
+      )}
+
+      {page === 'archive' && <Archive />}
+    </div>
+  );
+}

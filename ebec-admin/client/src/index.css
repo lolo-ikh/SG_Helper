@@ -1,63 +1,132 @@
 :root {
   --ebec-navy: #1D355E;
   --ebec-gold: #FFC107;
+  --system-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.glass-card {
-  background: #ffffff;
-  padding: 25px;
-  border-radius: 24px; /* Apple-style rounded corners */
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+/* 1. Animated Mesh Gradient (Blurred Blue/Yellow) */
+.apple-bg {
+  min-height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  font-family: var(--system-font);
+  background: #fff;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 193, 7, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(0, 122, 255, 0.2) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(29, 53, 94, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(255, 215, 0, 0.2) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
-.action-pill {
-  padding: 12px 20px;
+/* 2. Seamless Glass Nav (No Border) */
+.glass-nav {
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  padding: 8px 12px 8px 30px;
   border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+}
+
+.nav-links span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ebec-navy);
+  margin-right: 25px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.nav-links span:hover { opacity: 0.6; }
+
+.sign-out-btn {
+  background: #000;
+  color: #fff;
   border: none;
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
 }
 
-.action-pill.gold { background: var(--ebec-gold); color: var(--ebec-navy); }
-.action-pill.white { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); }
-.action-pill:hover { transform: scale(1.05); }
-
-.report-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
+/* 3. Hero & Typing Animation */
+.hero {
+  margin-top: 8vh;
+  text-align: center;
 }
 
-.status-tag {
-  background: #E3F2FD;
-  color: #1976D2;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: bold;
+.typing-text {
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  color: #1d1d1f; /* Apple's specific black */
+  overflow: hidden;
+  border-right: 3px solid var(--ebec-gold);
+  white-space: nowrap;
+  margin: 0 auto;
+  animation: typing 3s steps(30, end), blink 0.8s infinite;
 }
 
-.btn-secondary {
-  background: none;
-  border: 1px solid #ddd;
-  padding: 8px;
-  border-radius: 8px;
+/* 4. The Content Panel (No Borders) */
+.glass-panel {
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(40px);
+  padding: 50px;
+  border-radius: 48px;
+  width: 500px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+}
+
+.description {
+  color: #86868b;
+  font-size: 19px;
+  font-weight: 400;
+  margin-bottom: 30px;
+}
+
+.btn-apple-dark {
+  background: var(--ebec-navy);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 12px;
+  transition: transform 0.2s;
 }
 
-.ref-input {
-  font-size: 22px;
-  font-weight: bold;
-  border: 2px solid var(--ebec-gold);
-  border-radius: 8px;
-  padding: 5px;
-  width: 90%;
-  margin-bottom: 10px;
+.btn-apple-light {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-left: 12px;
+  cursor: pointer;
 }
+
+.btn-apple-dark:hover { transform: scale(1.02); }
+
+.ref-tag {
+  background: var(--ebec-gold);
+  color: #000;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+@keyframes typing { from { width: 0 } to { width: 100% } }
+@keyframes blink { 50% { border-color: transparent } }
