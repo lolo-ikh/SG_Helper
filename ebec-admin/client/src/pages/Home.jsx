@@ -37,6 +37,16 @@ const Clipboard = ({ size = 16 }) => (
 const Package = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
 );
+const Trash = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path></svg>
+);
+
+const getInitials = (name) => {
+  if(!name) return '';
+  const parts = name.split(' ').filter(Boolean);
+  if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+};
 
 // --- Constants ---
 const EBEC_TEAM = [
@@ -46,7 +56,7 @@ const EBEC_TEAM = [
   { name: "Leena IKHLEF", role: "SG" },
   { name: "Salah Badreddin", role: "HR Manager" },
   { name: "Oussama Bouziane", role: "HR Co-manager" },
-  { name: "Khoumari Aya", role: "External Relations & Comm Co-Manager" },
+  { name: "Khoumari Aya", role: "Co-Manager in Relex" },
   { name: "TOUTAH Sanaa", role: "Logistics Manager" },
   { name: "Mouhoun Cilia", role: "Events Logistics Co-manager" },
   { name: "Wissal Oulem", role: "Project Manager" },
@@ -54,8 +64,7 @@ const EBEC_TEAM = [
   { name: "AHSATAL Imed Eddine", role: "Media & Marketing" },
   { name: "Maria Ines Raheb", role: "Design Co-manager" },
   { name: "Sara BENALI", role: "Design Co-manager" },
-  { name: "ARBAOUI KHEDIDJA", role: "Design Manager" },
-  { name: "BEKHEDDA Asma", role: "Design" },
+  { name: "BEKHEDDA Asma", role: "Co-ManagerDesign" },
   { name: "LAKEL Maissa", role: "Co-Manager Relex" },
   { name: "MESSAOUDI Dorsaf", role: "Co-manger in Relex" },
   { name: "Bouzira Maroua", role: "Event Manager" },
@@ -66,7 +75,6 @@ const EBEC_TEAM = [
   { name: "Youcef Belaib", role: "Co-manager Finance" },
   { name: "DJOUBANI Sarah", role: "Marketing Co-Manager" },
   { name: "AMEZIANE Yani", role: "IT Manager" },
-  { name: "MANAA Mohaned", role: "IT Manager" },
   { name: "BOULEFAA Mustapha", role: "Events" }
 ];
 
@@ -258,7 +266,7 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
 
   return (
     <div className="form-overlay fade-in">
-      <div className="google-style-form">
+      <div className="google-style-form meeting-form">
         <div className="form-header">
           <h2>New Meeting</h2>
           <button className="close-btn" onClick={onCancel}>×</button>
@@ -296,7 +304,13 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
           />
 
           <div className="attendee-section">
-            <label>Add Attendees ({formData.attendees.length} selected)</label>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <label>Add Attendees ({formData.attendees.length} selected)</label>
+              <div style={{display:'flex', gap:8}}>
+                <button className="quick-btn" onClick={() => setFormData({...formData, attendees: sortedTeam.map(t=>t.name)})}>Select All EBEC</button>
+                <button className="quick-btn secondary" onClick={() => setFormData({...formData, attendees: []})}>Clear</button>
+              </div>
+            </div>
             <div className="attendee-grid">
               {sortedTeam.map(member => (
                 <div 
@@ -342,7 +356,115 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
   );
 };
 
-const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
+// Notes modal: simple rich-text editor (bold/italic/underline) and save
+const MeetingNotesModal = ({ meeting, onClose, onSave }) => {
+  const [html, setHtml] = useState(meeting?.notes || "");
+
+  useEffect(() => setHtml(meeting?.notes || ""), [meeting]);
+
+  const exec = (cmd) => {
+    document.execCommand(cmd, false);
+  };
+
+  return (
+    <div className="form-overlay">
+      <div className="google-style-form" style={{maxWidth:800}}>
+        <div className="form-header">
+          <h3>Notes — {meeting?.title}</h3>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+        <div className="form-body">
+          <div style={{display:'flex', gap:8}}>
+            <button className="quick-btn" onClick={() => exec('bold')}><b>B</b></button>
+            <button className="quick-btn" onClick={() => exec('italic')}><i>I</i></button>
+            <button className="quick-btn" onClick={() => exec('underline')}><u>U</u></button>
+          </div>
+
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onInput={(e)=> setHtml(e.currentTarget.innerHTML)}
+            className="notes-editor"
+            style={{minHeight:220, padding:12, border:'1px solid #eee', borderRadius:10, marginTop:8}}
+            dangerouslySetInnerHTML={{__html: html}}
+          />
+        </div>
+        <div className="form-footer">
+          <button className="btn-form-secondary" onClick={onClose}>Close</button>
+          <button className="btn-form-primary" onClick={() => { onSave(meeting.id, html); onClose(); }}>Save Notes</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Attendance modal: show selected attendees and allow marking present/absent
+const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
+  const initialList = meeting?.attendees || [];
+  const [attendance, setAttendance] = useState(() => {
+    const map = {};
+    initialList.forEach(n => { map[n] = meeting?.attendance?.[n] || false; });
+    return map;
+  });
+
+  useEffect(() => {
+    const map = {}; (meeting?.attendees || []).forEach(n=> map[n] = meeting?.attendance?.[n] || false);
+    setAttendance(map);
+  }, [meeting]);
+
+  const togglePresent = (name) => {
+    setAttendance(prev => ({...prev, [name]: !prev[name]}));
+  };
+
+  return (
+    <div className="form-overlay">
+      <div className="google-style-form" style={{maxWidth:700}}>
+        <div className="form-header">
+          <h3>Attendance — {meeting?.title}</h3>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+        <div className="form-body">
+          <p className="sub-hint">Toggle present attendees and save.</p>
+          <div style={{display:'flex', gap:8, marginBottom:8}}>
+            <button className="quick-btn" onClick={() => {
+              const all = {};
+              (meeting?.attendees || []).forEach(n=> all[n] = true);
+              setAttendance(all);
+            }}>Mark All Present</button>
+            <button className="quick-btn secondary" onClick={() => {
+              const none = {};
+              (meeting?.attendees || []).forEach(n=> none[n] = false);
+              setAttendance(none);
+            }}>Clear</button>
+          </div>
+
+          <div style={{display:'grid', gap:8, maxHeight:320, overflow:'auto'}}>
+            {(meeting?.attendees || []).map(name => (
+              <label key={name} className="attendee-pill" style={{justifyContent:'space-between'}}>
+                <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                  <div style={{width:28, height:28, borderRadius:6, background:'#f5f5f7', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                    {attendance[name] ? <Check /> : <span style={{opacity:0.4}}>—</span>}
+                  </div>
+                  <div>
+                    <div style={{fontWeight:700}}>{name}</div>
+                    <div style={{fontSize:12, color:'#666'}}>{(EBEC_TEAM.find(t=>t.name===name)?.role) || ''}</div>
+                  </div>
+                </div>
+                <input type="checkbox" checked={!!attendance[name]} onChange={() => togglePresent(name)} />
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="form-footer">
+          <button className="btn-form-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn-form-primary" onClick={() => { onSave(meeting.id, attendance); onClose(); }}>Save Attendance</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onDeleteTechCard, onSaveMeetingNotes, onSaveMeetingAttendance }) => {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -415,6 +537,12 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
   const nextCard = () => setActiveCard((prev) => (prev + 1) % cards.length);
   const prevCard = () => setActiveCard((prev) => (prev - 1 + cards.length) % cards.length);
 
+  const [openNotesFor, setOpenNotesFor] = useState(null);
+  const [openAttendanceFor, setOpenAttendanceFor] = useState(null);
+
+  const openNotes = (id) => setOpenNotesFor(id);
+  const openAttendance = (id) => setOpenAttendanceFor(id);
+
   return (
     <>
       <div className="hero fade-in">
@@ -452,6 +580,31 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
             />
           ))}
         </div>
+
+        {/* Quick summary / actions under the main card for faster UX */}
+        <div className="quick-summary">
+          <div className="stat-card">
+            <div className="stat-value">{meetings.length}</div>
+            <div className="stat-label">Meetings</div>
+            <div className="stat-note">Upcoming & recent</div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-value">{techCards.length}</div>
+            <div className="stat-label">Technical Cards</div>
+            <div className="stat-note">Ongoing activities</div>
+          </div>
+
+          <div className="stat-card action-card">
+            <div className="stat-value">+</div>
+            <div className="stat-label">Quick Actions</div>
+            <div className="stat-note">Create meeting or card</div>
+            <div className="quick-actions">
+              <button className="quick-btn" onClick={() => setPage('new-meeting')}>New Meeting</button>
+              <button className="quick-btn secondary" onClick={() => setPage('new-tech-card')}>New Card</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Dynamic Meetings Section */}
@@ -471,25 +624,42 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
             {meetings.length === 0 ? (
               <div className="empty-state">
                 <p>No meetings scheduled yet.</p>
+                <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
               </div>
             ) : (
               meetings.map(m => (
                 <div className="meeting-card fade-in" key={m.id}>
-                  <div className="meeting-main-info">
-                    <div className="meeting-date-pill">
-                      <span className="m-day">{m.date?.split('-')[2] || '--'}</span>
-                      <span className="m-month">{m.date?.split('-')[1] || '??'}</span>
+                  <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12}}>
+                    <div className="meeting-main-info">
+                      <div className="meeting-date-pill">
+                        <span className="m-day">{m.date?.split('-')[2] || '--'}</span>
+                        <span className="m-month">{m.date?.split('-')[1] || '??'}</span>
+                      </div>
+                      <div className="meeting-details">
+                        <h3>{m.title}</h3>
+                        <p>{m.time} • {m.attendees.length} Attendees {m.attendance ? `• ${Object.values(m.attendance).filter(Boolean).length} present` : ''}</p>
+                        { (m.description || m.notes) && <p className="meet-desc">{(m.description || '').slice(0,140)}{m.notes ? ' — (notes saved)' : ''}</p> }
+                        <div className="avatar-list">
+                          { (m.attendees || []).slice(0,4).map(a => (
+                            <div className="avatar" title={a} key={a}>{getInitials(a)}</div>
+                          )) }
+                          { (m.attendees || []).length > 4 && <div className="avatar">+{(m.attendees || []).length - 4}</div> }
+                        </div>
+                      </div>
                     </div>
-                    <div className="meeting-details">
-                      <h3>{m.title}</h3>
-                      <p>{m.time} • {m.attendees.length} Attendees</p>
+
+                    <div style={{display:'flex', flexDirection:'column', gap:8}} className="meeting-actions">
+                      <div style={{display:'flex', gap:8}}>
+                        <button className="action-btn" onClick={() => openAttendance(m.id)} title="Attendance"><UserCheck size={16} /></button>
+                        <button className="action-btn" onClick={() => openNotes(m.id)} title="Notes"><Clipboard size={16} /></button>
+                        <button className="action-btn report" onClick={() => alert(`Report for ${m.title}`)} title="Report"><FileText size={16} /></button>
+                      </div>
+                      <button className="action-btn danger" onClick={() => {
+                        if(window.confirm(`Delete meeting \"${m.title}\"? This cannot be undone.`)) {
+                          onDeleteMeeting && onDeleteMeeting(m.id);
+                        }
+                      }} title="Delete"><Trash size={14} /></button>
                     </div>
-                  </div>
-                  
-                  <div className="meeting-actions">
-                    <button className="action-btn" onClick={() => alert(`Attendance for ${m.title}`)}><UserCheck size={18} /> <span>Attendance</span></button>
-                    <button className="action-btn" onClick={() => alert(`Notes for ${m.title}`)}><Clipboard size={18} /> <span>Notes</span></button>
-                    <button className="action-btn report" onClick={() => alert(`Report for ${m.title}`)}><FileText size={18} /> <span>Report</span></button>
                   </div>
                 </div>
               ))
@@ -511,36 +681,41 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
             {techCards.length === 0 ? (
               <div className="empty-state">
                 <p>No technical cards active. Start tracking an activity!</p>
+                <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
               </div>
             ) : (
               techCards.map(tc => (
                 <div className="meeting-card tech-card-item fade-in" key={tc.id}>
-                  <div className="meeting-main-info">
-                    <div className="meeting-date-pill tech-pill">
-                      <Hash size={16} />
-                      <span className="m-month" style={{fontSize: '9px'}}>{tc.reference}</span>
-                    </div>
-                    <div className="meeting-details">
-                      <div className="flex-row items-center gap-2">
-                         <h3>{tc.title}</h3>
-                         <span className={`status-pill ${tc.isSponsored ? 'gold' : ''}`}>
-                            {tc.isSponsored ? 'Sponsored' : 'General'}
-                         </span>
+                  <div style={{display:'flex', justifyContent:'space-between', gap:12}}>
+                    <div className="meeting-main-info">
+                      <div className="meeting-date-pill tech-pill">
+                        <Hash size={16} />
+                        <span className="m-month" style={{fontSize: '9px'}}>{tc.reference}</span>
                       </div>
-                      <p className="theme-text">Theme: {tc.theme} • {tc.duration}</p>
+                      <div className="meeting-details">
+                        <div style={{display:'flex', alignItems:'center', gap:8}}>
+                          <h3 style={{margin:0}}>{tc.title}</h3>
+                          <span className={`status-pill ${tc.isSponsored ? 'gold' : ''}`}>
+                            {tc.isSponsored ? 'Sponsored' : 'General'}
+                          </span>
+                        </div>
+                        <p className="theme-text">Theme: {tc.theme} • {tc.duration}</p>
+                        <div className="meet-desc">{tc.agenda?.slice(0,120)}</div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="meeting-actions">
-                    <button className="action-btn" onClick={() => alert(`Reviewing agenda for: ${tc.agenda}`)}>
-                      <Clipboard size={18} /> <span>Agenda</span>
-                    </button>
-                    <button className="action-btn" onClick={() => alert(`Resources needed: ${tc.needs}`)}>
-                      <Package size={18} /> <span>Needs</span>
-                    </button>
-                    <button className="action-btn report" onClick={() => alert(`Reference Doc for ${tc.reference}`)}>
-                      <FileText size={18} /> <span>Full Doc</span>
-                    </button>
+
+                    <div style={{display:'flex', flexDirection:'column', gap:8, alignItems:'flex-end'}} className="meeting-actions">
+                      <div style={{display:'flex', gap:8}}>
+                        <button className="action-btn" onClick={() => alert(`Reviewing agenda for: ${tc.agenda}`)} title="Agenda"><Clipboard size={16} /></button>
+                        <button className="action-btn" onClick={() => alert(`Resources needed: ${tc.needs}`)} title="Needs"><Package size={16} /></button>
+                        <button className="action-btn report" onClick={() => alert(`Reference Doc for ${tc.reference}`)} title="Full Doc"><FileText size={16} /></button>
+                      </div>
+                      <button className="action-btn danger" onClick={() => {
+                        if(window.confirm(`Delete technical card \"${tc.title}\"? This cannot be undone.`)) {
+                          onDeleteTechCard && onDeleteTechCard(tc.id);
+                        }
+                      }} title="Delete"><Trash size={14} /></button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -553,6 +728,21 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards }) => {
           </div>
         </div>
       </section>
+      {openNotesFor && (
+        <MeetingNotesModal
+          meeting={meetings.find(m => m.id === openNotesFor)}
+          onClose={() => setOpenNotesFor(null)}
+          onSave={onSaveMeetingNotes}
+        />
+      )}
+
+      {openAttendanceFor && (
+        <MeetingAttendanceModal
+          meeting={meetings.find(m => m.id === openAttendanceFor)}
+          onClose={() => setOpenAttendanceFor(null)}
+          onSave={onSaveMeetingAttendance}
+        />
+      )}
     </>
   );
 };
@@ -614,6 +804,22 @@ export default function App() {
     setTechCards([newCard, ...techCards]);
     setRefCounter(prev => prev + 1);
     setPage('home');
+  };
+
+  const handleDeleteMeeting = (id) => {
+    setMeetings(prev => prev.filter(m => m.id !== id));
+  };
+
+  const handleDeleteTechCard = (id) => {
+    setTechCards(prev => prev.filter(tc => tc.id !== id));
+  };
+
+  const handleSaveMeetingNotes = (meetingId, html) => {
+    setMeetings(prev => prev.map(m => m.id === meetingId ? {...m, notes: html} : m));
+  };
+
+  const handleSaveMeetingAttendance = (meetingId, attendance) => {
+    setMeetings(prev => prev.map(m => m.id === meetingId ? {...m, attendance: {...m.attendance, ...attendance}} : m));
   };
 
   return (
@@ -704,31 +910,69 @@ export default function App() {
         .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); border: none; margin: 0 5px; cursor: pointer; }
         .dot.active { background: #fff; width: 32px; border-radius: 10px; }
 
+        /* Quick summary under hero */
+        .quick-summary { display:flex; gap:16px; justify-content:center; margin-top:18px; max-width:900px; margin-left:auto; margin-right:auto; }
+        .stat-card { background: rgba(255,255,255,0.06); border-radius:14px; padding:18px 22px; min-width:150px; color:#fff; text-align:center; box-shadow: 0 6px 20px rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.04); }
+        .stat-value { font-size:28px; font-weight:900; color:var(--ebec-gold); }
+        .stat-label { font-size:13px; margin-top:6px; color:#dfe7ff; font-weight:800; }
+        .stat-note { font-size:12px; color:rgba(255,255,255,0.6); margin-top:6px; }
+        .action-card { background: linear-gradient(135deg, rgba(255,193,7,0.14), rgba(0,122,255,0.06)); }
+        .quick-actions { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+        .quick-btn { background: #fff; color: var(--ebec-navy); border: none; padding:8px 12px; border-radius: 10px; font-weight:700; cursor:pointer; }
+        .quick-btn.secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.12); }
+
         .mgmt-section { width: 100%; background: var(--off-white); padding: 80px 20px; border-radius: 60px 60px 0 0; display: flex; justify-content: center; }
         .mgmt-content { max-width: 1000px; width: 100%; }
         .mgmt-heading { font-size: 32px; font-weight: 800; color: var(--ebec-navy); margin: 0; }
         .mgmt-sub { font-size: 18px; color: #666; margin: 5px 0 0 0; }
         .btn-icon-plus { background: var(--ebec-navy); color: #fff; border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
-        .meetings-list, .tech-cards-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
-        .meeting-card { background: #fff; border-radius: 24px; padding: 24px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; transition: 0.2s; }
-        .meeting-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        /* Grid layout for cards */
+        .meetings-list, .tech-cards-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-top: 20px; }
+        .meeting-card { background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap:12px; border: 1px solid #f0f3f6; transition: transform 0.18s, box-shadow 0.18s; }
+        .meeting-card:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(15,30,60,0.06); }
         
-        .meeting-main-info { display: flex; align-items: center; gap: 20px; }
+        .meeting-main-info { display: flex; align-items: flex-start; gap: 16px; }
         .meeting-date-pill { background: #f0f4f8; border-radius: 16px; padding: 10px; width: 60px; display: flex; flex-direction: column; align-items: center; }
         .meeting-date-pill.tech-pill { background: #fff8e1; color: #f57f17; }
         .m-day { font-size: 20px; font-weight: 800; color: var(--ebec-navy); }
         .m-month { font-size: 11px; font-weight: 700; color: var(--ebec-blue); text-transform: uppercase; }
         
-        .meeting-details h3 { margin: 0; font-size: 18px; color: #333; }
-        .meeting-details p { margin: 4px 0 0 0; font-size: 14px; color: #777; }
+        .meeting-details h3 { margin: 0; font-size: 18px; color: #1f2a37; font-weight: 800; }
+        .meeting-details p { margin: 6px 0 0 0; font-size: 13px; color: #6b7684; }
+        .meet-desc { margin:8px 0 0 0; color:#556; font-size:13px; }
+
+        .avatar-list { display:flex; gap:8px; margin-top:10px; }
+        .avatar { width:36px; height:36px; border-radius:10px; background:#eef4ff; display:flex; align-items:center; justify-content:center; font-weight:800; color: #0b3a8a; font-size:12px; border: 1px solid rgba(11,58,138,0.06); }
         .theme-text { color: var(--ebec-blue) !important; font-weight: 600; }
 
         .status-pill { padding: 4px 10px; border-radius: 100px; font-size: 10px; font-weight: 800; background: #eee; color: #888; text-transform: uppercase; }
         .status-pill.gold { background: var(--ebec-gold); color: #000; }
 
-        .action-btn { background: #f5f5f7; border: none; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; }
+        .action-btn { background: #f7fafc; border: none; padding: 8px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #2f3b47; cursor: pointer; transition: 0.12s; border: 1px solid #eef3f6; }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
         .action-btn.report { background: rgba(255, 193, 7, 0.1); color: #d68100; }
+        .action-btn.danger { background: #fff7f7; color: #9b2c2c; border: 1px solid #ffe6e6; }
+        .action-btn.danger:hover { box-shadow: 0 8px 22px rgba(155,44,44,0.06); transform: translateY(-3px); }
+
+        /* Improved focus states and form polish */
+        .form-input-full:focus, .form-input-title:focus, .form-textarea:focus, .form-input-half:focus { outline: none; box-shadow: 0 6px 18px rgba(0,122,255,0.12); border-color: rgba(0,122,255,0.6); }
+        .form-input-title::placeholder { color: rgba(0,0,0,0.25); }
+
+        /* Attendee grid improvements */
+        .attendee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; max-height: 240px; overflow: auto; padding-right: 6px; }
+        .attendee-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+        .attendee-pill { background:#fff; border-radius: 10px; padding:10px; display:flex; gap:12px; cursor:pointer; align-items:center; border:1px solid #f4f6f9; transition:0.12s; }
+        .attendee-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.06); }
+        .attendee-pill.active { background: linear-gradient(90deg, rgba(0,122,255,0.06), rgba(29,53,94,0.02)); border-color: rgba(0,122,255,0.08); }
+        .attendee-pill .check-circle { width:26px; height:26px; }
+        .attendee-pill .pill-text { display:flex; flex-direction:column; }
+        .pill-name { font-size:15px; font-weight:800; color:#1f2a37; }
+        .pill-role { font-size:12px; color:#94a0ad; margin-top:4px; font-weight:600; }
+
+        /* Empty state CTA */
+        .empty-state { padding: 40px; text-align: center; color: #aaa; border: 2px dashed #eee; border-radius: 20px; display:flex; flex-direction:column; gap:12px; align-items:center; }
+        .empty-state .cta { background: var(--ebec-navy); color:#fff; padding:10px 16px; border-radius:12px; border:none; font-weight:800; cursor:pointer; }
         
         /* New Tech Form Styles */
         .tech-card-form { max-width: 800px !important; }
@@ -763,10 +1007,11 @@ export default function App() {
         .form-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .google-style-form { background: #fff; width: 100%; max-width: 650px; border-radius: 28px; display: flex; flex-direction: column; overflow: hidden; max-height: 90vh; }
         .form-header { padding: 24px 32px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .form-body { padding: 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+        .form-body { padding: 36px; overflow-y: auto; display: flex; flex-direction: column; gap: 28px; }
         .form-input-title { font-size: 28px; border: none; border-bottom: 2px solid #eee; padding-bottom: 10px; font-weight: 700; outline: none; }
-        .form-input-full { padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; font-size: 15px; }
-        .form-textarea { padding: 12px 16px; border: 1px solid #ddd; border-radius: 12px; height: 100px; font-family: inherit; }
+        .form-input-full { padding: 12px 16px; border: 1px solid #eee; border-radius: 12px; font-size: 15px; }
+        .form-textarea { padding: 14px 16px; border: 1px solid #eee; border-radius: 12px; height: 220px; font-family: inherit; resize: vertical; }
+        .google-style-form.meeting-form .form-textarea { height: 240px; }
         .form-row { display: flex; gap: 15px; }
         .form-footer { padding: 24px 32px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 15px; }
 
@@ -779,6 +1024,26 @@ export default function App() {
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 50% { opacity: 0; } }
+
+        /* Notes editor styles */
+        .notes-editor { background: #fff; min-height: 300px; max-height: 480px; overflow:auto; }
+        .close-btn { background: transparent; border: none; font-size: 26px; cursor: pointer; color:#333; }
+
+        /* Form buttons - clean, modern */
+        .btn-form-primary { background: var(--ebec-navy); color: #fff; border: none; padding: 12px 20px; border-radius: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 12px 30px rgba(29,53,94,0.08); transition: transform .12s, box-shadow .12s; }
+        .btn-form-primary:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(29,53,94,0.12); }
+        .btn-form-secondary { background: transparent; color: #555; border: 1px solid #f0f2f5; padding: 10px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+
+        .quick-btn { background: #f7f8fa; color: #223; border: 1px solid #eef2f6; padding:8px 12px; border-radius:12px; font-weight:800; cursor:pointer; box-shadow: 0 6px 18px rgba(20,30,50,0.04); }
+        .quick-btn.secondary { background: transparent; color:#556; border:1px solid #eef2f6; }
+        .meet-desc { color: #666; margin-top:6px; font-size:13px; max-width:560px; }
+
+        /* Attendee section spacing and card look */
+        .attendee-section { margin-top: 12px; padding: 14px; background: #fff; border-radius: 12px; border: 1px solid #f3f5f7; box-shadow: 0 6px 18px rgba(30,40,60,0.04); }
+        .attendee-section > .attendee-grid { margin-top: 10px; padding-top: 6px; }
+
+        /* spacing between sections */
+        .form-section + .attendee-section, .attendee-section + .form-section { margin-top: 18px; }
       `}</style>
 
       <nav className="glass-nav">
@@ -801,6 +1066,10 @@ export default function App() {
           setRefNum={(val) => setRefCounter(parseInt(val) || refCounter)} 
           meetings={meetings} 
           techCards={techCards}
+          onDeleteMeeting={handleDeleteMeeting}
+          onDeleteTechCard={handleDeleteTechCard}
+          onSaveMeetingNotes={handleSaveMeetingNotes}
+          onSaveMeetingAttendance={handleSaveMeetingAttendance}
         />
       )}
       
