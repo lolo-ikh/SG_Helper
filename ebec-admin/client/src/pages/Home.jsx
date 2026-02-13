@@ -1296,34 +1296,33 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
                       <div className="stats-summary-row">
                         <div className="stat-item" title="Attendees">
-                          <UserCheck size={14} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
+                          <UserCheck size={12} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
                         </div>
                         <div className="stat-item" title="Notes">
-                          <Clipboard size={14} /> <span>{m.notes ? 'Saved' : '0'}</span>
+                          <Clipboard size={12} /> <span>{m.notes ? 'Saved' : '0'}</span>
                         </div>
                         <div className="stat-item" title="Report Status">
-                          <FileText size={14} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
+                          <FileText size={12} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
                         </div>
                       </div>
 
                       <div className="premium-card-footer">
-                        <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
-                          <UserCheck size={14} />
-                          {m.attendance ? 'Verify' : 'Take'}
+                        <button className="footer-action-btn" title={m.attendance ? 'Verify Attendance' : 'Take Attendance'} onClick={() => openAttendance(m.id)}>
+                          <UserCheck size={12} />
                         </button>
-                        <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
-                          <Clipboard size={14} />
+                        <button className="footer-action-btn" title="Meeting Notes" onClick={() => openNotes(m.id)}>
+                          <Clipboard size={12} />
                         </button>
-                        <button className="footer-action-btn" onClick={() => openEdit(m)}>
-                          <Edit3 size={14} />
+                        <button className="footer-action-btn" title="Edit Meeting" onClick={() => openEdit(m)}>
+                          <Edit3 size={12} />
                         </button>
-                        <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
-                          <FileText size={14} /> Report
+                        <button className="footer-action-btn report" title="Meeting Report" onClick={() => openReport(m.id)}>
+                          <FileText size={12} />
                         </button>
-                        <button className="footer-delete-btn" onClick={() => {
+                        <button className="footer-delete-btn" title="Delete Meeting" onClick={() => {
                           if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
                         }}>
-                          <Trash size={18} />
+                          <Trash size={16} />
                         </button>
                       </div>
                     </div>
@@ -1367,27 +1366,27 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
                     <div className="stats-summary-row">
                       <div className="stat-item" title="Sponsor">
-                        <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+                        <Package size={12} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
                       </div>
                       <div className="stat-item" title="Agenda">
-                        <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                        <Clipboard size={12} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
                       </div>
                     </div>
 
                     <div className="premium-card-footer">
-                      <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
-                        <Clipboard size={14} /> Agenda
+                      <button className="footer-action-btn" title="View Agenda" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
+                        <Clipboard size={12} />
                       </button>
-                      <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
-                        <Package size={14} /> Materials
+                      <button className="footer-action-btn" title="Materials Tracking" onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                        <Package size={12} />
                       </button>
-                      <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
-                        <FileText size={14} />
+                      <button className="footer-action-btn report" title="Technical Reference" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
+                        <FileText size={12} />
                       </button>
-                      <button className="footer-delete-btn" onClick={() => {
+                      <button className="footer-delete-btn" title="Remove Card" onClick={() => {
                         if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
                       }}>
-                        <Trash size={18} />
+                        <Trash size={16} />
                       </button>
                     </div>
                   </div>
