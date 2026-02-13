@@ -84,6 +84,15 @@ app.patch('/api/meetings/:id/attendance', (req, res) => {
     res.json({ success: true });
 });
 
+app.patch('/api/meetings/:id/report', (req, res) => {
+    const db = readDB();
+    const id = parseInt(req.params.id);
+    const { report } = req.body;
+    db.meetings = db.meetings.map(m => m.id === id ? { ...m, report } : m);
+    writeDB(db);
+    res.json({ success: true });
+});
+
 app.post('/api/tech-cards', (req, res) => {
     const db = readDB();
     const newCard = { ...req.body, id: Date.now() };

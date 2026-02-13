@@ -466,42 +466,142 @@ const NewMeetingForm = ({ onCancel, onSubmit }) => {
   );
 };
 
-// Notes modal: simple rich-text editor (bold/italic/underline) and save
 const MeetingNotesModal = ({ meeting, onClose, onSave }) => {
   const [html, setHtml] = useState(meeting?.notes || "");
-
   useEffect(() => setHtml(meeting?.notes || ""), [meeting]);
-
-  const exec = (cmd) => {
-    document.execCommand(cmd, false);
-  };
+  const exec = (cmd) => document.execCommand(cmd, false);
 
   return (
-    <div className="form-overlay">
-      <div className="google-style-form" style={{ maxWidth: 800 }}>
+    <div className="form-overlay fade-in">
+      <div className="premium-form" style={{ maxWidth: 800 }}>
         <div className="form-header">
-          <h3>Notes — {meeting?.title}</h3>
-          <button className="close-btn" onClick={onClose}>×</button>
+           <div className="header-content">
+             <div className="header-meta"><span className="meta-text">SESSION SCRIPTER</span></div>
+             <h2>Live Notes: {meeting?.title}</h2>
+           </div>
+           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="form-body">
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="quick-btn" onClick={() => exec('bold')}><b>B</b></button>
-            <button className="quick-btn" onClick={() => exec('italic')}><i>I</i></button>
-            <button className="quick-btn" onClick={() => exec('underline')}><u>U</u></button>
+          <div className="flex gap-2 mb-4">
+            <button className="status-tag present active" onClick={() => exec('bold')}>BOLD</button>
+            <button className="status-tag late active" onClick={() => exec('italic')}>ITALIC</button>
+            <button className="status-tag absent active" onClick={() => exec('underline')}>UNDERLINE</button>
           </div>
-
           <div
             contentEditable
             suppressContentEditableWarning
             onInput={(e) => setHtml(e.currentTarget.innerHTML)}
             className="notes-editor"
-            style={{ minHeight: 220, padding: 12, border: '1px solid #eee', borderRadius: 10, marginTop: 8 }}
+            style={{ minHeight: 400, padding: 24, background: '#fff', borderRadius: 24, border: '1px solid rgba(0,0,0,0.05)', fontSize: 16, outline: 'none' }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         </div>
-        <div className="form-footer">
-          <button className="btn-form-secondary" onClick={onClose}>Close</button>
-          <button className="btn-form-primary" onClick={() => { onSave(meeting.id, html); onClose(); }}>Save Notes</button>
+        <div className="form-footer-premium">
+          <button className="btn-tertiary" onClick={onClose}>Discard</button>
+          <button className="btn-primary-premium ripple" onClick={() => { onSave(meeting.id, html); onClose(); }}>Save Meeting Notes</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MeetingReportModal = ({ meeting, onClose, onSave }) => {
+  const [reportData, setReportData] = useState(meeting?.report || { type: 'latex', content: '', fileName: '' });
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generateLatex = () => {
+    setIsGenerating(true);
+    const present = Object.entries(meeting?.attendance || {}).filter(([_, s]) => s === 'present' || s === 'late').map(([k]) => k);
+    const notesTxt = meeting?.notes?.replace(/<[^>]*>/g, '\n') || "No notes available.";
+    
+    // Simulating AI generation logic for LaTeX
+    const latex = `
+\\documentclass{article}
+\\begin{document}
+\\title{Meeting Report: ${meeting.title}}
+\\author{EBEC Secretariat}
+\\date{${meeting.date}}
+\\maketitle
+
+\\section*{Attendees}
+\\begin{itemize}
+${present.map(n => `  \\item ${n}`).join('\n')}
+\\end{itemize}
+
+\\section*{Discussions}
+\\begin{itemize}
+  \\item ${notesTxt.split('\n').filter(l => l.trim()).join('\n  \\item ')}
+\\end{itemize}
+
+\\section*{Tasks & Actions}
+\\begin{itemize}
+  \\item Follow up on discussed points.
+\\end{itemize}
+
+\\end{document}
+    `.trim();
+
+    setTimeout(() => {
+      setReportData({ ...reportData, type: 'latex', content: latex, fileName: 'generated_report.tex' });
+      setIsGenerating(false);
+    }, 1500);
+  };
+
+  const simulateUpload = () => {
+    const fileName = prompt("Enter PDF Filename (Simulation):", "EBEC_Report_Final.pdf");
+    if (fileName) setReportData({ ...reportData, type: 'pdf', fileName });
+  };
+
+  return (
+    <div className="form-overlay fade-in">
+      <div className="premium-form" style={{ maxWidth: 700 }}>
+        <div className="form-header">
+           <div className="header-content">
+             <div className="header-meta"><span className="meta-text">REPORT CENTER</span></div>
+             <h2>{meeting?.title}</h2>
+           </div>
+           <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+        <div className="form-body">
+           <p className="sub-text mb-8">Choose to upload an existing PDF or generate a professional LaTeX report using meeting notes.</p>
+           
+           <div className="mgmt-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }} onClick={simulateUpload}>
+                 <div className="option-icon email"><FileText size={20} /></div>
+                 <h4 className="mt-4">Upload PDF</h4>
+                 <p style={{ fontSize: 12 }}>{reportData.type === 'pdf' ? reportData.fileName : 'Attach existing report'}</p>
+              </div>
+              <div className={`premium-card ${reportData.type === 'latex' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'latex' ? '2px solid var(--apple-blue)' : '' }} onClick={generateLatex}>
+                 <div className="option-icon meet"><Layout size={20} /></div>
+                 <h4 className="mt-4">{isGenerating ? 'Generating...' : 'Generate LaTeX'}</h4>
+                 <p style={{ fontSize: 12 }}>Create report from notes</p>
+              </div>
+           </div>
+
+           {reportData.content && (
+             <div className="mt-8">
+               <label className="section-label">Generated LaTeX Code</label>
+               <textarea 
+                 readOnly 
+                 className="notes-editor w-full" 
+                 style={{ height: 200, fontFamily: 'monospace', fontSize: 12, padding: 16, background: '#f5f5f7' }}
+                 value={reportData.content}
+               />
+               <button className="pill-btn mt-4" onClick={() => { navigator.clipboard.writeText(reportData.content); alert("LaTeX Copied!"); }}>Copy LaTeX</button>
+             </div>
+           )}
+
+           {reportData.type === 'pdf' && reportData.fileName && (
+              <div className="mt-8 p-6" style={{ background: '#f0f9ff', borderRadius: 24, textAlign: 'center', border: '1px dashed #0071e3' }}>
+                 <FileText size={48} color="#0071e3" style={{ margin: '0 auto 12px' }} />
+                 <h3 style={{ fontSize: 18 }}>{reportData.fileName}</h3>
+                 <p className="sub-text">PDF Document Linked Successfully</p>
+              </div>
+           )}
+        </div>
+        <div className="form-footer-premium">
+          <button className="btn-tertiary" onClick={onClose}>Close</button>
+          <button className="btn-primary-premium ripple" onClick={() => { onSave(meeting.id, reportData); onClose(); }}>Save & Sync Report</button>
         </div>
       </div>
     </div>
@@ -578,6 +678,21 @@ const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
                   <span className="option-desc">Export data in TSV format</span>
                 </div>
                 <ExternalLink size={20} color="#888" />
+              </div>
+
+              <div className="attendance-summary-panel mt-4 p-4" style={{ background: '#f8fafc', borderRadius: 20 }}>
+                <span className="member-role" style={{ display: 'block', marginBottom: 10 }}>Confirmed Attendees</span>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(attendance).filter(([_, s]) => s === 'present' || s === 'late').length === 0 ? (
+                    <span style={{ fontSize: 13, color: '#999' }}>No attendance recorded yet.</span>
+                  ) : (
+                    Object.entries(attendance).filter(([_, s]) => s === 'present' || s === 'late').map(([name, s]) => (
+                      <span key={name} className={`status-pill ${s === 'late' ? 'gold' : ''}`} style={{ background: s === 'late' ? 'var(--ebec-gold)' : '#34c759', color: s === 'late' ? '#000' : '#fff' }}>
+                        {name} {s === 'late' ? '(L)' : ''}
+                      </span>
+                    ))
+                  )}
+                </div>
               </div>
               <div className="option-row" onClick={() => setView('edit')}>
                 <div className="option-icon" style={{ background: '#f5f5f7', color: '#1d1d1f' }}><Edit3 size={20} /></div>
@@ -759,9 +874,11 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
   const [openNotesFor, setOpenNotesFor] = useState(null);
   const [openAttendanceFor, setOpenAttendanceFor] = useState(null);
+  const [openReportFor, setOpenReportFor] = useState(null);
 
   const openNotes = (id) => setOpenNotesFor(id);
   const openAttendance = (id) => setOpenAttendanceFor(id);
+  const openReport = (id) => setOpenReportFor(id);
 
   return (
     <>
@@ -1164,6 +1281,15 @@ export default function App() {
       });
   };
 
+  const handleSaveMeetingReport = (meetingId, report) => {
+    fetch(`${API_URL}/meetings/${meetingId}/report`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ report })
+    })
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m)));
+  };
+
   const handleSaveMeetingNotes = (meetingId, html) => {
     fetch(`${API_URL}/meetings/${meetingId}/notes`, {
       method: "PATCH",
@@ -1246,70 +1372,67 @@ export default function App() {
         .mgmt-content { max-width: 1300px; width: 100%; }
         .mgmt-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); 
-            gap: 40px; 
-            margin-top: 48px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+            gap: 24px; 
+            margin-top: 32px;
         }
 
         .premium-card {
             background: #fff;
             border: 1px solid rgba(0,0,0,0.04);
-            border-radius: 40px;
-            padding: 30px;
+            border-radius: 32px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.01);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
         }
         .premium-card:hover {
-            transform: translateY(-12px);
-            box-shadow: 0 40px 80px rgba(0,0,0,0.08);
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.06);
             border-color: rgba(0,113,227,0.1);
         }
 
         .date-visual-square {
             width: 100%;
-            aspect-ratio: 1;
-            border-radius: 28px;
+            aspect-ratio: 1.2;
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #fff;
-            margin-bottom: 30px;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            margin-bottom: 20px;
+            background: var(--apple-blue);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 10px 20px rgba(0, 113, 227, 0.1);
         }
-        .date-visual-square.tech-theme {
-            background: linear-gradient(135deg, #34d399 0%, #0d9488 100%);
-            box-shadow: 0 20px 40px rgba(52, 211, 153, 0.15);
-        }
-        .date-visual-square.orange-theme {
-            background: linear-gradient(135deg, #fb923c 0%, #f43f5e 100%);
-            box-shadow: 0 20px 40px rgba(251, 146, 60, 0.15);
+        .date-visual-square.gold-theme {
+            background: var(--ebec-gold);
+            color: #000;
+            box-shadow: 0 10px 20px rgba(255, 193, 7, 0.1);
         }
 
-        .dv-month { font-size: 22px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 3px; }
-        .dv-day { font-size: 88px; font-weight: 900; line-height: 1; margin: 8px 0; letter-spacing: -4px; color: #fff; }
-        .dv-time { font-size: 14px; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px; }
+        .dv-month { font-size: 16px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }
+        .dv-day { font-size: 64px; font-weight: 900; line-height: 1; margin: 4px 0; letter-spacing: -3px; }
+        .dv-time { font-size: 12px; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px; }
 
-        .card-info-block { margin-bottom: 24px; }
-        .card-info-block h3 { font-size: 24px; font-weight: 800; color: #1d1d1f; margin: 0; letter-spacing: -0.8px; line-height: 1.2; }
-        .card-info-block p { font-size: 15px; color: #666; margin: 10px 0 0 0; font-weight: 500; line-height: 1.5; }
+        .card-info-block { margin-bottom: 16px; }
+        .card-info-block h3 { font-size: 20px; font-weight: 800; color: #1d1d1f; margin: 0; letter-spacing: -0.5px; }
+        .card-info-block p { font-size: 13.5px; color: #666; margin: 6px 0 0 0; font-weight: 500; }
 
         .stats-summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 20px 0;
+            padding: 12px 0;
             color: #888;
             border-bottom: 1px solid rgba(0,0,0,0.03);
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
-        .stat-item { display: flex; align-items: center; gap: 8px; }
-        .stat-item span { font-size: 14px; font-weight: 700; color: #444; }
+        .stat-item { display: flex; align-items: center; gap: 6px; }
+        .stat-item span { font-size: 12px; font-weight: 700; color: #555; }
 
         .premium-card-footer {
             display: flex;
@@ -1665,6 +1788,7 @@ export default function App() {
           onDeleteTechCard={handleDeleteTechCard}
           onSaveMeetingNotes={handleSaveMeetingNotes}
           onSaveMeetingAttendance={handleSaveMeetingAttendance}
+          onSaveMeetingReport={handleSaveMeetingReport}
         />
       )}
 
