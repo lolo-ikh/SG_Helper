@@ -36,7 +36,7 @@ const initialData = {
             title: "Board Weekly Sync",
             date: "2026-02-15",
             time: "18:00",
-            attendees: ["Enzo Chaabnia", "Boucekkine Oumaima", "Leena IKHLEF"],
+            attendees: ["Enzo Chaabnia", "Oumaima Boucekkine", "Leena IKHLEF"],
             description: "Standard weekly synchronization."
         }
     ],
@@ -122,6 +122,15 @@ app.patch('/api/meetings/:id/report', (req, res) => {
     db.meetings = db.meetings.map(m => m.id === id ? { ...m, report } : m);
     writeDB(db);
     res.json({ success: true });
+});
+
+app.put('/api/meetings/:id', (req, res) => {
+    const db = readDB();
+    const id = parseInt(req.params.id);
+    const updatedMeeting = { ...req.body, id };
+    db.meetings = db.meetings.map(m => m.id === id ? updatedMeeting : m);
+    writeDB(db);
+    res.json(updatedMeeting);
 });
 
 app.post('/api/upload-report', upload.single('reportFile'), (req, res) => {

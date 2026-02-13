@@ -53,6 +53,12 @@ const Layout = ({ size = 20 }) => (
 const Edit3 = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
 );
+const Search = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+);
+const User = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+);
 
 const getInitials = (name) => {
   if (!name) return '';
@@ -962,7 +968,124 @@ const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
   );
 };
 
-const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onDeleteTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport }) => {
+const EditMeetingModal = ({ meeting, onCancel, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    ...meeting,
+    attendees: meeting.attendees || []
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const toggleAttendee = (name) => {
+    setFormData(prev => ({
+      ...prev,
+      attendees: (prev.attendees || []).includes(name)
+        ? prev.attendees.filter(a => a !== name)
+        : [...(prev.attendees || []), name]
+    }));
+  };
+
+  const teamList = EBEC_TEAM;
+
+  return (
+    <div className="form-overlay fade-in">
+      <div className="premium-form meeting-premium" style={{ maxHeight: '95vh' }}>
+        <div className="form-header">
+          <div className="header-content">
+            <div className="header-meta">
+              <span className="ref-tag">EDIT SESSION • EBEC-ADM-2026-{meeting.id.toString().slice(-4)}</span>
+            </div>
+            <h2>Update Meeting Intel</h2>
+          </div>
+          <button className="close-btn" onClick={onCancel}>×</button>
+        </div>
+
+        <div className="form-body">
+          <div className="input-group-premium">
+            <input
+              type="text"
+              className="form-input-title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              autoFocus
+            />
+          </div>
+
+          <div className="time-grid mt-6">
+            <div className="datetime-input">
+              <span className="input-label">Reschedule Date</span>
+              <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+            </div>
+            <div className="datetime-input">
+              <span className="input-label">Reschedule Time</span>
+              <input type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="field-group mt-6">
+            <label>Update Description</label>
+            <textarea
+              className="premium-textarea"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+
+          <div className="form-section-premium mt-8">
+            <div className="flex-between items-center mb-4">
+              <div className="section-info">
+                <label className="section-label mb-0">Rework Attendance List</label>
+                <div className="premium-search-container mt-2">
+                  <div className="search-icon-wrapper"><Search size={14} /></div>
+                  <input
+                    type="text"
+                    placeholder="Search name or role..."
+                    className="cute-search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="selection-actions">
+                <button className="pill-btn" onClick={() => setFormData({ ...formData, attendees: teamList.map(t => t.name) })}>Select All</button>
+                <button className="pill-btn secondary" onClick={() => setFormData({ ...formData, attendees: [] })}>Clear</button>
+              </div>
+            </div>
+
+            <div className="modern-attendee-grid" style={{ maxHeight: '300px' }}>
+              {teamList.filter(member =>
+                member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.role.toLowerCase().includes(searchQuery.toLowerCase())
+              ).map(member => (
+                <div
+                  key={member.name}
+                  className={`attendee-item ${formData.attendees?.includes(member.name) ? 'selected' : ''}`}
+                  onClick={() => toggleAttendee(member.name)}
+                >
+                  <div className="member-avatar">
+                    {getInitials(member.name)}
+                    <div className="selection-check"><Check size={12} /></div>
+                  </div>
+                  <div className="member-info">
+                    <span className="member-name">{member.name}</span>
+                    <span className="member-role">{member.role}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="form-footer-premium">
+          <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
+          <button className="btn-primary-premium ripple" onClick={() => onSubmit(formData)}>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onUpdateMeeting, onDeleteTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport }) => {
+  const [meetingSearch, setMeetingSearch] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1038,10 +1161,12 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
   const [openNotesFor, setOpenNotesFor] = useState(null);
   const [openAttendanceFor, setOpenAttendanceFor] = useState(null);
   const [openReportFor, setOpenReportFor] = useState(null);
+  const [editMeeting, setEditMeeting] = useState(null);
 
   const openNotes = (id) => setOpenNotesFor(id);
   const openAttendance = (id) => setOpenAttendanceFor(id);
   const openReport = (id) => setOpenReportFor(id);
+  const openEdit = (m) => setEditMeeting(m);
 
   return (
     <>
@@ -1100,8 +1225,12 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
             <div className="stat-label">Quick Actions</div>
             <div className="stat-note">Create meeting or card</div>
             <div className="quick-actions">
-              <button className="quick-btn" onClick={() => setPage('new-meeting')}>New Meeting</button>
-              <button className="quick-btn secondary" onClick={() => setPage('new-tech-card')}>New Card</button>
+              <button className="quick-btn" onClick={() => setPage('new-meeting')}>
+                <Plus size={18} /> New Meeting
+              </button>
+              <button className="quick-btn secondary" onClick={() => setPage('new-tech-card')}>
+                <Plus size={18} /> New Card
+              </button>
             </div>
           </div>
         </div>
@@ -1111,190 +1240,220 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
       <section className="mgmt-section">
         <div className="mgmt-content">
           <div className="mgmt-header-block flex-between" style={{ alignItems: 'center' }}>
-            <h2 className="mgmt-heading">My meetings</h2>
-            <nav className="mgmt-tabs">
-              <button className="tab-btn active">
-                Upcoming <span className="tab-count">{meetings.length}</span>
-              </button>
-              <button className="tab-btn">
-                Logistics <span className="tab-count">{techCards.length}</span>
-              </button>
-              <button className="tab-btn">
-                Completed <span className="tab-count">24</span>
-              </button>
-            </nav>
-            <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
-              <Plus size={20} /> Create New
-            </button>
-          </div>
-
-          <div className="mgmt-grid">
-            {meetings.length === 0 ? (
-              <div className="empty-state">
-                <p>No meetings scheduled yet.</p>
-                <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              <h2 className="mgmt-heading" style={{ margin: 0 }}>My meetings</h2>
+              <div className="premium-search-container" style={{ minWidth: 320 }}>
+                <div className="search-icon-wrapper">
+                  <Search size={16} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search meetings by name or date (YYYY-MM-DD)..."
+                  className="cute-search-input"
+                  style={{ width: '100%' }}
+                  value={meetingSearch}
+                  onChange={(e) => setMeetingSearch(e.target.value)}
+                />
               </div>
-            ) : (
-              [...meetings].sort((a, b) => new Date(a.date) - new Date(b.date)).map((m, idx) => {
-                const dateObj = new Date(m.date);
-                const month = dateObj.toLocaleString('en-US', { month: 'short' });
-                const day = m.date?.split('-')[2] || '--';
-                const isGold = idx % 2 !== 0;
-
-                return (
-                  <div className="premium-card fade-in" key={m.id}>
-                    {m.attendance && Object.keys(m.attendance).length > 0 && (
-                      <div className="status-badge-floating pulsate">Attendance Taken</div>
-                    )}
-
-                    <div className={`date-visual-square ${isGold ? 'gold-theme' : ''}`}>
-                      <span className="dv-month">{month}</span>
-                      <span className="dv-day">{day}</span>
-                      <span className="dv-time">{m.time} AM</span>
-                    </div>
-
-                    <div className="card-info-block">
-                      <h3>{m.title}</h3>
-                      <p>{m.description?.slice(0, 60) || 'Official board gathering'}</p>
-                    </div>
-
-                    <div className="stats-summary-row">
-                      <div className="stat-item" title="Attendees">
-                        <UserCheck size={14} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
-                      </div>
-                      <div className="stat-item" title="Notes">
-                        <Clipboard size={14} /> <span>{m.notes ? 'Saved' : '0'}</span>
-                      </div>
-                      <div className="stat-item" title="Report Status">
-                        <FileText size={14} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
-                      </div>
-                    </div>
-
-                    <div className="premium-card-footer">
-                      <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
-                        <UserCheck size={14} />
-                        {m.attendance ? 'Verify' : 'Take'}
-                      </button>
-                      <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
-                        <Clipboard size={14} />
-                      </button>
-                      <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
-                        <FileText size={14} /> Report
-                      </button>
-                      <button className="footer-delete-btn" onClick={() => {
-                        if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
-                      }}>
-                        <Trash size={18} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Technical Card Tracking Section */}
-          <div className="mgmt-header-block flex-between mt-12">
-            <div>
-              <h2 className="mgmt-heading">Technical Logistics</h2>
-              <p className="mgmt-sub">Manage activity references and materials</p>
+              <button className="btn-icon-plus" onClick={() => setPage('new-meeting')}>
+                <Plus size={18} /> Create New Meeting
+              </button>
             </div>
-            <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
-              <Plus size={20} /> New Card
-            </button>
-          </div>
 
-          <div className="mgmt-grid">
-            {techCards.length === 0 ? (
-              <div className="empty-state">
-                <p>No technical cards active.</p>
-                <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
+            <div className="mgmt-grid">
+              {meetings.length === 0 ? (
+                <div className="empty-state">
+                  <p>No meetings scheduled yet.</p>
+                  <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
+                </div>
+              ) : (
+                [...meetings]
+                  .filter(m =>
+                    m.title.toLowerCase().includes(meetingSearch.toLowerCase()) ||
+                    m.date.includes(meetingSearch)
+                  )
+                  .sort((a, b) => new Date(b.date) - new Date(a.date)).map((m, idx) => {
+                    const dateObj = new Date(m.date);
+                    const month = dateObj.toLocaleString('en-US', { month: 'short' });
+                    const day = m.date?.split('-')[2] || '--';
+                    const isGold = idx % 2 !== 0;
+
+                    return (
+                      <div className="premium-card fade-in" key={m.id}>
+                        {m.attendance && Object.keys(m.attendance).length > 0 && (
+                          <div className="status-badge-floating pulsate">Attendance Taken</div>
+                        )}
+
+                        <div className={`date-visual-square ${isGold ? 'gold-theme' : ''}`}>
+                          <span className="dv-month">{month}</span>
+                          <span className="dv-day">{day}</span>
+                          <span className="dv-time">{m.time} AM</span>
+                        </div>
+
+                        <div className="card-info-block">
+                          <h3>{m.title}</h3>
+                          <p>{m.description?.slice(0, 60) || 'Official board gathering'}</p>
+                        </div>
+
+                        <div className="stats-summary-row">
+                          <div className="stat-item" title="Attendees">
+                            <UserCheck size={16} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
+                          </div>
+                          <div className="stat-item" title="Notes">
+                            <Clipboard size={16} /> <span>{m.notes ? 'Saved' : '0'}</span>
+                          </div>
+                          <div className="stat-item" title="Report Status">
+                            <FileText size={16} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span>
+                          </div>
+                        </div>
+
+                        <div className="premium-card-footer">
+                          <button className="footer-action-btn" onClick={() => openAttendance(m.id)}>
+                            <UserCheck size={16} />
+                            {m.attendance ? 'Verify' : 'Take'}
+                          </button>
+                          <button className="footer-action-btn" onClick={() => openNotes(m.id)}>
+                            <Clipboard size={16} />
+                          </button>
+                          <button className="footer-action-btn" onClick={() => openEdit(m)}>
+                            <Edit3 size={16} />
+                          </button>
+                          <button className="footer-action-btn report" onClick={() => openReport(m.id)}>
+                            <FileText size={16} /> Report
+                          </button>
+                          <button className="footer-delete-btn" onClick={() => {
+                            if (window.confirm(`Delete meeting?`)) onDeleteMeeting(m.id);
+                          }}>
+                            <Trash size={20} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+
+            {/* Technical Card Tracking Section */}
+            <div className="mgmt-header-block flex-between mt-12">
+              <div className="mgmt-header-block flex-between mt-12" style={{ alignItems: 'center' }}>
+                <div>
+                  <h2 className="mgmt-heading">Technical Logistics</h2>
+                  <p className="mgmt-sub">Manage activity references and materials</p>
+                </div>
+                <button className="btn-icon-plus" onClick={() => setPage('new-tech-card')}>
+                  <Plus size={18} /> Create New Card
+                </button>
               </div>
-            ) : (
-              techCards.map((tc, idx) => {
-                const isGoldTheme = idx % 2 === 0;
-                return (
-                  <div className="premium-card fade-in" key={tc.id}>
-                    <div className={`date-visual-square ${isGoldTheme ? 'gold-theme' : ''}`}>
-                      <span className="dv-month">REF</span>
-                      <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
-                      <span className="dv-time">EBEC • 2026</span>
-                    </div>
 
-                    <div className="card-info-block">
-                      <h3>{tc.title}</h3>
-                      <p>{tc.theme} • {tc.duration}</p>
-                    </div>
-
-                    <div className="stats-summary-row">
-                      <div className="stat-item" title="Sponsor">
-                        <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
-                      </div>
-                      <div className="stat-item" title="Agenda">
-                        <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
-                      </div>
-                    </div>
-
-                    <div className="premium-card-footer">
-                      <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
-                        <Clipboard size={16} /> Agenda
-                      </button>
-                      <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
-                        <Package size={16} /> Materials
-                      </button>
-                      <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
-                        <FileText size={16} />
-                      </button>
-                      <button className="footer-delete-btn" onClick={() => {
-                        if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
-                      }}>
-                        <Trash size={20} />
-                      </button>
-                    </div>
+              <div className="mgmt-grid">
+                {techCards.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No technical cards active.</p>
+                    <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
                   </div>
-                );
-              })
-            )}
-          </div>
+                ) : (
+                  techCards.map((tc, idx) => {
+                    const isGoldTheme = idx % 2 === 0;
+                    return (
+                      <div className="premium-card fade-in" key={tc.id}>
+                        <div className={`date-visual-square ${isGoldTheme ? 'gold-theme' : ''}`}>
+                          <span className="dv-month">REF</span>
+                          <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
+                          <span className="dv-time">EBEC • 2026</span>
+                        </div>
 
-          <div className="action-row" style={{ marginTop: '40px' }}>
-            <button className="mgmt-btn secondary">Sync Google Drive</button>
-            <button className="mgmt-btn primary" onClick={() => setPage('archive')}>Full Archive</button>
-          </div>
-        </div>
-      </section>
-      {openNotesFor && (
-        <MeetingNotesModal
-          meeting={meetings.find(m => m.id === openNotesFor)}
-          onClose={() => setOpenNotesFor(null)}
-          onSave={onSaveMeetingNotes}
-        />
-      )}
+                        <div className="card-info-block">
+                          <h3>{tc.title}</h3>
+                          <p>{tc.theme} • {tc.duration}</p>
+                        </div>
 
-      {openAttendanceFor && (
-        <MeetingAttendanceModal
-          meeting={meetings.find(m => m.id === openAttendanceFor)}
-          onClose={() => setOpenAttendanceFor(null)}
-          onSave={onSaveMeetingAttendance}
-        />
-      )}
+                        <div className="stats-summary-row">
+                          <div className="stat-item" title="Sponsor">
+                            <Package size={14} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+                          </div>
+                          <div className="stat-item" title="Agenda">
+                            <Clipboard size={14} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                          </div>
+                        </div>
 
-      {openReportFor && (
-        <MeetingReportModal
-          meeting={meetings.find(m => m.id === openReportFor)}
-          onClose={() => setOpenReportFor(null)}
-          onSave={onSaveMeetingReport}
-        />
-      )}
-    </>
-  );
+                        <div className="premium-card-footer">
+                          <button className="footer-action-btn" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
+                            <Clipboard size={16} /> Agenda
+                          </button>
+                          <button className="footer-action-btn" onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                            <Package size={16} /> Materials
+                          </button>
+                          <button className="footer-action-btn report" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
+                            <FileText size={16} />
+                          </button>
+                          <button className="footer-delete-btn" onClick={() => {
+                            if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
+                          }}>
+                            <Trash size={20} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="action-row" style={{ marginTop: '40px' }}>
+                <button className="mgmt-btn secondary">Sync Google Drive</button>
+                <button className="mgmt-btn primary" onClick={() => setPage('archive')}>Full Archive</button>
+              </div>
+            </div>
+          </section >
+          {openNotesFor && (
+            <MeetingNotesModal
+              meeting={meetings.find(m => m.id === openNotesFor)}
+              onClose={() => setOpenNotesFor(null)}
+              onSave={onSaveMeetingNotes}
+            />
+          )
+          }
+
+          {
+            openAttendanceFor && (
+              <MeetingAttendanceModal
+                meeting={meetings.find(m => m.id === openAttendanceFor)}
+                onClose={() => setOpenAttendanceFor(null)}
+                onSave={onSaveMeetingAttendance}
+              />
+            )
+          }
+
+          {
+            openReportFor && (
+              <MeetingReportModal
+                meeting={meetings.find(m => m.id === openReportFor)}
+                onClose={() => setOpenReportFor(null)}
+                onSave={onSaveMeetingReport}
+              />
+            )
+          }
+
+          {
+            editMeeting && (
+              <EditMeetingModal
+                meeting={editMeeting}
+                onCancel={() => setEditMeeting(null)}
+                onSubmit={(data) => {
+                  onUpdateMeeting(data);
+                  setEditMeeting(null);
+                }}
+              />
+            )
+          }
+        </>
+        );
 };
 
-const AttendancePredictor = ({ meetings }) => {
+        const AttendancePredictor = ({meetings}) => {
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("18:00");
-  const [duration, setDuration] = useState(2);
-  const [predictions, setPredictions] = useState(null);
+        const [time, setTime] = useState("18:00");
+        const [duration, setDuration] = useState(2);
+        const [predictions, setPredictions] = useState(null);
 
   const predict = () => {
     if (!date) return alert("Please select a date first!");
@@ -1305,333 +1464,446 @@ const AttendancePredictor = ({ meetings }) => {
 
       let probability = history.length > 0 ? (presentCount / history.length) * 100 : 75; // Base prob or fallback
 
-      // Time Heuristic: Late night or early morning usually lower attendance
-      const hour = parseInt(time.split(":")[0]);
-      if (hour < 10) probability -= 10;
+        // Time Heuristic: Late night or early morning usually lower attendance
+        const hour = parseInt(time.split(":")[0]);
+        if (hour < 10) probability -= 10;
       if (hour > 20) probability -= 5;
 
       // Duration Heuristic: Long meetings (Diva fatigue)
       if (duration > 3) probability -= 15;
 
-      // Confidence Heuristic: More data = More confidence
-      const confidence = Math.min(history.length * 20 + 20, 95);
+        // Confidence Heuristic: More data = More confidence
+        const confidence = Math.min(history.length * 20 + 20, 95);
 
-      return {
-        name: member.name,
+        return {
+          name: member.name,
         role: member.role,
         probability: Math.max(Math.min(probability, 99), 5),
         confidence
       };
     });
 
-    setPredictions(results);
+        setPredictions(results);
   };
 
-  return (
-    <div className="premium-card" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', padding: 32, borderRadius: 32 }}>
-      <div className="flex-between" style={{ alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 30 }}>
-        <div>
-          <h3 style={{ color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ padding: 8, background: 'var(--ebec-gold)', borderRadius: 10, color: '#000' }}><Layout size={20} /></div>
-            Diva AI Attendance Predictor
-          </h3>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8 }}>Predict attendance probability based on historical patterns</p>
-        </div>
-        <button className="btn-primary-premium ripple" onClick={predict} style={{ minWidth: 150 }}>Run Simulation</button>
-      </div>
-
-      <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 30 }}>
-        <div className="input-group">
-          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Date</label>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
-        </div>
-        <div className="input-group">
-          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Proposed Time</label>
-          <input type="time" value={time} onChange={e => setTime(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
-        </div>
-        <div className="input-group">
-          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Duration (Hours)</label>
-          <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
-        </div>
-      </div>
-
-      {predictions && (
-        <div className="prediction-results fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-          {predictions.sort((a, b) => b.probability - a.probability).map(p => (
-            <div key={p.name} className="list-item" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0, padding: 16 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{p.name}</span>
-                  <span style={{ color: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), fontWeight: 800 }}>{Math.round(p.probability)}%</span>
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{p.role}</div>
-
-                <div className="mt-3" style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${p.probability}%`, background: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), transition: 's 0.8s ease-out' }}></div>
-                </div>
-                <div className="mt-2" style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>Confidence: {p.confidence}%</div>
-              </div>
+        return (
+        <div className="premium-card" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', padding: 32, borderRadius: 32 }}>
+          <div className="flex-between" style={{ alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 30 }}>
+            <div>
+              <h3 style={{ color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ padding: 8, background: 'var(--ebec-gold)', borderRadius: 10, color: '#000' }}><Layout size={20} /></div>
+                Diva AI Attendance Predictor
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8 }}>Predict attendance probability based on historical patterns</p>
             </div>
-          ))}
+            <button className="btn-primary-premium ripple" onClick={predict} style={{ minWidth: 150 }}>Run Simulation</button>
+          </div>
+
+          <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 30 }}>
+            <div className="input-group">
+              <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Date</label>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+            </div>
+            <div className="input-group">
+              <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Proposed Time</label>
+              <input type="time" value={time} onChange={e => setTime(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+            </div>
+            <div className="input-group">
+              <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Duration (Hours)</label>
+              <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+            </div>
+          </div>
+
+          {predictions && (
+            <div className="prediction-results fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {predictions.sort((a, b) => b.probability - a.probability).map(p => (
+                <div key={p.name} className="list-item" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0, padding: 16 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{p.name}</span>
+                      <span style={{ color: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), fontWeight: 800 }}>{Math.round(p.probability)}%</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{p.role}</div>
+
+                    <div className="mt-3" style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${p.probability}%`, background: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), transition: 's 0.8s ease-out' }}></div>
+                    </div>
+                    <div className="mt-2" style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>Confidence: {p.confidence}%</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
+        );
 };
 
-const Archive = ({ meetings = [] }) => {
-  const totalMeetings = meetings.length;
+        const Archive = ({meetings = [], onUpdateMeeting}) => {
+  const [editMeeting, setEditMeeting] = useState(null);
+        const totalMeetings = meetings.length;
   const completedWithAttendance = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0);
 
-  // Calculate Avg Attendance
-  let totalCap = 0;
-  let totalAttended = 0;
+        // Calculate Avg Attendance
+        let totalCap = 0;
+        let totalAttended = 0;
   completedWithAttendance.forEach(m => {
-    totalCap += m.attendees.length;
+          totalCap += m.attendees.length;
     totalAttended += Object.values(m.attendance).filter(s => s === 'present' || s === 'late').length;
   });
   const avgAttendance = totalCap > 0 ? Math.round((totalAttended / totalCap) * 100) : 0;
 
-  // Find Star Attendee (Diva)
-  const attendanceCounts = {};
+        // Find Star Attendee (Diva)
+        const attendanceCounts = { };
   completedWithAttendance.forEach(m => {
-    Object.entries(m.attendance).forEach(([name, status]) => {
-      if (status === 'present' || status === 'late') {
-        attendanceCounts[name] = (attendanceCounts[name] || 0) + 1;
-      }
-    });
+          Object.entries(m.attendance).forEach(([name, status]) => {
+            if (status === 'present' || status === 'late') {
+              attendanceCounts[name] = (attendanceCounts[name] || 0) + 1;
+            }
+          });
   });
   const starMember = Object.entries(attendanceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "None";
 
-  return (
-    <div className="dashboard-content fade-in">
-      <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Secretariat Hub</h2>
+        return (
+        <div className="dashboard-content fade-in">
+          <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Secretariat Hub</h2>
 
-      {/* Secretariat Analytics Suite */}
-      <div className="mgmt-grid mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 60 }}>
-        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <span className="stat-label" style={{ color: 'var(--ebec-gold)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Total Meetings</span>
-          <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{totalMeetings}</div>
-        </div>
-        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <span className="stat-label" style={{ color: 'var(--apple-blue)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Avg Engagement</span>
-          <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{avgAttendance}%</div>
-        </div>
-        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <span className="stat-label" style={{ color: '#34c759', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Diva of the Month</span>
-          <div className="stat-value" style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginTop: 10 }}>{starMember}</div>
-        </div>
-      </div>
+          {/* Secretariat Analytics Suite */}
+          <div className="mgmt-grid mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 60 }}>
+            <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span className="stat-label" style={{ color: 'var(--ebec-gold)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Total Meetings</span>
+              <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{totalMeetings}</div>
+            </div>
+            <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span className="stat-label" style={{ color: 'var(--apple-blue)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Avg Engagement</span>
+              <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{avgAttendance}%</div>
+            </div>
+            <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span className="stat-label" style={{ color: '#34c759', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Diva of the Month</span>
+              <div className="stat-value" style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginTop: 10 }}>{starMember}</div>
+            </div>
+          </div>
 
-      <AttendancePredictor meetings={meetings} />
+          <AttendancePredictor meetings={meetings} />
 
-      <div className="glass-panel-wide" style={{ marginTop: 60 }}>
-        <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px', fontWeight: 600 }}>Historical Secretariat Records</p>
-        <div className="archive-list" style={{ display: 'grid', gap: 12 }}>
-          {meetings.length === 0 ? (
-            <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
-          ) : (
-            [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date)).map((m) => (
-              <div className="list-item" key={m.id} style={{ marginBottom: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: 12, textAlign: 'center', minWidth: 60 }}>
-                    <span style={{ fontSize: 10, color: 'var(--ebec-gold)', display: 'block' }}>{new Date(m.date).toLocaleString('en-US', { month: 'short' })}</span>
-                    <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{m.date.split('-')[2]}</span>
+          <div className="glass-panel-wide" style={{ marginTop: 60 }}>
+            <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px', fontWeight: 600 }}>Historical Secretariat Records</p>
+            <div className="archive-list" style={{ display: 'grid', gap: 12 }}>
+              {meetings.length === 0 ? (
+                <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
+              ) : (
+                [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date)).map((m) => (
+                  <div className="list-item" key={m.id} style={{ marginBottom: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: 12, textAlign: 'center', minWidth: 60 }}>
+                        <span style={{ fontSize: 10, color: 'var(--ebec-gold)', display: 'block' }}>{new Date(m.date).toLocaleString('en-US', { month: 'short' })}</span>
+                        <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{m.date.split('-')[2]}</span>
+                      </div>
+                      <div>
+                        <p className="meet-title" style={{ fontSize: 18, fontWeight: 700 }}>{m.title}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                            {Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length} Attendees • EBEC-ADM-2026-{m.id.toString().slice(-4)}
+                          </span>
+                          <button
+                            onClick={() => setEditMeeting(m)}
+                            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <Edit3 size={10} /> Edit Info
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="tag" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>Archived</div>
                   </div>
-                  <div>
-                    <p className="meet-title" style={{ fontSize: 18, fontWeight: 700 }}>{m.title}</p>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-                      {Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length} Attendees • EBEC-ADM-2026-{m.id.toString().slice(-4)}
-                    </span>
-                  </div>
-                </div>
-                <div className="tag" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>Archived</div>
-              </div>
-            ))
+                ))
+              )}
+            </div>
+          </div>
+
+          {editMeeting && (
+            <EditMeetingModal
+              meeting={editMeeting}
+              onCancel={() => setEditMeeting(null)}
+              onSubmit={(data) => {
+                onUpdateMeeting(data);
+                setEditMeeting(null);
+              }}
+            />
           )}
         </div>
-      </div>
-    </div>
-  );
+        );
 };
 
-const SGProof = ({ onVerify }) => {
+        const AttendanceTracking = ({meetings}) => {
+  const attendedMeetings = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        return (
+        <div className="dashboard-content fade-in" style={{ maxWidth: '95vw' }}>
+          <div className="flex-between items-center mb-8">
+            <div>
+              <h2 className="section-title" style={{ color: '#fff', fontSize: '36px', margin: 0 }}>Secretariat Attendance Portal</h2>
+              <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Bird's eye view of EBEC engagement across all sync sessions.</p>
+            </div>
+            <div className="stat-card" style={{ background: 'rgba(52, 199, 89, 0.1)', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
+              <div className="stat-value" style={{ color: '#34c759' }}>{attendedMeetings.length}</div>
+              <div className="stat-label">Tracked Sessions</div>
+            </div>
+          </div>
+
+          <div className="glass-panel-wide" style={{ padding: 0, overflow: 'hidden', borderRadius: 40 }}>
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+              <table className="attendance-table">
+                <thead>
+                  <tr>
+                    <th className="sticky-col">TEAM MEMBER</th>
+                    {attendedMeetings.map(m => (
+                      <th key={m.id}>
+                        <div style={{ fontSize: 10, opacity: 0.6 }}>{m.date}</div>
+                        <div style={{ fontSize: 13, fontWeight: 800 }}>{m.title.slice(0, 15)}{m.title.length > 15 ? '...' : ''}</div>
+                      </th>
+                    ))}
+                    <th style={{ background: 'rgba(255,193,7,0.1)', color: 'var(--ebec-gold)' }}>ENGAGEMENT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {EBEC_TEAM.map(member => {
+                    let meetingsInvited = 0;
+                    let attendedCount = 0;
+
+                    return (
+                      <tr key={member.name}>
+                        <td className="sticky-col">
+                          <div style={{ fontWeight: 800 }}>{member.name}</div>
+                          <div style={{ fontSize: 10, opacity: 0.5 }}>{member.role}</div>
+                        </td>
+                        {attendedMeetings.map(m => {
+                          const status = m.attendance?.[member.name];
+                          const isOfficiallyInvited = (m.attendees || []).includes(member.name);
+                          const hasAttendanceRecord = status === 'present' || status === 'late' || status === 'absent';
+
+                          const isInvited = isOfficiallyInvited || hasAttendanceRecord;
+
+                          if (isInvited) meetingsInvited++;
+
+                          const displayStatus = status || (isOfficiallyInvited ? 'absent' : null);
+                          if (isInvited && (displayStatus === 'present' || displayStatus === 'late')) attendedCount++;
+
+                          return (
+                            <td key={m.id} style={{ textAlign: 'center' }}>
+                              {isInvited ? (
+                                <div className={`status-dot-cell ${displayStatus || 'absent'}`}>
+                                  {displayStatus === 'present' ? 'P' : (displayStatus === 'late' ? 'L' : 'A')}
+                                </div>
+                              ) : (
+                                <span style={{ opacity: 0.2 }}>-</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td style={{ textAlign: 'center', fontWeight: 900, fontSize: 16 }}>
+                          {meetingsInvited > 0 ? Math.round((attendedCount / meetingsInvited) * 100) : 0}%
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        );
+};
+
+        const SGProof = ({onVerify}) => {
   const [answer, setAnswer] = useState("");
-  const [isError, setIsError] = useState(false);
+        const [isError, setIsError] = useState(false);
 
   const handleSubmit = () => {
     if (answer.toLowerCase().trim() === 'momtaz') {
-      onVerify(true);
+          onVerify(true);
     } else {
-      setIsError(true);
+          setIsError(true);
       setTimeout(() => setIsError(false), 3000);
     }
   };
 
-  return (
-    <div className="proof-overlay bubble-theme fade-in">
-      <div className="bubble bubble-1"></div>
-      <div className="bubble bubble-2"></div>
-      <div className="bubble bubble-3"></div>
+        return (
+        <div className="proof-overlay bubble-theme fade-in">
+          <div className="bubble bubble-1"></div>
+          <div className="bubble bubble-2"></div>
+          <div className="bubble bubble-3"></div>
 
-      <div className={`glass-card-proof bubble-card ${isError ? 'shake' : ''}`}>
-        <h2 className="proof-heading">Are you the SG of EBEC?</h2>
-        <p className="proof-subtext">Proof that & gain access to the Secretary Portal.</p>
+          <div className={`glass-card-proof bubble-card ${isError ? 'shake' : ''}`}>
+            <h2 className="proof-heading">Are you the SG of EBEC?</h2>
+            <p className="proof-subtext">Proof that & gain access to the Secretary Portal.</p>
 
-        <div className="question-box">
-          <label>What is the famous word that the SG says?</label>
-          <div className="input-field-wrapper mt-4">
-            <input
-              type="text"
-              placeholder="Your answer..."
-              className="premium-input proof-input classy-input"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-              autoFocus
-            />
+            <div className="question-box">
+              <label>What is the famous word that the SG says?</label>
+              <div className="input-field-wrapper mt-4">
+                <input
+                  type="text"
+                  placeholder="Your answer..."
+                  className="premium-input proof-input classy-input"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {isError && (
+              <div className="error-message-sg fade-in">
+                <p className="big-error">YOU ARE NOOOT THE SG!!!!</p>
+                <p className="small-error">Why do you want to access the EBEC SG panel??</p>
+              </div>
+            )}
+
+            <button className="btn-primary-premium ripple w-full mt-8 classy-btn" onClick={handleSubmit}>
+              Verify Identity
+            </button>
           </div>
         </div>
-
-        {isError && (
-          <div className="error-message-sg fade-in">
-            <p className="big-error">YOU ARE NOOOT THE SG!!!!</p>
-            <p className="small-error">Why do you want to access the EBEC SG panel??</p>
-          </div>
-        )}
-
-        <button className="btn-primary-premium ripple w-full mt-8 classy-btn" onClick={handleSubmit}>
-          Verify Identity
-        </button>
-      </div>
-    </div>
-  );
+        );
 };
 
 const Footer = () => (
-  <footer className="footer-premium">
-    <div className="footer-glass">
-      <div className="footer-content">
-        <div className="footer-top">
-          <div className="footer-brand">
-            <div className="logo-circle small-logo">
-              <img src={ebecLogo} alt="Logo" className="footer-logo-img" />
+        <footer className="footer-premium">
+          <div className="footer-glass">
+            <div className="footer-content">
+              <div className="footer-top">
+                <div className="footer-brand">
+                  <div className="logo-circle small-logo">
+                    <img src={ebecLogo} alt="Logo" className="footer-logo-img" />
+                  </div>
+                  <span className="brand-name">EBEC Admin Hub</span>
+                </div>
+                <div className="footer-links">
+                  <span>Help Center</span>
+                  <span>Privacy Policy</span>
+                  <span>Contact Tech Team</span>
+                </div>
+              </div>
+              <div className="footer-bottom">
+                <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
+                <div className="social-dots">
+                  <div className="social-dot"></div>
+                  <div className="social-dot"></div>
+                  <div className="social-dot"></div>
+                </div>
+              </div>
             </div>
-            <span className="brand-name">EBEC Admin Hub</span>
           </div>
-          <div className="footer-links">
-            <span>Help Center</span>
-            <span>Privacy Policy</span>
-            <span>Contact Tech Team</span>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
-          <div className="social-dots">
-            <div className="social-dot"></div>
-            <div className="social-dot"></div>
-            <div className="social-dot"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </footer>
-);
+        </footer>
+        );
 
-const API_URL = "http://localhost:5000/api";
+        const API_URL = "http://localhost:5000/api";
 
-export default function App() {
+        export default function App() {
   const [page, setPage] = useState('home');
-  const [refCounter, setRefCounter] = useState(1);
-  const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
+        const [refCounter, setRefCounter] = useState(1);
+        const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
 
-  const [meetings, setMeetings] = useState([]);
-  const [techCards, setTechCards] = useState([]);
+        const [meetings, setMeetings] = useState([]);
+        const [techCards, setTechCards] = useState([]);
 
   // Load initial data
   useEffect(() => {
-    fetch(`${API_URL}/data`)
-      .then(res => res.json())
-      .then(data => {
-        setMeetings(data.meetings || []);
-        setTechCards(data.techCards || []);
-        setRefCounter(data.refCounter || 1);
-      });
+          fetch(`${API_URL}/data`)
+            .then(res => res.json())
+            .then(data => {
+              setMeetings(data.meetings || []);
+              setTechCards(data.techCards || []);
+              setRefCounter(data.refCounter || 1);
+            });
   }, []);
 
   const handleAddMeeting = (newMeeting) => {
-    fetch(`${API_URL}/meetings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newMeeting)
-    })
-      .then(res => res.json())
-      .then(saved => {
-        setMeetings([saved, ...meetings]);
-        setPage('home');
-      });
+          fetch(`${API_URL}/meetings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newMeeting)
+          })
+            .then(res => res.json())
+            .then(saved => {
+              setMeetings([saved, ...meetings]);
+              setPage('home');
+            });
   };
 
   const handleAddTechCard = (newCard) => {
-    fetch(`${API_URL}/tech-cards`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newCard)
-    })
-      .then(res => res.json())
-      .then(saved => {
-        setTechCards([saved, ...techCards]);
-        setRefCounter(prev => prev + 1);
-        setPage('home');
-      });
+          fetch(`${API_URL}/tech-cards`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newCard)
+          })
+            .then(res => res.json())
+            .then(saved => {
+              setTechCards([saved, ...techCards]);
+              setRefCounter(prev => prev + 1);
+              setPage('home');
+            });
   };
 
   const handleDeleteMeeting = (id) => {
-    fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
-      .then(() => {
-        setMeetings(prev => prev.filter(m => m.id !== id));
-        console.log("Deleted from database successfully");
-      });
+          fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
+            .then(() => {
+              setMeetings(prev => prev.filter(m => m.id !== id));
+              console.log("Deleted from database successfully");
+            });
   };
 
   const handleDeleteTechCard = (id) => {
-    fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
-      .then(() => {
-        setTechCards(prev => prev.filter(tc => tc.id !== id));
-        console.log("Deleted from database successfully");
-      });
+          fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
+            .then(() => {
+              setTechCards(prev => prev.filter(tc => tc.id !== id));
+              console.log("Deleted from database successfully");
+            });
+  };
+
+  const handleUpdateMeeting = (updatedMeeting) => {
+          fetch(`${API_URL}/meetings/${updatedMeeting.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedMeeting)
+          })
+            .then(res => res.json())
+            .then(saved => {
+              setMeetings(prev => prev.map(m => m.id === saved.id ? saved : m));
+            });
   };
 
   const handleSaveMeetingReport = (meetingId, report) => {
-    fetch(`${API_URL}/meetings/${meetingId}/report`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ report })
-    })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m)));
+          fetch(`${API_URL}/meetings/${meetingId}/report`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ report })
+          })
+            .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m)));
   };
 
   const handleSaveMeetingNotes = (meetingId, html) => {
-    fetch(`${API_URL}/meetings/${meetingId}/notes`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: html })
-    })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m)));
+          fetch(`${API_URL}/meetings/${meetingId}/notes`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ notes: html })
+          })
+            .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m)));
   };
 
   const handleSaveMeetingAttendance = (meetingId, attendance) => {
-    fetch(`${API_URL}/meetings/${meetingId}/attendance`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ attendance })
-    })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m)));
+          fetch(`${API_URL}/meetings/${meetingId}/attendance`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ attendance })
+          })
+            .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m)));
   };
 
-  return (
-    <div className="apple-bg">
-      <style>{`
+        return (
+        <div className="apple-bg">
+          <style>{`
         :root {
           --apple-blue: #0071e3;
           --google-blue: #4285f4;
@@ -1693,16 +1965,16 @@ export default function App() {
         .mgmt-content { max-width: 1300px; width: 100%; }
         .mgmt-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-            gap: 24px; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 20px; 
             margin-top: 32px;
         }
 
         .premium-card {
             background: #fff;
             border: 1px solid rgba(0,0,0,0.04);
-            border-radius: 32px;
-            padding: 24px;
+            border-radius: 28px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1736,9 +2008,9 @@ export default function App() {
             box-shadow: 0 10px 20px rgba(255, 193, 7, 0.1);
         }
 
-        .dv-month { font-size: 16px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }
-        .dv-day { font-size: 64px; font-weight: 900; line-height: 1; margin: 4px 0; letter-spacing: -3px; }
-        .dv-time { font-size: 12px; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px; }
+        .dv-month { font-size: 14px; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }
+        .dv-day { font-size: 52px; font-weight: 900; line-height: 1; margin: 2px 0; letter-spacing: -3px; }
+        .dv-time { font-size: 11px; font-weight: 700; opacity: 0.9; text-transform: uppercase; letter-spacing: 1.5px; }
 
         .card-info-block { margin-bottom: 16px; }
         .card-info-block h3 { font-size: 20px; font-weight: 800; color: #1d1d1f; margin: 0; letter-spacing: -0.5px; }
@@ -1757,54 +2029,85 @@ export default function App() {
 
         .premium-card-footer {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             margin-top: auto;
             align-items: center;
         }
         .footer-action-btn {
             flex: 1;
-            background: #f5f5f7;
-            border: none;
-            padding: 16px;
-            border-radius: 20px;
-            font-size: 13px;
+            background: rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+            padding: 10px 8px;
+            border-radius: 14px;
+            font-size: 11px;
             font-weight: 800;
             color: #1d1d1f;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.4px;
             cursor: pointer;
             transition: 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
+            white-space: nowrap;
         }
         .footer-action-btn:hover {
-            background: rgba(99, 102, 241, 0.1);
-            color: #6366f1;
-            transform: scale(1.02);
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: rgba(0,113,227,0.2);
         }
         .footer-action-btn.report {
-            background: rgba(255, 193, 7, 0.08);
-            color: #d68100;
+            background: rgba(0, 113, 227, 0.05);
+            color: var(--apple-blue);
         }
         .footer-delete-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 20px;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
             background: #fff5f5;
             color: #ff3b30;
-            border: none;
+            border: 1px solid rgba(255, 59, 48, 0.1);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: 0.3s;
+            flex-shrink: 0;
         }
         .footer-delete-btn:hover {
             background: #ff3b30;
             color: #fff;
-            transform: rotate(10deg) scale(1.1);
+            transform: scale(1.1);
+        }
+
+        /* --- Custom Designed Buttons --- */
+        .btn-icon-plus, .quick-btn {
+            background: linear-gradient(135deg, #0071e3 0%, #00c6fb 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 18px;
+            font-weight: 800;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0, 113, 227, 0.25);
+        }
+        .btn-icon-plus:hover, .quick-btn:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0, 113, 227, 0.35);
+        }
+        .quick-btn.secondary {
+            background: linear-gradient(135deg, #1D355E 0%, #2a4b82 100%);
+            box-shadow: 0 10px 30px rgba(29, 53, 94, 0.25);
+        }
+        .quick-btn.secondary:hover {
+            box-shadow: 0 20px 40px rgba(29, 53, 94, 0.35);
         }
 
         .status-badge-floating {
@@ -1924,7 +2227,32 @@ export default function App() {
         .time-row, .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .datetime-input { display: flex; flex-direction: column; gap: 6px; }
         .input-label { font-size: 12px; font-weight: 700; color: #888; margin-left: 4px; }
-        .datetime-input input { background: rgba(0,0,0,0.03); border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; outline: none; }
+        .datetime-input input, .premium-input-small { 
+          background: rgba(0,0,0,0.04); 
+          border: 1px solid rgba(0,0,0,0.05); 
+          padding: 14px 18px; 
+          border-radius: 14px; 
+          font-size: 14px; 
+          font-weight: 700; 
+          outline: none; 
+          color: #1d1d1f;
+          font-family: var(--system-font);
+          transition: 0.2s;
+        }
+        .datetime-input input:focus, .premium-input-small:focus {
+          background: #fff;
+          border-color: var(--apple-blue);
+          box-shadow: 0 4px 12px rgba(0, 113, 227, 0.08);
+        }
+        
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+          cursor: pointer;
+          filter: invert(0.4);
+          transition: 0.2s;
+        }
+        input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0); }
 
         .switch-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,193,7,0.05); padding: 20px; border-radius: 20px; cursor: pointer; transition: 0.2s; }
         .switch-row:hover { background: rgba(255,193,7,0.1); }
@@ -1989,7 +2317,9 @@ export default function App() {
 
         /* --- Global Utilities --- */
         .glass-nav { background: rgba(255, 255, 255, 0.1) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
-        .nav-links span { color: #fff !important; }
+        .nav-links span { color: #fff !important; cursor: pointer; transition: 0.3s; }
+        .nav-links span:hover { color: var(--ebec-gold) !important; }
+        .nav-links span.active { color: var(--ebec-gold) !important; font-weight: 800; text-shadow: 0 0 10px rgba(255, 193, 7, 0.3); }
         .fade-in { animation: fadeIn 0.6s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -2005,6 +2335,19 @@ export default function App() {
         .pb-10 { padding-bottom: 40px; }
         .mt-3 { margin-top: 12px; }
         .w-full { width: 100%; }
+
+        /* --- Attendance Table Matrix --- */
+        .attendance-table { width: 100%; border-collapse: collapse; background: transparent; color: #fff; }
+        .attendance-table th, .attendance-table td { padding: 20px; border: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
+        .attendance-table th { background: rgba(255,255,255,0.05); text-align: left; }
+        .attendance-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .attendance-table tr:hover .sticky-col { background: #162444 !important; }
+        .sticky-col { position: sticky; left: 0; background: #0c1a33; z-index: 10; border-right: 2px solid rgba(255,255,255,0.1) !important; transition: background 0.2s; }
+        
+        .status-dot-cell { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; }
+        .status-dot-cell.present { background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid rgba(52, 199, 89, 0.3); }
+        .status-dot-cell.late { background: rgba(255, 193, 7, 0.2); color: var(--ebec-gold); border: 1px solid rgba(255, 193, 7, 0.3); }
+        .status-dot-cell.absent { background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid rgba(255, 59, 48, 0.3); }
 
         /* --- Identity Proof Page (Apple Bubble Theme) --- */
         .proof-overlay.bubble-theme { 
@@ -2085,57 +2428,60 @@ export default function App() {
 
       `}</style>
 
-      <nav className="glass-nav">
-        <div className="logo-circle" onClick={() => setPage('home')}>
-          <img src={ebecLogo} alt="EBEC" className="header-logo" />
+          <nav className="glass-nav">
+            <div className="logo-circle" onClick={() => setPage('home')}>
+              <img src={ebecLogo} alt="EBEC" className="header-logo" />
+            </div>
+            <div className="nav-links">
+              <span className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}>Home</span>
+              <span>Activities</span>
+              <span className={page === 'attendance-tracking' ? 'active' : ''} onClick={() => setPage('attendance-tracking')}>Attendance</span>
+              <span className={page === 'archive' ? 'active' : ''} onClick={() => setPage('archive')}>Archive</span>
+            </div>
+            <button className="sign-out-btn" onClick={() => setPage('proving-sg')}>Sign Out</button>
+          </nav>
+
+          {page === 'home' && (
+            <Home
+              setPage={setPage}
+              refNum={currentRef}
+              setRefNum={(val) => setRefCounter(parseInt(val) || refCounter)}
+              meetings={meetings}
+              techCards={techCards}
+              onDeleteMeeting={handleDeleteMeeting}
+              onUpdateMeeting={handleUpdateMeeting}
+              onDeleteTechCard={handleDeleteTechCard}
+              onSaveMeetingNotes={handleSaveMeetingNotes}
+              onSaveMeetingAttendance={handleSaveMeetingAttendance}
+              onSaveMeetingReport={handleSaveMeetingReport}
+            />
+          )}
+
+          {page === 'new-meeting' && (
+            <NewMeetingForm onCancel={() => setPage('home')} onSubmit={handleAddMeeting} />
+          )}
+
+          {page === 'new-tech-card' && (
+            <NewTechnicalCardForm
+              onCancel={() => setPage('home')}
+              onSubmit={handleAddTechCard}
+              currentRef={currentRef}
+            />
+          )}
+
+          {page === 'archive' && <Archive meetings={meetings} onUpdateMeeting={handleUpdateMeeting} />}
+
+          {page === 'attendance-tracking' && <AttendanceTracking meetings={meetings} />}
+
+          {page === 'proving-sg' && (
+            <SGProof onVerify={(success) => {
+              if (success) {
+                setPage('home');
+              }
+            }} />
+          )}
+
+          <Footer />
         </div>
-        <div className="nav-links">
-          <span onClick={() => setPage('home')}>Home</span>
-          <span>Activities</span>
-          <span>Attendance</span>
-          <span onClick={() => setPage('archive')}>Archive</span>
-        </div>
-        <button className="sign-out-btn" onClick={() => setPage('proving-sg')}>Sign Out</button>
-      </nav>
-
-      {page === 'home' && (
-        <Home
-          setPage={setPage}
-          refNum={currentRef}
-          setRefNum={(val) => setRefCounter(parseInt(val) || refCounter)}
-          meetings={meetings}
-          techCards={techCards}
-          onDeleteMeeting={handleDeleteMeeting}
-          onDeleteTechCard={handleDeleteTechCard}
-          onSaveMeetingNotes={handleSaveMeetingNotes}
-          onSaveMeetingAttendance={handleSaveMeetingAttendance}
-          onSaveMeetingReport={handleSaveMeetingReport}
-        />
-      )}
-
-      {page === 'new-meeting' && (
-        <NewMeetingForm onCancel={() => setPage('home')} onSubmit={handleAddMeeting} />
-      )}
-
-      {page === 'new-tech-card' && (
-        <NewTechnicalCardForm
-          onCancel={() => setPage('home')}
-          onSubmit={handleAddTechCard}
-          currentRef={currentRef}
-        />
-      )}
-
-      {page === 'archive' && <Archive meetings={meetings} />}
-
-      {page === 'proving-sg' && (
-        <SGProof onVerify={(success) => {
-          if (success) {
-            setPage('home');
-          }
-        }} />
-      )}
-
-      <Footer />
-    </div>
-  );
+        );
 }
