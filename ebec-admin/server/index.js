@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -9,6 +10,23 @@ const DB_FILE = path.join(__dirname, 'db.json');
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Configure Multer for PDF storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, 'uploads/reports');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage: storage });
 
 // Initialize DB file if it doesn't exist
 const initialData = {
@@ -91,6 +109,15 @@ app.patch('/api/meetings/:id/report', (req, res) => {
     db.meetings = db.meetings.map(m => m.id === id ? { ...m, report } : m);
     writeDB(db);
     res.json({ success: true });
+});
+
+app.post('/api/upload-report', upload.single('reportFile'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    // Return the relative URL to access the file
+    const fileUrl = `/uploads/reports/${req.file.filename}`;
+    res.json({ success: true, fileName: req.file.originalname, fileUrl: fileUrl });
 });
 
 app.post('/api/tech-cards', (req, res) => {
