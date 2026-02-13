@@ -1,0 +1,30 @@
+{
+  "meetings": [
+    {
+      "id": 1,
+      "title": "Board Weekly Sync",
+      "date": "2026-02-15",
+      "time": "18:00",
+      "attendees": [
+        "Enzo Chaabnia",
+        "Boucekkine Oumaima",
+        "Leena IKHLEF"
+      ],
+      "description": "Standard weekly synchronization."
+    }
+  ],
+  "techCards": [
+    {
+      "id": 101,
+      "title": "Arduino Workshop",
+      "theme": "Electronics",
+      "duration": "3 Hours",
+      "reference": "01/26",
+      "isSponsored": true,
+      "sponsorName": "TechCorp",
+      "agenda": "1. Intro, 2. Circuit building, 3. Coding",
+      "needs": "20 Arduinos, 40 LEDs, Breadboards"
+    }
+  ],
+  "refCounter": 2
+}

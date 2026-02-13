@@ -932,61 +932,80 @@ const Footer = () => (
   </footer>
 );
 
+const API_URL = "http://localhost:5000/api";
+
 export default function App() {
   const [page, setPage] = useState('home');
   const [refCounter, setRefCounter] = useState(1);
   const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
 
-  const [meetings, setMeetings] = useState([
-    {
-      id: 1,
-      title: "Board Weekly Sync",
-      date: "2026-02-15",
-      time: "18:00",
-      attendees: ["Enzo Chaabnia", "Boucekkine Oumaima", "Leena IKHLEF"],
-      description: "Standard weekly synchronization."
-    }
-  ]);
+  const [meetings, setMeetings] = useState([]);
+  const [techCards, setTechCards] = useState([]);
 
-  const [techCards, setTechCards] = useState([
-    {
-      id: 101,
-      title: "Arduino Workshop",
-      theme: "Electronics",
-      duration: "3 Hours",
-      reference: "01/26",
-      isSponsored: true,
-      sponsorName: "TechCorp",
-      agenda: "1. Intro, 2. Circuit building, 3. Coding",
-      needs: "20 Arduinos, 40 LEDs, Breadboards"
-    }
-  ]);
+  // Load initial data
+  useEffect(() => {
+    fetch(`${API_URL}/data`)
+      .then(res => res.json())
+      .then(data => {
+        setMeetings(data.meetings || []);
+        setTechCards(data.techCards || []);
+        setRefCounter(data.refCounter || 1);
+      });
+  }, []);
 
   const handleAddMeeting = (newMeeting) => {
-    setMeetings([newMeeting, ...meetings]);
-    setPage('home');
+    fetch(`${API_URL}/meetings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newMeeting)
+    })
+      .then(res => res.json())
+      .then(saved => {
+        setMeetings([saved, ...meetings]);
+        setPage('home');
+      });
   };
 
   const handleAddTechCard = (newCard) => {
-    setTechCards([newCard, ...techCards]);
-    setRefCounter(prev => prev + 1);
-    setPage('home');
+    fetch(`${API_URL}/tech-cards`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newCard)
+    })
+      .then(res => res.json())
+      .then(saved => {
+        setTechCards([saved, ...techCards]);
+        setRefCounter(prev => prev + 1);
+        setPage('home');
+      });
   };
 
   const handleDeleteMeeting = (id) => {
-    setMeetings(prev => prev.filter(m => m.id !== id));
+    fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
+      .then(() => setMeetings(prev => prev.filter(m => m.id !== id)));
   };
 
   const handleDeleteTechCard = (id) => {
-    setTechCards(prev => prev.filter(tc => tc.id !== id));
+    fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
+      .then(() => setTechCards(prev => prev.filter(tc => tc.id !== id)));
   };
 
   const handleSaveMeetingNotes = (meetingId, html) => {
-    setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m));
+    fetch(`${API_URL}/meetings/${meetingId}/notes`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes: html })
+    })
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m)));
   };
 
   const handleSaveMeetingAttendance = (meetingId, attendance) => {
-    setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m));
+    fetch(`${API_URL}/meetings/${meetingId}/attendance`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attendance })
+    })
+      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance: { ...m.attendance, ...attendance } } : m)));
   };
 
   return (
