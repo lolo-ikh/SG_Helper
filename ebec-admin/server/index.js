@@ -64,6 +64,19 @@ const readDB = () => JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
 // Routes
+app.get('/', (req, res) => {
+    res.send(`
+        <div style="font-family: sans-serif; padding: 50px; text-align: center;">
+            <h1 style="color: #6366f1;">EBEC Admin API</h1>
+            <p>The SG Helper Backend is live and running.</p>
+            <div style="background: #f4f4f5; padding: 20px; border-radius: 12px; display: inline-block; margin-top: 20px;">
+                <code>Status: Online</code><br>
+                <code>Port: ${PORT}</code>
+            </div>
+        </div>
+    `);
+});
+
 app.get('/api/data', (req, res) => {
     res.json(readDB());
 });
@@ -137,6 +150,14 @@ app.delete('/api/tech-cards/:id', (req, res) => {
     res.status(204).send();
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
+}).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`ERROR: Port ${PORT} is already in use!`);
+        console.error(`The server is likely already running in another terminal.`);
+        process.exit(1);
+    } else {
+        console.error(err);
+    }
 });

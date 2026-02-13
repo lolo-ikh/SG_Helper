@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ebecLogo from '../assets/EBEC.jfif';
 
 // --- Custom SVG Icons ---
@@ -518,45 +518,148 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
 
   const generateLatex = () => {
     setIsGenerating(true);
-    const present = Object.entries(meeting?.attendance || {}).filter(([_, s]) => s === 'present' || s === 'late').map(([k]) => k);
-    const notesTxt = meeting?.notes?.replace(/<[^>]*>/g, '\n') || "No notes available.";
 
-    // Simulating AI generation logic for LaTeX
+    // 1. Identify Attendees with Status
+    const attendance = meeting?.attendance || {};
+    const attendeeRows = EBEC_TEAM.map(m => {
+      const status = attendance[m.name] || 'absent';
+      const symbol = status === 'present' ? 'P' : (status === 'late' ? 'L' : 'A');
+      return `${m.name} & ${m.role} & ${symbol} \\\\ \\hline`;
+    }).join('\n');
+
+    // 2. Advanced HTML to LaTeX Converter
+    const htmlToLatex = (html) => {
+      if (!html) return "No notes recorded.";
+      let tex = html
+        .replace(/<b[^>]*>(.*?)<\/b>/gi, '\\textbf{$1}')
+        .replace(/<i[^>]*>(.*?)<\/i>/gi, '\\textit{$1}')
+        .replace(/<u[^>]*>(.*?)<\/u>/gi, '\\underline{$1}')
+        .replace(/<li[^>]*>(.*?)<\/li>/gi, '\\item $1\n')
+        .replace(/<ul[^>]*>/gi, '\\begin{itemize}\n')
+        .replace(/<\/ul>/gi, '\\end{itemize}\n')
+        .replace(/<p[^>]*>/gi, '\n\n')
+        .replace(/<\/p>/gi, '')
+        .replace(/<br[^>]*>/gi, '\\\\ ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/<[^>]*>/g, ''); // Clean any remaining tags
+
+      // Escape LaTeX special characters
+      tex = tex.replace(/([&%$#_{}])/g, '\\$1');
+      return tex;
+    };
+
+    const notesTex = htmlToLatex(meeting?.notes);
+
+    // 3. High-Quality Professional Template
     const latex = `
-\\documentclass{article}
+\\documentclass[11pt,a4paper]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage[margin=1in]{geometry}
+\\usepackage{fancyhdr}
+\\usepackage{tabularx}
+\\usepackage{xcolor}
+\\usepackage{titlesec}
+
+% Professional Colors
+\\definecolor{ebecblue}{HTML}{0071E3}
+\\definecolor{ebecgold}{HTML}{EBEC00}
+
+% Title Formatting
+\\titleformat{\\section}{\\large\\bfseries\\color{ebecblue}}{}{0em}{}[\\titlerule]
+
+% Header/Footer
+\\pagestyle{fancy}
+\\fancyhf{}
+\\lhead{\\textbf{EBEC SECRETARIAT}}
+\\rhead{Report: ${meeting.title}}
+\\lfoot{EBEC Helper Admin}
+\\rfoot{Page \\thepage}
+
 \\begin{document}
-\\title{Meeting Report: ${meeting.title}}
-\\author{EBEC Secretariat}
-\\date{${meeting.date}}
-\\maketitle
 
-\\section*{Attendees}
-\\begin{itemize}
-${present.map(n => `  \\item ${n}`).join('\n')}
-\\end{itemize}
+% Branding and Title Header
+\\begin{center}
+    \\Huge \\textbf{\\color{ebecblue} EBEC} \\\\
+    \\large \\textit{Board of European Students of Technology} \\\\
+    \\vspace{0.5cm}
+    \\Large \\textbf{Official Meeting Report} \\\\
+    \\vspace{0.2cm}
+    \\large ${meeting.title}
+\\end{center}
 
-\\section*{Discussions}
-\\begin{itemize}
-  \\item ${notesTxt.split('\n').filter(l => l.trim()).join('\n  \\item ')}
-\\end{itemize}
+\\vspace{1cm}
 
-\\section*{Tasks & Actions}
-\\begin{itemize}
-  \\item Follow up on discussed points.
-\\end{itemize}
+% Metadata Section
+\\section*{Meeting Information}
+\\begin{tabular}{ll}
+    \\textbf{Date:} & ${meeting.date} \\\\
+    \\textbf{Time:} & ${meeting.time} AM \\\\
+    \\textbf{Project:} & EBEC Administrative Year 2026 \\\\
+    \\textbf{Ref:} & EBEC-ADM-2026-${meeting.id.toString().slice(-4)}
+\\end{tabular}
+
+\\vspace{0.5cm}
+
+% Smart Attendee Table
+\\section*{Attendance Register}
+\\begin{tabularx}{\\textwidth}{|X|l|c|}
+    \\hline
+    \\rowcolor{ebecblue!10} \\textbf{Name} & \\textbf{Role} & \\textbf{Status} \\\\ \\hline
+    ${attendeeRows}
+\\end{tabularx}
+\\textit{\\small (P: Present, L: Late, A: Absent)}
+
+\\vspace{0.5cm}
+
+% Content from Scripter
+\\section*{Discussions and Deliberations}
+${notesTex}
+
+\\vspace{1cm}
+
+% Footer / Closing
+\\vfill
+\\begin{flushright}
+    \\textbf{Authorized by:} \\\\
+    Secretary General \\\\
+    EBEC Secretariat 2026
+\\end{flushright}
 
 \\end{document}
     `.trim();
 
     setTimeout(() => {
-      setReportData({ ...reportData, type: 'latex', content: latex, fileName: 'generated_report.tex' });
+      setReportData({ ...reportData, type: 'latex', content: latex, fileName: `EBEC_Report_${meeting.id}.tex` });
       setIsGenerating(false);
-    }, 1500);
+    }, 2000);
   };
 
-  const simulateUpload = () => {
-    const fileName = prompt("Enter PDF Filename (Simulation):", "EBEC_Report_Final.pdf");
-    if (fileName) setReportData({ ...reportData, type: 'pdf', fileName });
+  const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('reportFile', file);
+
+    setIsUploading(true);
+    try {
+      const resp = await fetch('http://localhost:5000/api/upload-report', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await resp.json();
+      if (data.success) {
+        setReportData({ ...reportData, type: 'pdf', fileName: data.fileName, fileUrl: data.fileUrl });
+      }
+    } catch (err) {
+      console.error("Upload failed", err);
+      alert("Upload failed. Make sure the server is running.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -573,9 +676,20 @@ ${present.map(n => `  \\item ${n}`).join('\n')}
           <p className="sub-text mb-8">Choose to upload an existing PDF or generate a professional LaTeX report using meeting notes.</p>
 
           <div className="mgmt-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }} onClick={simulateUpload}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".pdf"
+              onChange={handleFileUpload}
+            />
+            <div
+              className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`}
+              style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <div className="option-icon email"><FileText size={20} /></div>
-              <h4 className="mt-4">Upload PDF</h4>
+              <h4 className="mt-4">{isUploading ? 'Uploading...' : 'Upload PDF'}</h4>
               <p style={{ fontSize: 12 }}>{reportData.type === 'pdf' ? reportData.fileName : 'Attach existing report'}</p>
             </div>
             <div className={`premium-card ${reportData.type === 'latex' ? 'selected' : ''}`} style={{ cursor: 'pointer', border: reportData.type === 'latex' ? '2px solid var(--apple-blue)' : '' }} onClick={generateLatex}>
@@ -584,6 +698,24 @@ ${present.map(n => `  \\item ${n}`).join('\n')}
               <p style={{ fontSize: 12 }}>Create report from notes</p>
             </div>
           </div>
+
+          {reportData.type === 'pdf' && reportData.fileUrl && (
+            <div className="mt-6 p-4" style={{ background: 'rgba(0,113,227,0.05)', borderRadius: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <FileText size={20} color="var(--apple-blue)" />
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{reportData.fileName}</span>
+              </div>
+              <a
+                href={`http://localhost:5000${reportData.fileUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pill-btn"
+                style={{ background: '#000', color: '#fff' }}
+              >
+                View PDF
+              </a>
+            </div>
+          )}
 
           {reportData.content && (
             <div className="mt-8">
@@ -598,11 +730,13 @@ ${present.map(n => `  \\item ${n}`).join('\n')}
             </div>
           )}
 
-          {reportData.type === 'pdf' && reportData.fileName && (
-            <div className="mt-8 p-6" style={{ background: '#f0f9ff', borderRadius: 24, textAlign: 'center', border: '1px dashed #0071e3' }}>
-              <FileText size={48} color="#0071e3" style={{ margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: 18 }}>{reportData.fileName}</h3>
-              <p className="sub-text">PDF Document Linked Successfully</p>
+          {reportData.type === 'pdf' && reportData.fileUrl && (
+            <div className="mt-8" style={{ height: '500px', borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)' }}>
+              <iframe
+                src={`http://localhost:5000${reportData.fileUrl}`}
+                title="Report Viewer"
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
             </div>
           )}
         </div>
@@ -637,21 +771,49 @@ const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
   };
 
   const copyAsText = () => {
-    const present = Object.entries(attendance).filter(([_, v]) => v === 'present').map(([k, _]) => k);
-    const late = Object.entries(attendance).filter(([_, v]) => v === 'late').map(([k, _]) => k);
-    const absent = Object.entries(attendance).filter(([_, v]) => v === 'absent').map(([k, _]) => k);
+    const getWithNameRole = (list) => list.map(name => {
+      const teamMember = EBEC_TEAM.find(t => t.name === name);
+      return teamMember ? `${name} (${teamMember.role})` : name;
+    });
+
+    const present = getWithNameRole(Object.entries(attendance).filter(([_, v]) => v === 'present').map(([k, _]) => k));
+    const late = getWithNameRole(Object.entries(attendance).filter(([_, v]) => v === 'late').map(([k, _]) => k));
+    const absent = getWithNameRole(Object.entries(attendance).filter(([_, v]) => v === 'absent').map(([k, _]) => k));
 
     const text = `Attendance — ${meeting.title}\nDate: ${meeting.date}\n\nPresent: ${present.join(', ') || 'None'}\nLate: ${late.join(', ') || 'None'}\nAbsent: ${absent.join(', ') || 'None'}`;
     navigator.clipboard.writeText(text);
-    alert("Copied as plain text!");
+    alert("Copied as plain text with roles!");
+  };
+
+  const copyAttendedOnly = () => {
+    const list = Object.entries(attendance)
+      .filter(([_, v]) => v === 'present' || v === 'late')
+      .map(([name, s]) => {
+        const teamMember = EBEC_TEAM.find(t => t.name === name);
+        return `${name} — ${teamMember?.role || 'Member'} [${s === 'late' ? 'L' : 'P'}]`;
+      });
+    const text = `Attendees Only — ${meeting.title}\nDate: ${meeting.date}\n\n${list.join('\n') || 'No attendees recorded.'}`;
+    navigator.clipboard.writeText(text);
+    alert("Copied attended list (Names + Roles)!");
   };
 
   const copyAsSpreadsheet = () => {
-    const rows = [["Attendee", "Status"]];
-    Object.entries(attendance).forEach(([name, status]) => rows.push([name, status]));
+    // Format optimized for Google Sheets: Name | Role | Date | P | L | A
+    const rows = [["Full Name", "EBEC Role", "Meeting Date", "Present (P)", "Late (L)", "Absent (A)"]];
+    const dateStr = meeting.date || new Date().toISOString().split('T')[0];
+
+    Object.entries(attendance).forEach(([name, status]) => {
+      const teamMember = EBEC_TEAM.find(t => t.name === name);
+      const isP = status === 'present' ? '1' : '0';
+      const isL = status === 'late' ? '1' : '0';
+      const isA = status === 'absent' ? '1' : '0';
+
+      rows.push([name, teamMember?.role || 'Member', dateStr, isP, isL, isA]);
+    });
+
     const tsv = rows.map(r => r.join("\t")).join("\n");
     navigator.clipboard.writeText(tsv);
-    alert("Copied as Spreadsheet (TSV)!");
+    alert("Copied for Google Sheets! (Columns: Name, Role, Date, P, L, A)");
   };
 
   return (
@@ -686,21 +848,15 @@ const MeetingAttendanceModal = ({ meeting, onClose, onSave }) => {
                 </div>
                 <ExternalLink size={20} color="#888" />
               </div>
-
-              <div className="attendance-summary-panel mt-4 p-4" style={{ background: '#f8fafc', borderRadius: 20 }}>
-                <span className="member-role" style={{ display: 'block', marginBottom: 10 }}>Confirmed Attendees</span>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(attendance).filter(([_, s]) => s === 'present' || s === 'late').length === 0 ? (
-                    <span style={{ fontSize: 13, color: '#999' }}>No attendance recorded yet.</span>
-                  ) : (
-                    Object.entries(attendance).filter(([_, s]) => s === 'present' || s === 'late').map(([name, s]) => (
-                      <span key={name} className={`status-pill ${s === 'late' ? 'gold' : ''}`} style={{ background: s === 'late' ? 'var(--ebec-gold)' : '#34c759', color: s === 'late' ? '#000' : '#fff' }}>
-                        {name} {s === 'late' ? '(L)' : ''}
-                      </span>
-                    ))
-                  )}
+              <div className="option-row" onClick={copyAttendedOnly}>
+                <div className="option-icon" style={{ background: 'rgba(235, 236, 0, 0.1)', color: 'var(--ebec-gold)' }}><UserCheck size={20} /></div>
+                <div className="option-content">
+                  <span className="option-title">Copy Attended Only</span>
+                  <span className="option-desc">Names + Roles of who actually came</span>
                 </div>
+                <Copy size={20} color="#888" />
               </div>
+
               <div className="option-row" onClick={() => setView('edit')}>
                 <div className="option-icon" style={{ background: '#f5f5f7', color: '#1d1d1f' }}><Edit3 size={20} /></div>
                 <div className="option-content">
@@ -979,7 +1135,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                 <button className="cta" onClick={() => setPage('new-meeting')}>Create first meeting</button>
               </div>
             ) : (
-              meetings.map((m, idx) => {
+              [...meetings].sort((a, b) => new Date(a.date) - new Date(b.date)).map((m, idx) => {
                 const dateObj = new Date(m.date);
                 const month = dateObj.toLocaleString('en-US', { month: 'short' });
                 const day = m.date?.split('-')[2] || '--';
@@ -1004,7 +1160,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
                     <div className="stats-summary-row">
                       <div className="stat-item" title="Attendees">
-                        <UserCheck size={14} /> <span>{m.attendees.length}</span>
+                        <UserCheck size={14} /> <span>{Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length}</span>
                       </div>
                       <div className="stat-item" title="Notes">
                         <Clipboard size={14} /> <span>{m.notes ? 'Saved' : '0'}</span>
@@ -1134,27 +1290,170 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
   );
 };
 
-const Archive = ({ meetings = [] }) => (
-  <div className="dashboard-content fade-in">
-    <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Meeting Archive</h2>
-    <div className="glass-panel-wide">
-      <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px' }}>Historical records synced from database...</p>
-      {meetings.length === 0 ? (
-        <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
-      ) : (
-        meetings.map((m) => (
-          <div className="list-item" key={m.id}>
-            <div>
-              <span className="date">{m.date}</span>
-              <p className="meet-title">{m.title}</p>
+const AttendancePredictor = ({ meetings }) => {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("18:00");
+  const [duration, setDuration] = useState(2);
+  const [predictions, setPredictions] = useState(null);
+
+  const predict = () => {
+    if (!date) return alert("Please select a date first!");
+
+    const results = EBEC_TEAM.map(member => {
+      const history = meetings.filter(m => m.attendance && m.attendance[member.name]);
+      const presentCount = history.filter(m => m.attendance[member.name] === 'present' || m.attendance[member.name] === 'late').length;
+
+      let probability = history.length > 0 ? (presentCount / history.length) * 100 : 75; // Base prob or fallback
+
+      // Time Heuristic: Late night or early morning usually lower attendance
+      const hour = parseInt(time.split(":")[0]);
+      if (hour < 10) probability -= 10;
+      if (hour > 20) probability -= 5;
+
+      // Duration Heuristic: Long meetings (Diva fatigue)
+      if (duration > 3) probability -= 15;
+
+      // Confidence Heuristic: More data = More confidence
+      const confidence = Math.min(history.length * 20 + 20, 95);
+
+      return {
+        name: member.name,
+        role: member.role,
+        probability: Math.max(Math.min(probability, 99), 5),
+        confidence
+      };
+    });
+
+    setPredictions(results);
+  };
+
+  return (
+    <div className="premium-card" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', padding: 32, borderRadius: 32 }}>
+      <div className="flex-between" style={{ alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 30 }}>
+        <div>
+          <h3 style={{ color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: 8, background: 'var(--ebec-gold)', borderRadius: 10, color: '#000' }}><Layout size={20} /></div>
+            Diva AI Attendance Predictor
+          </h3>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8 }}>Predict attendance probability based on historical patterns</p>
+        </div>
+        <button className="btn-primary-premium ripple" onClick={predict} style={{ minWidth: 150 }}>Run Simulation</button>
+      </div>
+
+      <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: 30 }}>
+        <div className="input-group">
+          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Date</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+        </div>
+        <div className="input-group">
+          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Proposed Time</label>
+          <input type="time" value={time} onChange={e => setTime(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+        </div>
+        <div className="input-group">
+          <label style={{ color: '#fff', fontSize: 11, textTransform: 'uppercase', opacity: 0.6 }}>Duration (Hours)</label>
+          <input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="premium-input-small" style={{ width: '100%', marginTop: 8 }} />
+        </div>
+      </div>
+
+      {predictions && (
+        <div className="prediction-results fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+          {predictions.sort((a, b) => b.probability - a.probability).map(p => (
+            <div key={p.name} className="list-item" style={{ background: 'rgba(255,255,255,0.05)', marginBottom: 0, padding: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{p.name}</span>
+                  <span style={{ color: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), fontWeight: 800 }}>{Math.round(p.probability)}%</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{p.role}</div>
+
+                <div className="mt-3" style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${p.probability}%`, background: p.probability > 70 ? '#34c759' : (p.probability > 40 ? 'var(--ebec-gold)' : '#ff3b30'), transition: 's 0.8s ease-out' }}></div>
+                </div>
+                <div className="mt-2" style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', textAlign: 'right' }}>Confidence: {p.confidence}%</div>
+              </div>
             </div>
-            <span className="tag">#EBEC-2026-ADM-{m.id.toString().slice(-4)}</span>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </div>
-  </div>
-);
+  );
+};
+
+const Archive = ({ meetings = [] }) => {
+  const totalMeetings = meetings.length;
+  const completedWithAttendance = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0);
+
+  // Calculate Avg Attendance
+  let totalCap = 0;
+  let totalAttended = 0;
+  completedWithAttendance.forEach(m => {
+    totalCap += m.attendees.length;
+    totalAttended += Object.values(m.attendance).filter(s => s === 'present' || s === 'late').length;
+  });
+  const avgAttendance = totalCap > 0 ? Math.round((totalAttended / totalCap) * 100) : 0;
+
+  // Find Star Attendee (Diva)
+  const attendanceCounts = {};
+  completedWithAttendance.forEach(m => {
+    Object.entries(m.attendance).forEach(([name, status]) => {
+      if (status === 'present' || status === 'late') {
+        attendanceCounts[name] = (attendanceCounts[name] || 0) + 1;
+      }
+    });
+  });
+  const starMember = Object.entries(attendanceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "None";
+
+  return (
+    <div className="dashboard-content fade-in">
+      <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Secretariat Hub</h2>
+
+      {/* Secretariat Analytics Suite */}
+      <div className="mgmt-grid mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 60 }}>
+        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <span className="stat-label" style={{ color: 'var(--ebec-gold)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Total Meetings</span>
+          <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{totalMeetings}</div>
+        </div>
+        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <span className="stat-label" style={{ color: 'var(--apple-blue)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Avg Engagement</span>
+          <div className="stat-value" style={{ fontSize: 32, fontWeight: 800, color: '#fff' }}>{avgAttendance}%</div>
+        </div>
+        <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <span className="stat-label" style={{ color: '#34c759', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Diva of the Month</span>
+          <div className="stat-value" style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginTop: 10 }}>{starMember}</div>
+        </div>
+      </div>
+
+      <AttendancePredictor meetings={meetings} />
+
+      <div className="glass-panel-wide" style={{ marginTop: 60 }}>
+        <p style={{ opacity: 0.8, color: '#fff', marginBottom: '20px', fontWeight: 600 }}>Historical Secretariat Records</p>
+        <div className="archive-list" style={{ display: 'grid', gap: 12 }}>
+          {meetings.length === 0 ? (
+            <p style={{ color: '#fff', opacity: 0.5 }}>No meetings in archive.</p>
+          ) : (
+            [...meetings].sort((a, b) => new Date(b.date) - new Date(a.date)).map((m) => (
+              <div className="list-item" key={m.id} style={{ marginBottom: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: 12, textAlign: 'center', minWidth: 60 }}>
+                    <span style={{ fontSize: 10, color: 'var(--ebec-gold)', display: 'block' }}>{new Date(m.date).toLocaleString('en-US', { month: 'short' })}</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{m.date.split('-')[2]}</span>
+                  </div>
+                  <div>
+                    <p className="meet-title" style={{ fontSize: 18, fontWeight: 700 }}>{m.title}</p>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                      {Object.values(m.attendance || {}).filter(s => s === 'present' || s === 'late').length} Attendees • EBEC-ADM-2026-{m.id.toString().slice(-4)}
+                    </span>
+                  </div>
+                </div>
+                <div className="tag" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>Archived</div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SGProof = ({ onVerify }) => {
   const [answer, setAnswer] = useState("");
