@@ -104,7 +104,7 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
   const [formData, setFormData] = useState({
     title: "",
     theme: "",
-    duration: "One Day", // One Day, Multi-Day, Hours
+    duration: "One Day", // Hours, One Day, Multi-Day
     startTime: "",
     endTime: "",
     objectives: "",
@@ -117,15 +117,38 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
     reference: currentRef
   });
 
-  const [externalInput, setExternalInput] = useState({ name: "", info: "" });
+  const [externalInput, setExternalInput] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    isStudent: true,
+    school: "",
+    year: "",
+    studentId: "",
+    nationalId: ""
+  });
+
+  const [showGuestForm, setShowGuestForm] = useState(false);
 
   const addExternal = () => {
-    if (externalInput.name) {
+    if (externalInput.name && (externalInput.studentId || externalInput.nationalId)) {
       setFormData({
         ...formData,
         externalAttendees: [...formData.externalAttendees, { ...externalInput, id: Date.now() }]
       });
-      setExternalInput({ name: "", info: "" });
+      setExternalInput({
+        name: "",
+        email: "",
+        phone: "",
+        isStudent: true,
+        school: "",
+        year: "",
+        studentId: "",
+        nationalId: ""
+      });
+      setShowGuestForm(false);
+    } else {
+      alert("Please fill in the Name and a valid ID Number (Student or National ID)");
     }
   };
 
@@ -142,9 +165,9 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
         <div className="form-header">
           <div className="header-content">
             <div className="header-meta">
-              <span className="ref-tag">TECH CARD • {formData.reference}</span>
+              <span className="ref-tag">ADMIN • LOGISTICS • {formData.reference}</span>
             </div>
-            <h2>Activity Logistics</h2>
+            <h2>Create Technical Card</h2>
           </div>
           <button className="close-btn" onClick={onCancel}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -155,7 +178,7 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
           <div className="input-group-premium">
             <input
               type="text"
-              placeholder="Activity Title"
+              placeholder="Activity Title (e.g. Design Thinking Workshop)"
               className="form-input-title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -165,10 +188,10 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
 
           <div className="form-grid">
             <div className="field-group">
-              <label>Theme & Domain</label>
+              <label>Domain / Theme</label>
               <input
                 type="text"
-                placeholder="e.g. AI Ethics, Robotics, Marketing"
+                placeholder="Robotics, Marketing, HR..."
                 className="premium-input"
                 value={formData.theme}
                 onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
@@ -177,7 +200,7 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
           </div>
 
           <div className="form-section-premium">
-            <label className="section-label">Duration & Scheduling</label>
+            <label className="section-label">Session Duration</label>
             <div className="segmented-control">
               {["Hours", "One Day", "Multi-Day"].map(d => (
                 <button
@@ -189,13 +212,14 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
                 </button>
               ))}
             </div>
+
             <div className="time-row mt-4">
               <div className="datetime-input">
-                <span className="input-label">Start Time</span>
+                <span className="input-label">{formData.duration === 'Multi-Day' ? 'Start Date & Time' : 'From'}</span>
                 <input type="datetime-local" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
               </div>
               <div className="datetime-input">
-                <span className="input-label">End Time</span>
+                <span className="input-label">{formData.duration === 'Multi-Day' ? 'End Date & Time' : 'To'}</span>
                 <input type="datetime-local" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
               </div>
             </div>
@@ -203,30 +227,42 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
 
           <div className="form-grid mt-4">
             <div className="field-group">
-              <label>Core Objectives</label>
+              <label>Objectives</label>
               <textarea
-                placeholder="What are the key goals for this activity?"
+                placeholder="Primary goals of this session..."
                 value={formData.objectives}
                 onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
                 className="premium-textarea"
+                style={{ height: '80px' }}
               />
             </div>
             <div className="field-group">
-              <label>Detailed Agenda</label>
+              <label>Activity Agenda</label>
               <textarea
-                placeholder="Break down the timeline..."
+                placeholder="Walkthrough of the activity steps..."
                 value={formData.agenda}
                 onChange={(e) => setFormData({ ...formData, agenda: e.target.value })}
                 className="premium-textarea"
+                style={{ height: '80px' }}
               />
             </div>
           </div>
 
           <div className="form-section-premium">
+            <label className="section-label">Logistics & School Needs</label>
+            <textarea
+              placeholder="Room, Projectors, Material, Boards..."
+              className="premium-textarea"
+              value={formData.needs}
+              onChange={(e) => setFormData({ ...formData, needs: e.target.value })}
+            />
+          </div>
+
+          <div className="form-section-premium">
             <div className="switch-row" onClick={() => setFormData({ ...formData, isSponsored: !formData.isSponsored })}>
               <div className="switch-info">
-                <label>Sponsorship Status</label>
-                <p>Is this activity backed by an external partner?</p>
+                <label>External Sponsorship</label>
+                <p>Is this activity powered by a sponsor?</p>
               </div>
               <div className={`ios-switch ${formData.isSponsored ? 'on' : ''}`}></div>
             </div>
@@ -244,49 +280,75 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
             )}
           </div>
 
-          <div className="form-section-premium">
-            <label className="section-label">Logistics & Materials</label>
-            <textarea
-              placeholder="What equipment, tools, or resources are required?"
-              className="premium-textarea"
-              value={formData.needs}
-              onChange={(e) => setFormData({ ...formData, needs: e.target.value })}
-            />
-          </div>
-
-          <div className="form-section-premium pb-10">
+          <div className="form-section-premium mb-0">
             <div className="flex-between items-center mb-4">
-              <label className="section-label mb-0">Attendance Type</label>
-              <select
-                className="premium-select"
-                value={formData.attendeeType}
-                onChange={(e) => setFormData({ ...formData, attendeeType: e.target.value })}
-              >
-                <option value="School">Internal (School Only)</option>
-                <option value="Outside">External (Guests Only)</option>
-                <option value="Mixed">Mixed Access</option>
-              </select>
+              <label className="section-label mb-0">Attendance Scope</label>
+              <div className="segmented-control tiny">
+                {["School", "Outside", "Mixed"].map(type => (
+                  <button
+                    key={type}
+                    className={`segment-btn ${formData.attendeeType === type ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, attendeeType: type })}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {(formData.attendeeType === 'Outside' || formData.attendeeType === 'Mixed') && (
-              <div className="guest-manager mt-4">
-                <div className="guest-input-row">
-                  <input placeholder="Guest Name" value={externalInput.name} onChange={e => setExternalInput({ ...externalInput, name: e.target.value })} />
-                  <input placeholder="Affiliation/Role" value={externalInput.info} onChange={e => setExternalInput({ ...externalInput, info: e.target.value })} />
-                  <button className="add-guest-btn" onClick={addExternal}>
-                    <Plus size={20} />
-                  </button>
+            {(formData.attendeeType !== 'School') && (
+              <div className="guest-portal-premium">
+                <div className="flex-between items-center mb-3">
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>
+                    External Guests ({formData.externalAttendees.length})
+                  </span>
+                  <button className="pill-btn mini" onClick={() => setShowGuestForm(true)}>+ Add Guest</button>
                 </div>
-                <div className="guest-scroller mt-4">
+
+                {showGuestForm && (
+                  <div className="guest-data-form fade-in">
+                    <div className="form-grid compact">
+                      <input placeholder="Full Name" value={externalInput.name} onChange={e => setExternalInput({ ...externalInput, name: e.target.value })} className="premium-input-small" />
+                      <input placeholder="Email" value={externalInput.email} onChange={e => setExternalInput({ ...externalInput, email: e.target.value })} className="premium-input-small" />
+                      <input placeholder="Phone" value={externalInput.phone} onChange={e => setExternalInput({ ...externalInput, phone: e.target.value })} className="premium-input-small" />
+                    </div>
+
+                    <div className="segmented-control tiny mt-3">
+                      <button className={`segment-btn ${externalInput.isStudent ? 'active' : ''}`} onClick={() => setExternalInput({ ...externalInput, isStudent: true })}>Student</button>
+                      <button className={`segment-btn ${!externalInput.isStudent ? 'active' : ''}`} onClick={() => setExternalInput({ ...externalInput, isStudent: false })}>Professional / Other</button>
+                    </div>
+
+                    <div className="form-grid compact mt-3">
+                      {externalInput.isStudent ? (
+                        <>
+                          <input placeholder="School / University" value={externalInput.school} onChange={e => setExternalInput({ ...externalInput, school: e.target.value })} className="premium-input-small" />
+                          <input placeholder="Year of Study" value={externalInput.year} onChange={e => setExternalInput({ ...externalInput, year: e.target.value })} className="premium-input-small" />
+                          <input placeholder="Student ID Card #" value={externalInput.studentId} onChange={e => setExternalInput({ ...externalInput, studentId: e.target.value })} className="premium-input-small" />
+                        </>
+                      ) : (
+                        <input placeholder="National ID (NIN) Number" value={externalInput.nationalId} onChange={e => setExternalInput({ ...externalInput, nationalId: e.target.value })} className="premium-input-small" style={{ gridColumn: 'span 2' }} />
+                      )}
+                    </div>
+
+                    <div className="flex-between mt-4">
+                      <button className="btn-tertiary mini" onClick={() => setShowGuestForm(false)}>Cancel</button>
+                      <button className="btn-primary-premium ripple mini" onClick={addExternal}>Confirm Guest</button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="guest-scroller-premium mt-4">
                   {formData.externalAttendees.map(g => (
-                    <div key={g.id} className="guest-card">
-                      <div className="guest-info">
-                        <span className="guest-name">{g.name}</span>
-                        <span className="guest-meta">{g.info}</span>
+                    <div key={g.id} className="guest-log-item">
+                      <div className="guest-main">
+                        <span className="gn">{g.name}</span>
+                        <span className="gt">{g.isStudent ? `${g.year} • ${g.school}` : 'Professional Access'}</span>
                       </div>
-                      <button className="remove-guest" onClick={() => removeExternal(g.id)}>
-                        <Trash size={14} />
-                      </button>
+                      <div className="guest-contact">
+                        <span>{g.email}</span>
+                        <span>{g.isStudent ? `ID: ${g.studentId}` : `NIN: ${g.nationalId}`}</span>
+                      </div>
+                      <button className="delete-guest" onClick={() => removeExternal(g.id)}><Trash size={12} /></button>
                     </div>
                   ))}
                 </div>
@@ -296,11 +358,11 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
         </div>
 
         <div className="form-footer-premium">
-          <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
+          <button className="btn-tertiary" onClick={onCancel}>Discard</button>
           <button className="btn-primary-premium ripple" onClick={() => {
-            if (!formData.title) return alert("Please enter an activity title");
+            if (!formData.title) return alert("Please enter the activity title");
             onSubmit({ ...formData, id: Date.now() });
-          }}>Generate Technical Card</button>
+          }}>Save Technical Card</button>
         </div>
       </div>
     </div>
@@ -1176,61 +1238,61 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
             {displayText}<span className="cursor">|</span>
           </h1>
         </div>
+      </div>
 
-        <p className="description">What's on the mind of the SG today?</p>
+      <p className="description">What's on the mind of the SG today?</p>
 
-        <div className="carousel-container">
-          <button className="nav-arrow" onClick={prevCard}><ChevronLeft size={32} /></button>
+      <div className="carousel-container">
+        <button className="nav-arrow" onClick={prevCard}><ChevronLeft size={32} /></button>
 
-          <div className="main-focus-card">
-            <div className="card-content-wrap">
-              <h2 className="card-main-title">{cards[activeCard].title}</h2>
-              <p className="card-subtitle">{cards[activeCard].subtitle}</p>
+        <div className="main-focus-card">
+          <div className="card-content-wrap card-anim" key={activeCard}>
+            <h2 className="card-main-title">{cards[activeCard].title}</h2>
+            <p className="card-subtitle">{cards[activeCard].subtitle}</p>
 
-              <button className="main-plus-btn" onClick={cards[activeCard].action}>
-                {cards[activeCard].icon}
-              </button>
-            </div>
+            <button className="main-plus-btn" onClick={cards[activeCard].action}>
+              {cards[activeCard].icon}
+            </button>
           </div>
-
-          <button className="nav-arrow" onClick={nextCard}><ChevronRight size={32} /></button>
         </div>
 
-        <div className="card-indicators">
-          {cards.map((_, idx) => (
-            <button
-              key={idx}
-              className={`dot ${activeCard === idx ? 'active' : ''}`}
-              onClick={() => setActiveCard(idx)}
-            />
-          ))}
+        <button className="nav-arrow" onClick={nextCard}><ChevronRight size={32} /></button>
+      </div>
+
+      <div className="card-indicators">
+        {cards.map((_, idx) => (
+          <button
+            key={idx}
+            className={`dot ${activeCard === idx ? 'active' : ''}`}
+            onClick={() => setActiveCard(idx)}
+          />
+        ))}
+      </div>
+
+      <div className="quick-summary">
+        <div className="stat-card">
+          <div className="stat-value">{meetings.length}</div>
+          <div className="stat-label">Meetings</div>
+          <div className="stat-note">Upcoming & recent</div>
         </div>
 
-        <div className="quick-summary">
-          <div className="stat-card">
-            <div className="stat-value">{meetings.length}</div>
-            <div className="stat-label">Meetings</div>
-            <div className="stat-note">Upcoming & recent</div>
-          </div>
+        <div className="stat-card">
+          <div className="stat-value">{techCards.length}</div>
+          <div className="stat-label">Technical Cards</div>
+          <div className="stat-note">Ongoing activities</div>
+        </div>
 
-          <div className="stat-card">
-            <div className="stat-value">{techCards.length}</div>
-            <div className="stat-label">Technical Cards</div>
-            <div className="stat-note">Ongoing activities</div>
-          </div>
-
-          <div className="stat-card action-card">
-            <div className="stat-value">+</div>
-            <div className="stat-label">Quick Actions</div>
-            <div className="stat-note">Create meeting or card</div>
-            <div className="quick-actions">
-              <button className="quick-btn" onClick={() => setPage('new-meeting')}>
-                <Plus size={14} /> New Meeting
-              </button>
-              <button className="quick-btn secondary" onClick={() => setPage('new-tech-card')}>
-                <Plus size={14} /> New Card
-              </button>
-            </div>
+        <div className="stat-card action-card">
+          <div className="stat-value">+</div>
+          <div className="stat-label">Quick Actions</div>
+          <div className="stat-note">Create meeting or card</div>
+          <div className="quick-actions">
+            <button className="quick-btn" onClick={() => setPage('new-meeting')}>
+              <Plus size={14} /> New Meeting
+            </button>
+            <button className="quick-btn secondary" onClick={() => setPage('new-tech-card')}>
+              <Plus size={14} /> New Card
+            </button>
           </div>
         </div>
       </div>
@@ -1343,48 +1405,55 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
           </div>
 
           <div className="mgmt-grid">
-            {techCards.length === 0 ? (
+            {techCards.filter(tc => !tc.isArchived).length === 0 ? (
               <div className="empty-state">
-                <p>No technical cards active.</p>
-                <button className="cta" onClick={() => setPage('new-tech-card')}>Create first card</button>
+                <p>No active technical cards for 2026.</p>
+                <button className="cta" onClick={() => setPage('new-tech-card')}>Create 01/26 Card</button>
               </div>
             ) : (
-              techCards.map((tc, idx) => {
+              techCards.filter(tc => !tc.isArchived).map((tc, idx) => {
                 const isGoldTheme = idx % 2 === 0;
                 return (
                   <div className="premium-card fade-in" key={tc.id}>
                     <div className={`date-visual-square ${isGoldTheme ? 'gold-theme' : ''}`}>
-                      <span className="dv-month">REF</span>
-                      <span className="dv-day" style={{ fontSize: '42px' }}>{tc.reference.split('/')[0]}</span>
+                      <span className="dv-month">LOGISTICS</span>
+                      <span className="dv-day" style={{ fontSize: '38px', letterSpacing: '-1px' }}>{tc.reference}</span>
                       <span className="dv-time">EBEC • 2026</span>
                     </div>
 
                     <div className="card-info-block">
+                      <div className="flex-between items-center mb-1">
+                        <span style={{ fontSize: 9, fontWeight: 900, background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>{tc.duration}</span>
+                        {tc.isSponsored && <span style={{ fontSize: 9, fontWeight: 900, color: 'var(--ebec-gold)', textTransform: 'uppercase' }}>Sponsored</span>}
+                      </div>
                       <h3>{tc.title}</h3>
-                      <p>{tc.theme} • {tc.duration}</p>
+                      <p>{tc.theme} • {tc.attendeeType} Access</p>
                     </div>
 
                     <div className="stats-summary-row">
-                      <div className="stat-item" title="Sponsor">
-                        <Package size={12} /> <span>{tc.isSponsored ? tc.sponsorName : 'General'}</span>
+                      <div className="stat-item" title="External Guests">
+                        <UserCheck size={12} /> <span>{tc.externalAttendees?.length || 0} Guests</span>
                       </div>
-                      <div className="stat-item" title="Agenda">
-                        <Clipboard size={12} /> <span>{tc.agenda ? 'Ready' : 'Draft'}</span>
+                      <div className="stat-item" title="Agenda Status">
+                        <Clipboard size={12} /> <span>{tc.agenda ? 'Built' : 'Draft'}</span>
                       </div>
                     </div>
 
                     <div className="premium-card-footer">
-                      <button className="footer-action-btn" title="View Agenda" onClick={() => alert(`Agenda: ${tc.agenda}`)}>
+                      <button className="footer-action-btn" title="View Detailed Agenda" onClick={() => alert(`Objectives: ${tc.objectives}\n\nAgenda: ${tc.agenda}`)}>
                         <Clipboard size={12} />
                       </button>
-                      <button className="footer-action-btn" title="Materials Tracking" onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                      <button className="footer-action-btn" title="School Logistics & Needs" onClick={() => alert(`Needs: ${tc.needs}`)}>
                         <Package size={12} />
                       </button>
-                      <button className="footer-action-btn report" title="Technical Reference" onClick={() => alert(`Reference Doc: ${tc.reference}`)}>
-                        <FileText size={12} />
+                      <button className="footer-action-btn report" title="Guest Intelligence" onClick={() => {
+                        const guestList = tc.externalAttendees?.map(g => `- ${g.name} (${g.isStudent ? g.school : 'Professional'})`).join('\n') || "No external guests.";
+                        alert(`External Guest List:\n\n${guestList}`);
+                      }}>
+                        <UserCheck size={12} />
                       </button>
-                      <button className="footer-delete-btn" title="Remove Card" onClick={() => {
-                        if (window.confirm(`Remove this technical card?`)) onDeleteTechCard(tc.id);
+                      <button className="footer-delete-btn" title="Archive Technical Card" onClick={() => {
+                        if (window.confirm(`Move this card to 2025 Archive?`)) onArchiveTechCard(tc.id);
                       }}>
                         <Trash size={16} />
                       </button>
@@ -1402,40 +1471,48 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
         </div>
       </section>
 
-      {openNotesFor && (
-        <MeetingNotesModal
-          meeting={meetings.find(m => m.id === openNotesFor)}
-          onClose={() => setOpenNotesFor(null)}
-          onSave={onSaveMeetingNotes}
-        />
-      )}
+      {
+        openNotesFor && (
+          <MeetingNotesModal
+            meeting={meetings.find(m => m.id === openNotesFor)}
+            onClose={() => setOpenNotesFor(null)}
+            onSave={onSaveMeetingNotes}
+          />
+        )
+      }
 
-      {openAttendanceFor && (
-        <MeetingAttendanceModal
-          meeting={meetings.find(m => m.id === openAttendanceFor)}
-          onClose={() => setOpenAttendanceFor(null)}
-          onSave={onSaveMeetingAttendance}
-        />
-      )}
+      {
+        openAttendanceFor && (
+          <MeetingAttendanceModal
+            meeting={meetings.find(m => m.id === openAttendanceFor)}
+            onClose={() => setOpenAttendanceFor(null)}
+            onSave={onSaveMeetingAttendance}
+          />
+        )
+      }
 
-      {openReportFor && (
-        <MeetingReportModal
-          meeting={meetings.find(m => m.id === openReportFor)}
-          onClose={() => setOpenReportFor(null)}
-          onSave={onSaveMeetingReport}
-        />
-      )}
+      {
+        openReportFor && (
+          <MeetingReportModal
+            meeting={meetings.find(m => m.id === openReportFor)}
+            onClose={() => setOpenReportFor(null)}
+            onSave={onSaveMeetingReport}
+          />
+        )
+      }
 
-      {editMeeting && (
-        <EditMeetingModal
-          meeting={editMeeting}
-          onCancel={() => setEditMeeting(null)}
-          onSubmit={(data) => {
-            onUpdateMeeting(data);
-            setEditMeeting(null);
-          }}
-        />
-      )}
+      {
+        editMeeting && (
+          <EditMeetingModal
+            meeting={editMeeting}
+            onCancel={() => setEditMeeting(null)}
+            onSubmit={(data) => {
+              onUpdateMeeting(data);
+              setEditMeeting(null);
+            }}
+          />
+        )
+      }
     </>
   );
 };
@@ -1529,7 +1606,7 @@ const AttendancePredictor = ({ meetings }) => {
   );
 };
 
-const Archive = ({ meetings = [], onUpdateMeeting }) => {
+const Archive = ({ meetings = [], techCards = [], onUpdateMeeting }) => {
   const [editMeeting, setEditMeeting] = useState(null);
   const totalMeetings = meetings.length;
   const completedWithAttendance = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0);
@@ -1555,10 +1632,47 @@ const Archive = ({ meetings = [], onUpdateMeeting }) => {
   const starMember = Object.entries(attendanceCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "None";
 
   return (
-    <div className="dashboard-content fade-in">
+    <div className="dashboard-content fade-in" style={{ maxWidth: 1200 }}>
+      {/* Technical Card Archive (2025 & Older) */}
+      <div className="mgmt-header-block mb-8">
+        <h2 className="mgmt-heading" style={{ color: '#fff' }}>Technical Archive</h2>
+        <p className="mgmt-sub">Legacy cards and historical logistics (Year 2025)</p>
+      </div>
+      <div className="mgmt-grid mb-16">
+        {techCards.filter(tc => tc.isArchived).length > 0 ? (
+          techCards.filter(tc => tc.isArchived).map((tc, idx) => (
+            <div className="premium-card fade-in" key={tc.id} style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <div className="date-visual-square" style={{ opacity: 0.6, background: '#333' }}>
+                <span className="dv-month">ARCHIVED</span>
+                <span className="dv-day" style={{ fontSize: 32 }}>{tc.reference}</span>
+              </div>
+              <div className="card-info-block">
+                <h3 style={{ color: '#fff' }}>{tc.title}</h3>
+                <p style={{ color: 'rgba(255,255,255,0.4)' }}>{tc.theme} • {tc.duration}</p>
+              </div>
+              <div className="premium-card-footer">
+                <button className="footer-action-btn" title="View Objective" style={{ color: '#fff' }} onClick={() => alert(`Objectives: ${tc.objectives}`)}>
+                  <Clipboard size={12} />
+                </button>
+                <button className="footer-action-btn" style={{ color: '#fff' }} onClick={() => alert(`Logistics: ${tc.needs}`)}>
+                  <Package size={12} />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="empty-state" style={{ background: 'transparent' }}>
+            <p>No archived technical cards found.</p>
+          </div>
+        )}
+      </div>
+
       <h2 className="section-title" style={{ color: '#fff', fontSize: '32px', marginBottom: '20px' }}>Secretariat Hub</h2>
 
-      {/* Secretariat Analytics Suite */}
+      <div className="mgmt-header-block mb-8">
+        <h2 className="mgmt-heading" style={{ color: '#fff' }}>Meeting Archive</h2>
+        <p className="mgmt-sub">Verified attendance logs and reports</p>
+      </div>
       <div className="mgmt-grid mb-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24, marginBottom: 60 }}>
         <div className="premium-card" style={{ padding: 24, textAlign: 'center', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <span className="stat-label" style={{ color: 'var(--ebec-gold)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Total Meetings</span>
@@ -1832,35 +1946,49 @@ const SGProof = ({ onVerify }) => {
   );
 };
 
-const Footer = () => (
-  <footer className="footer-premium">
-    <div className="footer-glass">
-      <div className="footer-content">
-        <div className="footer-top">
-          <div className="footer-brand">
-            <div className="logo-circle small-logo">
-              <img src={ebecLogo} alt="Logo" className="footer-logo-img" />
+const Footer = () => {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+
+  return (
+    <footer
+      className="footer-premium"
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      }}
+      style={{
+        '--x': `${pos.x}px`,
+        '--y': `${pos.y}px`
+      }}
+    >
+      <div className="footer-glass">
+        <div className="footer-content">
+          <div className="footer-top">
+            <div className="footer-brand">
+              <div className="logo-circle small-logo">
+                <img src={ebecLogo} alt="Logo" className="footer-logo-img" />
+              </div>
+              <span className="brand-name">EBEC Admin Hub</span>
             </div>
-            <span className="brand-name">EBEC Admin Hub</span>
+            <div className="footer-links">
+              <span>Help Center</span>
+              <span>Privacy Policy</span>
+              <span>Contact Tech Team</span>
+            </div>
           </div>
-          <div className="footer-links">
-            <span>Help Center</span>
-            <span>Privacy Policy</span>
-            <span>Contact Tech Team</span>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
-          <div className="social-dots">
-            <div className="social-dot"></div>
-            <div className="social-dot"></div>
-            <div className="social-dot"></div>
+          <div className="footer-bottom">
+            <p>© 2026 EBEC Secretary General Leena IKHLEF. Built for Excellence.</p>
+            <div className="social-dots">
+              <div className="social-dot"></div>
+              <div className="social-dot"></div>
+              <div className="social-dot"></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 const API_URL = "http://localhost:5000/api";
 
@@ -1923,6 +2051,31 @@ export default function App() {
       .then(() => {
         setTechCards(prev => prev.filter(tc => tc.id !== id));
         console.log("Deleted from database successfully");
+      });
+  };
+
+  const onArchiveTechCard = (id) => {
+    // We update the card on the server via PATCH
+    fetch(`${API_URL}/tech-cards/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isArchived: true })
+    })
+      .then(res => res.json())
+      .then(updated => {
+        setTechCards(prev => prev.map(tc => tc.id === id ? updated : tc));
+      });
+  };
+
+  const handleUpdateTechCard = (updatedCard) => {
+    fetch(`${API_URL}/tech-cards/${updatedCard.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedCard)
+    })
+      .then(res => res.json())
+      .then(saved => {
+        setTechCards(prev => prev.map(tc => tc.id === saved.id ? saved : tc));
       });
   };
 
@@ -2023,9 +2176,15 @@ export default function App() {
         .stat-value { font-size:28px; font-weight:900; color:var(--ebec-gold); }
         .stat-label { font-size:13px; margin-top:6px; color:#dfe7ff; font-weight:800; }
         .stat-note { font-size:12px; color:rgba(255,255,255,0.6); margin-top:6px; }
+        
+        @keyframes cardSlide {
+          from { opacity: 0; transform: translateX(30px) scale(0.9); filter: blur(10px); }
+          to { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+        }
+        .card-anim { animation: cardSlide 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; width: 100%; display: flex; flex-direction: column; align-items: center; }
 
         /* --- Management Sections --- */
-        .mgmt-section { width: 100%; background: #fff; padding: 100px 40px; border-radius: 64px 64px 0 0; display: flex; justify-content: center; }
+        .mgmt-section { width: 100%; background: #fff; padding: 100px 40px; border-radius: 64px 64px 0 0; display: flex; justify-content: center; margin-top: 80px; }
         .mgmt-content { max-width: 1300px; width: 100%; }
         .mgmt-grid { 
             display: grid; 
@@ -2437,8 +2596,50 @@ export default function App() {
         .list-item .meet-title { font-size: 18px; font-weight: 700; color: #fff; margin:0; }
         .list-item .tag { background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 100px; color: #fff; font-size: 11px; font-weight: 800; }
 
+        /* --- Guest Portal & Technical Extensions --- */
+        .segmented-control.tiny { border-radius: 10px; padding: 3px; }
+        .segmented-control.tiny .segment-btn { padding: 6px; font-size: 11px; border-radius: 7px; }
+        
+        .guest-portal-premium { padding: 20px; background: rgba(0,0,0,0.03); border-radius: 24px; border: 1px dashed rgba(0,0,0,0.1); }
+        .pill-btn.mini { padding: 6px 12px; font-size: 11px; }
+        .guest-data-form { background: rgba(255,255,255,0.7); padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #fff; }
+        .form-grid.compact { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .btn-tertiary.mini { font-size: 12px; padding: 8px 16px; }
+        .btn-primary-premium.mini { padding: 8px 20px; font-size: 13px; border-radius: 12px; }
+
+        .guest-scroller-premium { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 8px; }
+        .guest-log-item { background: #fff; padding: 12px 16px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(0,0,0,0.03); animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        
+        .guest-main { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+        .guest-main .gn { font-size: 13px; font-weight: 800; color: #1d1d1f; }
+        .guest-main .gt { font-size: 10px; color: #888; font-weight: 600; text-transform: uppercase; }
+        
+        .guest-contact { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-right: 20px; }
+        .guest-contact span { font-size: 11px; font-weight: 600; color: #555; }
+        
+        .delete-guest { width: 28px; height: 28px; border-radius: 8px; border: none; background: #fff5f5; color: #ff3b30; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .delete-guest:hover { background: #ff3b30; color: #fff; }
+
         /* --- Global Utilities --- */
-        .glass-nav { background: rgba(255, 255, 255, 0.1) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+        .glass-nav { 
+          background: rgba(255, 255, 255, 0.1) !important; 
+          border: 1px solid rgba(255, 255, 255, 0.2) !important; 
+          position: sticky;
+          top: 20px;
+          z-index: 1000;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          width: 65%;
+          max-width: 850px;
+          border-radius: 100px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 32px;
+          transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          margin-top: 24px;
+        }
         .nav-links span { color: #fff !important; cursor: pointer; transition: 0.3s; }
         .nav-links span:hover { color: var(--ebec-gold) !important; }
         .nav-links span.active { color: var(--ebec-gold) !important; font-weight: 800; text-shadow: 0 0 10px rgba(255, 193, 7, 0.3); }
@@ -2521,7 +2722,22 @@ export default function App() {
         @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
 
         /* --- Footer Styles (Matching Top) --- */
-        .footer-premium { background: var(--ebec-navy); width: 100%; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-premium { 
+          background: var(--ebec-navy); 
+          position: relative;
+          width: 100%; 
+          border-top: 1px solid rgba(255,255,255,0.05); 
+          overflow: hidden;
+        }
+        .footer-premium::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(1200px circle at var(--x) var(--y), rgba(255, 193, 7, 0.25), transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.3s;
+        }
         .footer-glass { 
             padding: 100px 40px 60px 40px; 
             background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4));
@@ -2573,6 +2789,8 @@ export default function App() {
           onDeleteMeeting={handleDeleteMeeting}
           onUpdateMeeting={handleUpdateMeeting}
           onDeleteTechCard={handleDeleteTechCard}
+          onArchiveTechCard={onArchiveTechCard}
+          onUpdateTechCard={handleUpdateTechCard}
           onSaveMeetingNotes={handleSaveMeetingNotes}
           onSaveMeetingAttendance={handleSaveMeetingAttendance}
           onSaveMeetingReport={handleSaveMeetingReport}
@@ -2591,7 +2809,14 @@ export default function App() {
         />
       )}
 
-      {page === 'archive' && <Archive meetings={meetings} onUpdateMeeting={handleUpdateMeeting} />}
+      {page === 'archive' && (
+        <Archive
+          meetings={meetings}
+          techCards={techCards}
+          onUpdateMeeting={handleUpdateMeeting}
+          onUpdateTechCard={handleUpdateTechCard}
+        />
+      )}
 
       {page === 'attendance-tracking' && <AttendanceTracking meetings={meetings} />}
 

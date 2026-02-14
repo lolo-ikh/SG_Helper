@@ -842,16 +842,20 @@
   ],
   "techCards": [
     {
-      "id": 101,
-      "title": "Arduino Workshop",
-      "theme": "Electronics",
-      "duration": "3 Hours",
-      "reference": "01/26",
+      "id": 1740000000000,
+      "title": "Recruitment Day Finals",
+      "theme": "HR",
+      "duration": "One Day",
+      "reference": "33/25",
       "isSponsored": true,
-      "sponsorName": "TechCorp",
-      "agenda": "1. Intro, 2. Circuit building, 3. Coding",
-      "needs": "20 Arduinos, 40 LEDs, Breadboards"
+      "sponsorName": "Telecom Partner",
+      "objectives": "Finalize selection for new board members",
+      "agenda": "Interview phase, scoring, selection",
+      "needs": "Amphi B, Scoring sheets",
+      "attendeeType": "School",
+      "externalAttendees": [],
+      "isArchived": true
     }
   ],
-  "refCounter": 2
+  "refCounter": 1
 }

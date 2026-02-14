@@ -159,6 +159,19 @@ app.delete('/api/tech-cards/:id', (req, res) => {
     res.status(204).send();
 });
 
+app.patch('/api/tech-cards/:id', (req, res) => {
+    const db = readDB();
+    const id = parseInt(req.params.id);
+    const index = db.techCards.findIndex(tc => tc.id === id);
+    if (index !== -1) {
+        db.techCards[index] = { ...db.techCards[index], ...req.body };
+        writeDB(db);
+        res.json(db.techCards[index]);
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
 const server = app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 }).on('error', (err) => {
