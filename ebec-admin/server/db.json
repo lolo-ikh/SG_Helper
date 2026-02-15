@@ -843,38 +843,24 @@
   "techCards": [
     {
       "title": "StudUps",
-      "theme": "Business, StartUps",
+      "theme": "Entrepreneurship Exhibition & Competition",
+      "activityType": "scientific",
       "duration": "One Day",
       "startTime": "2026-02-21T07:00",
       "endTime": "2026-02-21T17:00",
-      "objectives": "Let new startups express their idea and get more attention.\nHelp Startups pitch their ideas.",
-      "agenda": "9AM-11AM: Stand and get to know StartUps.\n1PM-2PM: Selected Startups pitch their ideas.\n2-3pm: closing ceremony.",
+      "objectives": "Promote youth, student, and early-stage entrepreneurship\nProvide visibility for startups, incubated startups, and micro-enterprises\nEncourage innovation and real-world problem solving\nConnect startups with institutions, experts, and potential partners\nCreate an engaging and structured entrepreneurship event adapted to Ramadan.",
+      "agenda": "08:30 - 09:30: Startup arrival and booth setup / Organizer briefing\n09:30 - 12:00: Booth exhibition, jury visits, and public voting\n13:00 - 14:30: Jury final evaluation and deliberation\n14:30 - 15:00: Awards and closing ceremony",
       "isSponsored": false,
       "sponsorName": "",
-      "needs": "Tables.\nmultipres.\nHDMI cable.",
+      "needs": " Booth Specifications\nEach booth includes:\n● 1 table\n● 2 chairs\n● Booth number and startup name\n● Access to electricity (shared power strips)\n● Space for roll-up or poster display",
       "attendeeType": "Mixed",
       "externalAttendees": [],
-      "reference": "03/26",
-      "location": "The Main Library",
+      "reference": "04/26",
+      "location": "The Main Library.",
       "isIndoor": false,
-      "id": 1771171162685,
-      "docUrl": "https://docs.google.com/open?id=13qvRCoRXnrZmzvdrszG8tlhoOY4s9fYhDjqEMcHku3Q"
-    },
-    {
-      "id": 1740000000000,
-      "title": "Recruitment Day Finals",
-      "theme": "HR",
-      "duration": "One Day",
-      "reference": "33/25",
-      "isSponsored": true,
-      "sponsorName": "Telecom Partner",
-      "objectives": "Finalize selection for new board members",
-      "agenda": "Interview phase, scoring, selection",
-      "needs": "Amphi B, Scoring sheets",
-      "attendeeType": "School",
-      "externalAttendees": [],
-      "isArchived": true
+      "id": 1771174434409,
+      "docUrl": "https://docs.google.com/open?id=1farhi-Rc4yQt7wEXhK0LDpOVmA_FN_-QE-CU3UDmdC8"
     }
   ],
-  "refCounter": 4
+  "refCounter": 5
 }

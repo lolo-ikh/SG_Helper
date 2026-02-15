@@ -559,10 +559,10 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
         {/* Tab Navigation */}
         <div style={{ display: 'flex', gap: 4, padding: '16px 40px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', flexShrink: 0 }}>
           {[
-            { id: 'basic', label: 'Basic Info', icon: '📋' },
-            { id: 'details', label: 'Activity Details', icon: '🎯' },
-            { id: 'content', label: 'Content', icon: '📝' },
-            { id: 'guests', label: 'Guests', icon: '👥' }
+            { id: 'basic', label: 'Basic Info', icon: '' },
+            { id: 'details', label: 'Activity Details', icon: '' },
+            { id: 'content', label: 'Content', icon: '' },
+            { id: 'guests', label: 'Guests', icon: '' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -632,7 +632,7 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
                 <div className="field-group">
                   <label>Indoor / Outdoor</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{formData.isIndoor ? '🏢 Indoor' : '🌳 Outdoor'}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{formData.isIndoor ? 'Indoor' : 'Outdoor'}</span>
                     <div className={`ios-switch ${formData.isIndoor ? 'on' : ''}`} onClick={() => setFormData({ ...formData, isIndoor: !formData.isIndoor })}></div>
                   </div>
                 </div>
@@ -750,7 +750,7 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
               </div>
 
               {(formData.externalAttendees || []).length > 0 && (
-                <button className="pill-btn" onClick={exportToCSV} style={{ marginTop: 16, width: '100%' }}>📥 Export as CSV</button>
+                <button className="pill-btn" onClick={exportToCSV} style={{ marginTop: 16, width: '100%' }}>Export as CSV</button>
               )}
             </>
           )}
@@ -759,13 +759,22 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
         {/* Footer */}
         <div className="form-footer-premium" style={{ flexShrink: 0, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
           <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
-          <button className="btn-primary-premium ripple" onClick={() => {
-            onUpdate(formData);
-            if (formData.docUrl) {
-              setTimeout(() => window.open(formData.docUrl, '_blank'), 500);
-            }
-          }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            💾 Save & {formData.docUrl ? '📄 View Google Docs' : 'Close'}
+          <button 
+            className="btn-primary-premium ripple" 
+            onClick={() => {
+              console.log("Save button clicked!");
+              console.log("Card data before save:", formData);
+              const docUrlToOpen = formData.docUrl?.trim();
+              onUpdate(formData);
+              if (docUrlToOpen && (docUrlToOpen.startsWith('http://') || docUrlToOpen.startsWith('https://'))) {
+                setTimeout(() => {
+                  window.open(docUrlToOpen, '_blank');
+                }, 800);
+              }
+            }} 
+            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+          >
+            Save & {formData.docUrl?.trim() ? 'View Google Docs' : 'Close'}
           </button>
         </div>
       </div>
@@ -2071,7 +2080,7 @@ const AttendancePredictor = ({ meetings }) => {
   );
 };
 
-const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechCard }) => {
+const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechCard, onDeleteTechCard }) => {
   const [editMeeting, setEditMeeting] = useState(null);
   const [editTechCard, setEditTechCard] = useState(null);
   const totalMeetings = meetings.length;
@@ -2130,6 +2139,18 @@ const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechC
                 )}
                 <button className="footer-action-btn" style={{ color: '#fff' }} onClick={() => alert(`Logistics: ${tc.needs}`)}>
                   <Package size={12} />
+                </button>
+                <button 
+                  className="footer-action-btn" 
+                  title="Delete Permanently" 
+                  style={{ color: '#ff3b30' }} 
+                  onClick={() => {
+                    if (confirm(`Delete "${tc.title}" permanently? This cannot be undone.`)) {
+                      onDeleteTechCard(tc.id);
+                    }
+                  }}
+                >
+                  <Trash size={12} />
                 </button>
               </div>
             </div>
@@ -2542,14 +2563,27 @@ export default function App() {
   };
 
   const handleUpdateTechCard = (updatedCard) => {
+    console.log("Saving tech card:", updatedCard);
     fetch(`${API_URL}/tech-cards/${updatedCard.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedCard)
     })
-      .then(res => res.json())
+      .then(res => {
+        console.log("Save response status:", res.status);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(saved => {
+        console.log("Tech card saved successfully:", saved);
         setTechCards(prev => prev.map(tc => tc.id === saved.id ? saved : tc));
+        alert("Technical card saved successfully!");
+      })
+      .catch(error => {
+        console.error("Error saving tech card:", error);
+        alert("Error saving technical card: " + error.message);
       });
   };
 
@@ -3291,6 +3325,7 @@ export default function App() {
           techCards={techCards}
           onUpdateMeeting={handleUpdateMeeting}
           onUpdateTechCard={handleUpdateTechCard}
+          onDeleteTechCard={handleDeleteTechCard}
         />
       )}
 
