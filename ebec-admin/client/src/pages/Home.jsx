@@ -513,6 +513,7 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
   const [formData, setFormData] = useState({ ...card });
   const [externalInput, setExternalInput] = useState({ name: "", email: "", phone: "", isStudent: true, school: "", year: "", studentId: "", nationalId: "" });
   const [showGuestForm, setShowGuestForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
 
   const addExternal = () => {
     if (!externalInput.name) return alert("Guest Name is required");
@@ -527,15 +528,15 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
   };
 
   const exportToCSV = () => {
-    const headers = ["Name", "Email", "Phone", "School", "Year", "Student ID", "National ID"];
+    const headers = ["Name", "Email", "Phone", "School", "Year", "Student ID"];
     const rows = (formData.externalAttendees || []).map(g => [
-      `"${g.name || ''}"`, `"${g.email || ''}"`, `"${g.phone || ''}"`, `"${g.school || ''}"`, `"${g.year || ''}"`, `"${g.studentId || ''}"`, `"${g.nationalId || ''}"`
+      `"${g.name || ''}"`, `"${g.email || ''}"`, `"${g.phone || ''}"`, `"${g.school || ''}"`, `"${g.year || ''}"`, `"${g.studentId || ''}"`
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${formData.title.replace(/[^a-z0-9]/gi, '_')}_guests.csv`);
+    link.setAttribute("download", `technical-card-guests.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -543,96 +544,229 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
 
   return (
     <div className="form-overlay fade-in">
-      <div className="premium-form" style={{ maxWidth: 800 }}>
-        <div className="form-header">
+      <div className="premium-form" style={{ maxWidth: 950, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="form-header" style={{ flexShrink: 0 }}>
           <div className="header-content">
-            <div className="header-meta"><span className="meta-text">EDIT MODE • {formData.reference}</span></div>
-            <h2>Modify Technical Card</h2>
+            <div className="header-meta" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span className="ref-tag" style={{ background: '#0071e3', color: '#fff' }}>{formData.reference}</span>
+              <span className="meta-text">EDIT TECHNICAL CARD</span>
+            </div>
+            <h2 style={{ margin: '8px 0 0 0' }}>{formData.title}</h2>
           </div>
           <button className="close-btn" onClick={onCancel}>×</button>
         </div>
 
-        <div className="form-body">
-          <div className="input-group-premium">
-            <label className="section-label">Activity Title</label>
-            <input className="form-input-title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-          </div>
-
-          <div className="form-grid mt-4">
-            <div className="field-group">
-              <label>Domain / Theme</label>
-              <input className="premium-input" value={formData.theme} onChange={e => setFormData({ ...formData, theme: e.target.value })} />
-            </div>
-            <div className="field-group">
-              <label>Location</label>
-              <input className="premium-input" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
-            </div>
-          </div>
-
-          <div className="field-group mt-4">
-            <label>Google Doc Setup</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <input
-                className="premium-input-small"
-                style={{ flex: 1, background: 'rgba(52, 199, 89, 0.05)', borderColor: 'rgba(52, 199, 89, 0.2)' }}
-                placeholder="Paste Google Doc or Drive Folder URL here..."
-                value={formData.docUrl || ""}
-                onChange={e => setFormData({ ...formData, docUrl: e.target.value })}
-              />
-              {formData.docUrl && (
-                <button className="btn-tertiary mini" onClick={() => window.open(formData.docUrl, '_blank')}>Test Link</button>
-              )}
-            </div>
-            <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
-              If auto-generation failed, open your Google Drive, find the doc, and paste the link here.
-            </p>
-          </div>
-
-          <div className="form-grid mt-4">
-            <label>Needs & Logistics</label>
-            <textarea className="premium-textarea" value={formData.needs} onChange={e => setFormData({ ...formData, needs: e.target.value })} style={{ height: 80 }} />
-          </div>
+        {/* Tab Navigation */}
+        <div style={{ display: 'flex', gap: 4, padding: '16px 40px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', flexShrink: 0 }}>
+          {[
+            { id: 'basic', label: 'Basic Info', icon: '📋' },
+            { id: 'details', label: 'Activity Details', icon: '🎯' },
+            { id: 'content', label: 'Content', icon: '📝' },
+            { id: 'guests', label: 'Guests', icon: '👥' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                background: activeTab === tab.id ? '#fff' : 'transparent',
+                border: activeTab === tab.id ? '2px solid #0071e3' : '2px solid transparent',
+                padding: '10px 16px',
+                borderRadius: '12px 12px 0 0',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                color: activeTab === tab.id ? '#0071e3' : '#888',
+                transition: '0.2s'
+              }}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
         </div>
 
-        <div className="field-group mt-4">
-          <label>Agenda</label>
-          <textarea className="premium-textarea" value={formData.agenda} onChange={e => setFormData({ ...formData, agenda: e.target.value })} style={{ height: 100 }} />
-        </div>
-
-        <div className="form-section-premium mt-6">
-          <div className="flex-between items-center mb-3">
-            <label className="section-label mb-0">External Guest List</label>
-            <button className="pill-btn mini" onClick={() => setShowGuestForm(true)}>+ Add Guest</button>
-          </div>
-
-          {showGuestForm && (
-            <div className="guest-data-form fade-in">
-              <div className="form-grid compact">
-                <input placeholder="Full Name" value={externalInput.name} onChange={e => setExternalInput({ ...externalInput, name: e.target.value })} className="premium-input-small" />
-                <input placeholder="Email" value={externalInput.email} onChange={e => setExternalInput({ ...externalInput, email: e.target.value })} className="premium-input-small" />
+        {/* Form Body - Scrollable */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
+          {/* BASIC INFO TAB */}
+          {activeTab === 'basic' && (
+            <>
+              <div className="input-group-premium mb-8">
+                <label className="section-label">Activity Title</label>
+                <input className="form-input-title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
               </div>
-              <div className="flex-between mt-3">
-                <button className="btn-tertiary mini" onClick={() => setShowGuestForm(false)}>Cancel</button>
-                <button className="btn-primary-premium ripple mini" onClick={addExternal}>Add</button>
+
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="field-group">
+                  <label>Reference Number</label>
+                  <input className="premium-input" value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} placeholder="e.g., 01/26" />
+                </div>
+                <div className="field-group">
+                  <label>Location / Venue</label>
+                  <input className="premium-input" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} placeholder="Where is it happening?" />
+                </div>
               </div>
-            </div>
+
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
+                <div className="field-group">
+                  <label>Domain / Theme</label>
+                  <input className="premium-input" value={formData.theme} onChange={e => setFormData({ ...formData, theme: e.target.value })} placeholder="e.g., Robotics, Marketing" />
+                </div>
+                <div className="field-group">
+                  <label>Duration</label>
+                  <select className="premium-input" value={formData.duration || 'One Day'} onChange={e => setFormData({ ...formData, duration: e.target.value })}>
+                    <option value="Hours">Hours</option>
+                    <option value="One Day">One Day</option>
+                    <option value="Multi-Day">Multi-Day</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
+                <div className="field-group">
+                  <label>Activity Type</label>
+                  <select className="premium-input" value={formData.activityType || 'scientific'} onChange={e => setFormData({ ...formData, activityType: e.target.value })}>
+                    <option value="scientific">Scientific</option>
+                    <option value="cultural">Cultural</option>
+                    <option value="sport">Sport</option>
+                  </select>
+                </div>
+                <div className="field-group">
+                  <label>Indoor / Outdoor</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{formData.isIndoor ? '🏢 Indoor' : '🌳 Outdoor'}</span>
+                    <div className={`ios-switch ${formData.isIndoor ? 'on' : ''}`} onClick={() => setFormData({ ...formData, isIndoor: !formData.isIndoor })}></div>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
 
-          <div className="guest-scroller-premium mt-3" style={{ maxHeight: 200 }}>
-            {(formData.externalAttendees || []).map(g => (
-              <div key={g.id} className="guest-log-item">
-                <span className="gn">{g.name}</span>
-                <div className="guest-contact"><span>{g.email}</span></div>
-                <button className="delete-guest" onClick={() => removeExternal(g.id)}><Trash size={12} /></button>
+          {/* ACTIVITY DETAILS TAB */}
+          {activeTab === 'details' && (
+            <>
+              <div className="mb-8">
+                <label className="section-label" style={{ marginBottom: 16 }}>Target Audience</label>
+                <div className="segmented-control">
+                  {[
+                    { value: "School", label: "School Only" },
+                    { value: "Outside", label: "External" },
+                    { value: "Mixed", label: "Mixed" }
+                  ].map(type => (
+                    <button
+                      key={type.value}
+                      className={`segment-btn ${formData.attendeeType === type.value ? 'active' : ''}`}
+                      onClick={() => setFormData({ ...formData, attendeeType: type.value })}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: '#888', marginTop: 8 }}>
+                  {formData.attendeeType === 'School' && 'Internal: Only ENSIA community members'}
+                  {formData.attendeeType === 'Outside' && 'External: Non-ENSIA participants only'}
+                  {formData.attendeeType === 'Mixed' && 'Hybrid: ENSIA members + external guests'}
+                </p>
               </div>
-            ))}
-          </div>
 
-          <div className="form-footer-premium">
-            <button className="btn-tertiary" onClick={onCancel}>Discard Changes</button>
-            <button className="btn-apple-light" onClick={exportToCSV} style={{ marginRight: 10, fontSize: 13, padding: '8px 16px' }}>Export Guests CSV</button>
-            <button className="btn-primary-premium ripple" onClick={() => onUpdate(formData)}>Save Updates</button>
-          </div>
+              <div className="mb-8">
+                <label className="section-label" style={{ marginBottom: 16 }}>Sponsorship</label>
+                <div className="switch-row" onClick={() => setFormData({ ...formData, isSponsored: !formData.isSponsored })} style={{ background: 'rgba(255,193,7,0.05)', padding: '16px 20px' }}>
+                  <span style={{ fontWeight: 700 }}>Is this sponsored?</span>
+                  <div className={`ios-switch ${formData.isSponsored ? 'on' : ''}`}></div>
+                </div>
+                {formData.isSponsored && (
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#888' }}>Sponsor Name</label>
+                    <input className="premium-input" value={formData.sponsorName || ''} onChange={e => setFormData({ ...formData, sponsorName: e.target.value })} placeholder="Official Sponsor Name" style={{ marginTop: 8 }} />
+                  </div>
+                )}
+              </div>
+
+              <div className="field-group">
+                <label>Google Doc URL</label>
+                <input className="premium-input" value={formData.docUrl || ''} onChange={e => setFormData({ ...formData, docUrl: e.target.value })} placeholder="Paste Google Doc link..." />
+                {formData.docUrl && (
+                  <button className="pill-btn" onClick={() => window.open(formData.docUrl, '_blank')} style={{ marginTop: 8 }}>Open Doc</button>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* CONTENT TAB */}
+          {activeTab === 'content' && (
+            <>
+              <div className="field-group mb-8">
+                <label className="section-label">Objectives</label>
+                <textarea className="premium-textarea" value={formData.objectives || ''} onChange={e => setFormData({ ...formData, objectives: e.target.value })} placeholder="Primary goals of this session..." style={{ height: 100 }} />
+              </div>
+
+              <div className="field-group mb-8">
+                <label className="section-label">Agenda</label>
+                <textarea className="premium-textarea" value={formData.agenda || ''} onChange={e => setFormData({ ...formData, agenda: e.target.value })} placeholder="Walkthrough of activity steps..." style={{ height: 100 }} />
+              </div>
+
+              <div className="field-group">
+                <label className="section-label">Needs & Logistics</label>
+                <textarea className="premium-textarea" value={formData.needs || ''} onChange={e => setFormData({ ...formData, needs: e.target.value })} placeholder="Room, Projectors, Material, Boards..." style={{ height: 100 }} />
+              </div>
+            </>
+          )}
+
+          {/* GUESTS TAB */}
+          {activeTab === 'guests' && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>External Attendees ({formData.externalAttendees?.length || 0})</h3>
+                <button className="pill-btn mini" onClick={() => setShowGuestForm(true)}>+ Add Guest</button>
+              </div>
+
+              {showGuestForm && (
+                <div className="guest-data-form fade-in mb-8">
+                  <div className="form-grid compact">
+                    <input placeholder="Full Name*" value={externalInput.name} onChange={e => setExternalInput({ ...externalInput, name: e.target.value })} className="premium-input-small" />
+                    <input placeholder="Email" value={externalInput.email} onChange={e => setExternalInput({ ...externalInput, email: e.target.value })} className="premium-input-small" />
+                    <input placeholder="Phone" value={externalInput.phone} onChange={e => setExternalInput({ ...externalInput, phone: e.target.value })} className="premium-input-small" />
+                  </div>
+                  <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                    <button className="btn-tertiary mini" onClick={() => setShowGuestForm(false)}>Cancel</button>
+                    <button className="btn-primary-premium ripple mini" onClick={addExternal}>Add Guest</button>
+                  </div>
+                </div>
+              )}
+
+              <div className="guest-scroller-premium" style={{ maxHeight: 350 }}>
+                {(formData.externalAttendees || []).length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#888', padding: '40px 20px' }}>No guests added yet. Click "+ Add Guest" to start.</p>
+                ) : (
+                  formData.externalAttendees.map(g => (
+                    <div key={g.id} className="guest-log-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#fff', borderRadius: 12, marginBottom: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1d1d1f' }}>{g.name}</div>
+                        <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{g.email || 'No email'}</div>
+                      </div>
+                      <button className="delete-guest" onClick={() => removeExternal(g.id)} style={{ background: '#ff3b30', color: '#fff' }}><Trash size={12} /></button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {(formData.externalAttendees || []).length > 0 && (
+                <button className="pill-btn" onClick={exportToCSV} style={{ marginTop: 16, width: '100%' }}>📥 Export as CSV</button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="form-footer-premium" style={{ flexShrink: 0, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
+          <button className="btn-primary-premium ripple" onClick={() => {
+            onUpdate(formData);
+            if (formData.docUrl) {
+              setTimeout(() => window.open(formData.docUrl, '_blank'), 500);
+            }
+          }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            💾 Save & {formData.docUrl ? '📄 View Google Docs' : 'Close'}
+          </button>
         </div>
       </div>
     </div>
