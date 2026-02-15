@@ -842,6 +842,25 @@
   ],
   "techCards": [
     {
+      "title": "StudUps",
+      "theme": "Business, StartUps,  ",
+      "duration": "One Day",
+      "startTime": "2026-02-21T07:00",
+      "endTime": "2026-02-21T17:00",
+      "objectives": "Let new startups express their idea and get more attention.\nHelp Startups pithc their ideas.",
+      "agenda": "9AM-11AM: Stand and get to know StartUps.\n1PM-2PM: Selected Startups pitch their ideas.\n2-3pm: closing ceremony.",
+      "isSponsored": false,
+      "sponsorName": "",
+      "needs": "Tables.\nmultipres.\nHDMI cable.",
+      "attendeeType": "Outside",
+      "externalAttendees": [],
+      "reference": "01/26",
+      "location": "The Main Library ",
+      "isIndoor": false,
+      "id": 1771168301162,
+      "docUrl": null
+    },
+    {
       "id": 1740000000000,
       "title": "Recruitment Day Finals",
       "theme": "HR",
@@ -857,5 +876,5 @@
       "isArchived": true
     }
   ],
-  "refCounter": 1
+  "refCounter": 2
 }

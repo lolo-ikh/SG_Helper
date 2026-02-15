@@ -114,8 +114,11 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
     needs: "",
     attendeeType: "School", // School, Outside, Mixed
     externalAttendees: [],
-    reference: currentRef
+    reference: currentRef,
+    location: "",
+    isIndoor: true
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   const [externalInput, setExternalInput] = useState({
     name: "",
@@ -184,6 +187,28 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               autoFocus
             />
+          </div>
+
+          {/* Location and Indoor Switch */}
+          <div className="flex-between items-center mb-6" style={{ background: 'rgba(255,255,255,0.5)', padding: '12px 20px', borderRadius: 16 }}>
+            <div style={{ flex: 1, marginRight: 20 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 6 }}>Location / Venue</label>
+              <input
+                type="text"
+                placeholder="Where is it happening?"
+                style={{ width: '100%', border: 'none', background: 'transparent', fontSize: 16, fontWeight: 600, color: '#1d1d1f', outline: 'none' }}
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: formData.isIndoor ? '#1d1d1f' : '#888' }}>{formData.isIndoor ? 'Indoor' : 'Outdoor'}</span>
+              <div
+                className={`ios-switch ${formData.isIndoor ? 'on' : ''}`}
+                onClick={() => setFormData({ ...formData, isIndoor: !formData.isIndoor })}
+                style={{ width: 42, height: 26 }}
+              ></div>
+            </div>
           </div>
 
           <div className="form-grid">
@@ -358,11 +383,192 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
         </div>
 
         <div className="form-footer-premium">
-          <button className="btn-tertiary" onClick={onCancel}>Discard</button>
-          <button className="btn-primary-premium ripple" onClick={() => {
+          <button className="btn-tertiary" onClick={onCancel} disabled={isSaving}>Discard</button>
+          <button className="btn-primary-premium ripple" disabled={isSaving} onClick={async () => {
             if (!formData.title) return alert("Please enter the activity title");
-            onSubmit({ ...formData, id: Date.now() });
-          }}>Save Technical Card</button>
+
+            setIsSaving(true);
+            let docUrl = null;
+
+            try {
+              // Sync with Google Docs
+              const dateObj = new Date(formData.startTime || Date.now());
+              const dateEndObj = new Date(formData.endTime || Date.now());
+              const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+              const payload = {
+                ref_num: formData.reference,
+                date_write: new Date().toLocaleDateString('en-GB'),
+                type: formData.theme.toLowerCase(),
+                title: formData.title,
+                place_name: formData.location || "TBD",
+                is_inside: formData.isIndoor,
+                day_name: days[dateObj.getDay()],
+                date_activity: dateObj.toLocaleDateString('en-GB'),
+                time_from: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                time_to: dateEndObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                target_group: formData.attendeeType,
+                coordination: "",
+                objectives: formData.objectives,
+                themes: formData.theme,
+                needs: formData.needs,
+                agenda: formData.agenda,
+                is_sponsored: formData.isSponsored
+              };
+
+              // Use simple text/plain to avoid CORS preflight, although response parsing depends on GAS CORS headers. 
+              // We'll try standard JSON first.
+              const res = await fetch("https://script.google.com/macros/s/AKfycbwNX0MtzLsbOZsU9sSGC3q8LTjIwzkwFuBfPgZ6YtrrPpJVWqoId4i5idCbP3QO6ssU6Q/exec", {
+                method: "POST",
+                body: JSON.stringify(payload)
+              });
+
+              const data = await res.json();
+              if (data.status === 'success') {
+                docUrl = data.url;
+                // alert("Google Doc generated successfully!");
+              }
+            } catch (e) {
+              console.error("Google Doc Sync Failed", e);
+              // Allow saving even if doc generation fails
+            }
+
+            onSubmit({ ...formData, id: Date.now(), docUrl });
+            setIsSaving(false);
+          }}>
+            {isSaving ? 'Generating Doc...' : 'Save & Auto-Generate Doc'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
+  const [formData, setFormData] = useState({ ...card });
+  const [externalInput, setExternalInput] = useState({ name: "", email: "", phone: "", isStudent: true, school: "", year: "", studentId: "", nationalId: "" });
+  const [showGuestForm, setShowGuestForm] = useState(false);
+
+  const addExternal = () => {
+    if (!externalInput.name) return alert("Guest Name is required");
+    const newGuest = { ...externalInput, id: Date.now() };
+    setFormData({ ...formData, externalAttendees: [...(formData.externalAttendees || []), newGuest] });
+    setExternalInput({ name: "", email: "", phone: "", isStudent: true, school: "", year: "", studentId: "", nationalId: "" });
+    setShowGuestForm(false);
+  };
+
+  const removeExternal = (id) => {
+    setFormData({ ...formData, externalAttendees: formData.externalAttendees.filter(g => g.id !== id) });
+  };
+
+  const exportToCSV = () => {
+    const headers = ["Name", "Email", "Phone", "School", "Year", "Student ID", "National ID"];
+    const rows = (formData.externalAttendees || []).map(g => [
+      `"${g.name || ''}"`, `"${g.email || ''}"`, `"${g.phone || ''}"`, `"${g.school || ''}"`, `"${g.year || ''}"`, `"${g.studentId || ''}"`, `"${g.nationalId || ''}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${formData.title.replace(/[^a-z0-9]/gi, '_')}_guests.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="form-overlay fade-in">
+      <div className="premium-form" style={{ maxWidth: 800 }}>
+        <div className="form-header">
+          <div className="header-content">
+            <div className="header-meta"><span className="meta-text">EDIT MODE • {formData.reference}</span></div>
+            <h2>Modify Technical Card</h2>
+          </div>
+          <button className="close-btn" onClick={onCancel}>×</button>
+        </div>
+
+        <div className="form-body">
+          <div className="input-group-premium">
+            <label className="section-label">Activity Title</label>
+            <input className="form-input-title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+          </div>
+
+          <div className="form-grid mt-4">
+            <div className="field-group">
+              <label>Domain / Theme</label>
+              <input className="premium-input" value={formData.theme} onChange={e => setFormData({ ...formData, theme: e.target.value })} />
+            </div>
+            <div className="field-group">
+              <label>Location</label>
+              <input className="premium-input" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="field-group mt-4">
+            <label>Google Doc Setup</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input
+                className="premium-input-small"
+                style={{ flex: 1, background: 'rgba(52, 199, 89, 0.05)', borderColor: 'rgba(52, 199, 89, 0.2)' }}
+                placeholder="Paste Google Doc or Drive Folder URL here..."
+                value={formData.docUrl || ""}
+                onChange={e => setFormData({ ...formData, docUrl: e.target.value })}
+              />
+              {formData.docUrl && (
+                <button className="btn-tertiary mini" onClick={() => window.open(formData.docUrl, '_blank')}>Test Link</button>
+              )}
+            </div>
+            <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+              If auto-generation failed, open your Google Drive, find the doc, and paste the link here.
+            </p>
+          </div>
+
+          <div className="form-grid mt-4">
+            <label>Needs & Logistics</label>
+            <textarea className="premium-textarea" value={formData.needs} onChange={e => setFormData({ ...formData, needs: e.target.value })} style={{ height: 80 }} />
+          </div>
+        </div>
+
+        <div className="field-group mt-4">
+          <label>Agenda</label>
+          <textarea className="premium-textarea" value={formData.agenda} onChange={e => setFormData({ ...formData, agenda: e.target.value })} style={{ height: 100 }} />
+        </div>
+
+        <div className="form-section-premium mt-6">
+          <div className="flex-between items-center mb-3">
+            <label className="section-label mb-0">External Guest List</label>
+            <button className="pill-btn mini" onClick={() => setShowGuestForm(true)}>+ Add Guest</button>
+          </div>
+
+          {showGuestForm && (
+            <div className="guest-data-form fade-in">
+              <div className="form-grid compact">
+                <input placeholder="Full Name" value={externalInput.name} onChange={e => setExternalInput({ ...externalInput, name: e.target.value })} className="premium-input-small" />
+                <input placeholder="Email" value={externalInput.email} onChange={e => setExternalInput({ ...externalInput, email: e.target.value })} className="premium-input-small" />
+              </div>
+              <div className="flex-between mt-3">
+                <button className="btn-tertiary mini" onClick={() => setShowGuestForm(false)}>Cancel</button>
+                <button className="btn-primary-premium ripple mini" onClick={addExternal}>Add</button>
+              </div>
+            </div>
+          )}
+
+          <div className="guest-scroller-premium mt-3" style={{ maxHeight: 200 }}>
+            {(formData.externalAttendees || []).map(g => (
+              <div key={g.id} className="guest-log-item">
+                <span className="gn">{g.name}</span>
+                <div className="guest-contact"><span>{g.email}</span></div>
+                <button className="delete-guest" onClick={() => removeExternal(g.id)}><Trash size={12} /></button>
+              </div>
+            ))}
+          </div>
+
+          <div className="form-footer-premium">
+            <button className="btn-tertiary" onClick={onCancel}>Discard Changes</button>
+            <button className="btn-apple-light" onClick={exportToCSV} style={{ marginRight: 10, fontSize: 13, padding: '8px 16px' }}>Export Guests CSV</button>
+            <button className="btn-primary-premium ripple" onClick={() => onUpdate(formData)}>Save Updates</button>
+          </div>
         </div>
       </div>
     </div>
@@ -612,7 +818,7 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
         .replace(/<[^>]*>/g, ''); // Clean any remaining tags
 
       // Escape LaTeX special characters
-      tex = tex.replace(/([&%$#_{}])/g, '\\$1');
+      tex = tex.replace(/([&%$#_{ }])/g, '\\$1');
       return tex;
     };
 
@@ -620,81 +826,81 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
 
     // 3. High-Quality Professional Template
     const latex = `
-\\documentclass[11pt,a4paper]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage[margin=1in]{geometry}
-\\usepackage{fancyhdr}
-\\usepackage{tabularx}
-\\usepackage{xcolor}
-\\usepackage{titlesec}
+        \\documentclass[11pt,a4paper]{article}
+        \\usepackage[utf8]{inputenc}
+        \\usepackage[margin=1in]{geometry}
+        \\usepackage{fancyhdr}
+        \\usepackage{tabularx}
+        \\usepackage{xcolor}
+        \\usepackage{titlesec}
 
-% Professional Colors
-\\definecolor{ebecblue}{HTML}{0071E3}
-\\definecolor{ebecgold}{HTML}{EBEC00}
+        % Professional Colors
+        \\definecolor{ebecblue}{HTML}{0071E3}
+        \\definecolor{ebecgold}{HTML}{EBEC00}
 
-% Title Formatting
-\\titleformat{\\section}{\\large\\bfseries\\color{ebecblue}}{}{0em}{}[\\titlerule]
+        % Title Formatting
+        \\titleformat{\\section}{\\large\\bfseries\\color{ebecblue}}{ }{0em}{ }[\\titlerule]
 
-% Header/Footer
-\\pagestyle{fancy}
-\\fancyhf{}
-\\lhead{\\textbf{EBEC SECRETARIAT}}
-\\rhead{Report: ${meeting.title}}
-\\lfoot{EBEC Helper Admin}
-\\rfoot{Page \\thepage}
+        % Header/Footer
+        \\pagestyle{fancy}
+        \\fancyhf{ }
+        \\lhead{\\textbf{EBEC SECRETARIAT}}
+        \\rhead{Report: ${meeting.title}}
+        \\lfoot{EBEC Helper Admin}
+        \\rfoot{Page \\thepage}
 
-\\begin{document}
+        \\begin{document}
 
-% Branding and Title Header
-\\begin{center}
-    \\Huge \\textbf{\\color{ebecblue} EBEC} \\\\
-    \\large \\textit{Board of European Students of Technology} \\\\
-    \\vspace{0.5cm}
-    \\Large \\textbf{Official Meeting Report} \\\\
-    \\vspace{0.2cm}
-    \\large ${meeting.title}
-\\end{center}
+        % Branding and Title Header
+        \\begin{center}
+        \\Huge \\textbf{\\color{ebecblue} EBEC} \\\\
+        \\large \\textit{Board of European Students of Technology} \\\\
+        \\vspace{0.5cm}
+        \\Large \\textbf{Official Meeting Report} \\\\
+        \\vspace{0.2cm}
+        \\large ${meeting.title}
+        \\end{center}
 
-\\vspace{1cm}
+        \\vspace{1cm}
 
-% Metadata Section
-\\section*{Meeting Information}
-\\begin{tabular}{ll}
-    \\textbf{Date:} & ${meeting.date} \\\\
-    \\textbf{Time:} & ${meeting.time} AM \\\\
-    \\textbf{Project:} & EBEC Administrative Year 2026 \\\\
-    \\textbf{Ref:} & EBEC-ADM-2026-${meeting.id.toString().slice(-4)}
-\\end{tabular}
+        % Metadata Section
+        \\section*{Meeting Information}
+        \\begin{tabular}{ll}
+        \\textbf{Date:} & ${meeting.date} \\\\
+        \\textbf{Time:} & ${meeting.time} AM \\\\
+        \\textbf{Project:} & EBEC Administrative Year 2026 \\\\
+        \\textbf{Ref:} & EBEC-ADM-2026-${meeting.id.toString().slice(-4)}
+        \\end{tabular}
 
-\\vspace{0.5cm}
+        \\vspace{0.5cm}
 
-% Smart Attendee Table
-\\section*{Attendance Register}
-\\begin{tabularx}{\\textwidth}{|X|l|c|}
-    \\hline
-    \\rowcolor{ebecblue!10} \\textbf{Name} & \\textbf{Role} & \\textbf{Status} \\\\ \\hline
-    ${attendeeRows}
-\\end{tabularx}
-\\textit{\\small (P: Present, L: Late, A: Absent)}
+        % Smart Attendee Table
+        \\section*{Attendance Register}
+        \\begin{tabularx}{\\textwidth}{| X | l | c |}
+        \\hline
+        \\rowcolor{ebecblue!10} \\textbf{Name} & \\textbf{Role} & \\textbf{Status} \\\\ \\hline
+        ${attendeeRows}
+        \\end{tabularx}
+        \\textit{\\small (P: Present, L: Late, A: Absent)}
 
-\\vspace{0.5cm}
+        \\vspace{0.5cm}
 
-% Content from Scripter
-\\section*{Discussions and Deliberations}
-${notesTex}
+        % Content from Scripter
+        \\section*{Discussions and Deliberations}
+        ${notesTex}
 
-\\vspace{1cm}
+        \\vspace{1cm}
 
-% Footer / Closing
-\\vfill
-\\begin{flushright}
-    \\textbf{Authorized by:} \\\\
-    Secretary General \\\\
-    EBEC Secretariat 2026
-\\end{flushright}
+        % Footer / Closing
+        \\vfill
+        \\begin{flushright}
+        \\textbf{Authorized by:} \\\\
+        Secretary General \\\\
+        EBEC Secretariat 2026
+        \\end{flushright}
 
-\\end{document}
-    `.trim();
+        \\end{document}
+        `.trim();
 
     setTimeout(() => {
       setReportData({ ...reportData, type: 'latex', content: latex, fileName: `EBEC_Report_${meeting.id}.tex` });
@@ -1224,6 +1430,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
   const [openAttendanceFor, setOpenAttendanceFor] = useState(null);
   const [openReportFor, setOpenReportFor] = useState(null);
   const [editMeeting, setEditMeeting] = useState(null);
+  const [editTechCard, setEditTechCard] = useState(null);
 
   const openNotes = (id) => setOpenNotesFor(id);
   const openAttendance = (id) => setOpenAttendanceFor(id);
@@ -1427,7 +1634,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                         {tc.isSponsored && <span style={{ fontSize: 9, fontWeight: 900, color: 'var(--ebec-gold)', textTransform: 'uppercase' }}>Sponsored</span>}
                       </div>
                       <h3>{tc.title}</h3>
-                      <p>{tc.theme} • {tc.attendeeType} Access</p>
+                      <p>{tc.theme} • {tc.attendeeType} Access {tc.location && <span style={{ opacity: 0.8 }}>• {tc.location}</span>}</p>
                     </div>
 
                     <div className="stats-summary-row">
@@ -1440,18 +1647,23 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                     </div>
 
                     <div className="premium-card-footer">
-                      <button className="footer-action-btn" title="View Detailed Agenda" onClick={() => alert(`Objectives: ${tc.objectives}\n\nAgenda: ${tc.agenda}`)}>
-                        <Clipboard size={12} />
+                      {/* Google Doc Button */}
+                      {tc.docUrl ? (
+                        <button className="footer-action-btn" title="Open Google Doc" onClick={() => window.open(tc.docUrl, '_blank')} style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34c759' }}>
+                          <FileText size={14} />
+                        </button>
+                      ) : (
+                        <button className="footer-action-btn" title="No Doc Linked" style={{ opacity: 0.3, cursor: 'not-allowed' }}>
+                          <FileText size={14} />
+                        </button>
+                      )}
+
+                      {/* Edit & Invites Button */}
+                      <button className="footer-action-btn" title="Edit Card & Managing Invites" onClick={() => setEditTechCard(tc)} style={{ background: 'rgba(0, 113, 227, 0.1)', color: '#0071e3' }}>
+                        <Edit3 size={14} />
                       </button>
-                      <button className="footer-action-btn" title="School Logistics & Needs" onClick={() => alert(`Needs: ${tc.needs}`)}>
-                        <Package size={12} />
-                      </button>
-                      <button className="footer-action-btn report" title="Guest Intelligence" onClick={() => {
-                        const guestList = tc.externalAttendees?.map(g => `- ${g.name} (${g.isStudent ? g.school : 'Professional'})`).join('\n') || "No external guests.";
-                        alert(`External Guest List:\n\n${guestList}`);
-                      }}>
-                        <UserCheck size={12} />
-                      </button>
+
+                      {/* Archive Button */}
                       <button className="footer-delete-btn" title="Archive Technical Card" onClick={() => {
                         if (window.confirm(`Move this card to 2025 Archive?`)) onArchiveTechCard(tc.id);
                       }}>
@@ -1513,6 +1725,20 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
           />
         )
       }
+
+      {
+        editTechCard && (
+          <EditTechnicalCardModal
+            card={editTechCard}
+            onCancel={() => setEditTechCard(null)}
+            onUpdate={(updatedData) => {
+              onUpdateTechCard(updatedData);
+              setEditTechCard(null);
+            }}
+          />
+        )
+      }
+
     </>
   );
 };
@@ -1606,8 +1832,9 @@ const AttendancePredictor = ({ meetings }) => {
   );
 };
 
-const Archive = ({ meetings = [], techCards = [], onUpdateMeeting }) => {
+const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechCard }) => {
   const [editMeeting, setEditMeeting] = useState(null);
+  const [editTechCard, setEditTechCard] = useState(null);
   const totalMeetings = meetings.length;
   const completedWithAttendance = meetings.filter(m => m.attendance && Object.keys(m.attendance).length > 0);
 
@@ -1651,9 +1878,17 @@ const Archive = ({ meetings = [], techCards = [], onUpdateMeeting }) => {
                 <p style={{ color: 'rgba(255,255,255,0.4)' }}>{tc.theme} • {tc.duration}</p>
               </div>
               <div className="premium-card-footer">
+                <button className="footer-action-btn" title="Edit Technical Data" style={{ color: '#fff' }} onClick={() => setEditTechCard(tc)}>
+                  <Edit3 size={12} />
+                </button>
                 <button className="footer-action-btn" title="View Objective" style={{ color: '#fff' }} onClick={() => alert(`Objectives: ${tc.objectives}`)}>
                   <Clipboard size={12} />
                 </button>
+                {tc.docUrl && (
+                  <button className="footer-action-btn" title="Open Google Doc" style={{ color: '#fff' }} onClick={() => window.open(tc.docUrl, '_blank')}>
+                    <FileText size={12} />
+                  </button>
+                )}
                 <button className="footer-action-btn" style={{ color: '#fff' }} onClick={() => alert(`Logistics: ${tc.needs}`)}>
                   <Package size={12} />
                 </button>
@@ -2117,6 +2352,8 @@ export default function App() {
     })
       .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance } : m)));
   };
+
+
 
   return (
     <div className="apple-bg">
@@ -2831,4 +3068,5 @@ export default function App() {
       <Footer />
     </div>
   );
+
 }
