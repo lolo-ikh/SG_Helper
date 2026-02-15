@@ -143,32 +143,60 @@ app.post('/api/upload-report', upload.single('reportFile'), (req, res) => {
 });
 
 app.post('/api/tech-cards', (req, res) => {
-    const db = readDB();
-    const newCard = { ...req.body, id: Date.now() };
-    db.techCards.unshift(newCard);
-    db.refCounter += 1;
-    writeDB(db);
-    res.status(201).json(newCard);
+    try {
+        const db = readDB();
+        const newCard = { ...req.body, id: Date.now() };
+        console.log("[POST /api/tech-cards] Creating new tech card:", newCard);
+        db.techCards.unshift(newCard);
+        db.refCounter += 1;
+        writeDB(db);
+        console.log("New tech card created with ID:", newCard.id);
+        res.status(201).json(newCard);
+    } catch (error) {
+        console.error("Error creating tech card:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.delete('/api/tech-cards/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    db.techCards = db.techCards.filter(tc => tc.id !== id);
-    writeDB(db);
-    res.status(204).send();
+    try {
+        const db = readDB();
+        const id = parseInt(req.params.id);
+        console.log(`[DELETE /api/tech-cards/${id}] Deleting tech card...`);
+        const beforeCount = db.techCards.length;
+        db.techCards = db.techCards.filter(tc => tc.id !== id);
+        const afterCount = db.techCards.length;
+        writeDB(db);
+        console.log(`Tech card deleted. Count: ${beforeCount} -> ${afterCount}`);
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error deleting tech card:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.patch('/api/tech-cards/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const index = db.techCards.findIndex(tc => tc.id === id);
-    if (index !== -1) {
-        db.techCards[index] = { ...db.techCards[index], ...req.body };
-        writeDB(db);
-        res.json(db.techCards[index]);
-    } else {
-        res.status(404).send('Not found');
+    try {
+        const db = readDB();
+        const id = parseInt(req.params.id);
+        console.log(`[PATCH /api/tech-cards/${id}] Updating tech card...`);
+        console.log("Request body:", req.body);
+        
+        const index = db.techCards.findIndex(tc => tc.id === id);
+        console.log(`Card index found: ${index}`);
+        
+        if (index !== -1) {
+            db.techCards[index] = { ...db.techCards[index], ...req.body };
+            writeDB(db);
+            console.log("Card updated and saved to database");
+            res.json(db.techCards[index]);
+        } else {
+            console.log(`Card with ID ${id} not found in database`);
+            res.status(404).json({ error: `Tech card ${id} not found` });
+        }
+    } catch (error) {
+        console.error("Error updating tech card:", error);
+        res.status(500).json({ error: error.message });
     }
 });
 

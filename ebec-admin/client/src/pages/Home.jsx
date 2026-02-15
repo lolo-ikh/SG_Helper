@@ -514,6 +514,7 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
   const [externalInput, setExternalInput] = useState({ name: "", email: "", phone: "", isStudent: true, school: "", year: "", studentId: "", nationalId: "" });
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const [isSaving, setIsSaving] = useState(false);
 
   const addExternal = () => {
     if (!externalInput.name) return alert("Guest Name is required");
@@ -594,22 +595,24 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
                 <input className="form-input-title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
               </div>
 
+              <div className="field-group mb-8" style={{ background: 'rgba(0, 113, 227, 0.05)', padding: 16, borderRadius: 12, border: '2px solid #0071e3' }}>
+                <label style={{ fontWeight: 700, color: '#0071e3' }}>Reference Number (Edit this)</label>
+                <input className="premium-input" value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} placeholder="e.g., 01/26" style={{ marginTop: 8, fontWeight: 700, fontSize: 16 }} />
+                <p style={{ fontSize: 11, color: '#0071e3', marginTop: 8 }}>Change this to organize cards (e.g., 01/26, 02/26, 03/26)</p>
+              </div>
+
               <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div className="field-group">
-                  <label>Reference Number</label>
-                  <input className="premium-input" value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} placeholder="e.g., 01/26" />
-                </div>
                 <div className="field-group">
                   <label>Location / Venue</label>
                   <input className="premium-input" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} placeholder="Where is it happening?" />
                 </div>
-              </div>
-
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
                 <div className="field-group">
                   <label>Domain / Theme</label>
                   <input className="premium-input" value={formData.theme} onChange={e => setFormData({ ...formData, theme: e.target.value })} placeholder="e.g., Robotics, Marketing" />
                 </div>
+              </div>
+
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
                 <div className="field-group">
                   <label>Duration</label>
                   <select className="premium-input" value={formData.duration || 'One Day'} onChange={e => setFormData({ ...formData, duration: e.target.value })}>
@@ -618,9 +621,6 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
                     <option value="Multi-Day">Multi-Day</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
                 <div className="field-group">
                   <label>Activity Type</label>
                   <select className="premium-input" value={formData.activityType || 'scientific'} onChange={e => setFormData({ ...formData, activityType: e.target.value })}>
@@ -629,6 +629,9 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
                     <option value="sport">Sport</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
                 <div className="field-group">
                   <label>Indoor / Outdoor</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
@@ -758,23 +761,27 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
 
         {/* Footer */}
         <div className="form-footer-premium" style={{ flexShrink: 0, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-          <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
+          <button className="btn-tertiary" onClick={onCancel} disabled={isSaving}>Cancel</button>
           <button 
             className="btn-primary-premium ripple" 
+            disabled={isSaving}
             onClick={() => {
-              console.log("Save button clicked!");
-              console.log("Card data before save:", formData);
+              setIsSaving(true);
+              console.log("Save button clicked! Card ID:", formData.id);
+              console.log("Card data to save:", formData);
               const docUrlToOpen = formData.docUrl?.trim();
-              onUpdate(formData);
-              if (docUrlToOpen && (docUrlToOpen.startsWith('http://') || docUrlToOpen.startsWith('https://'))) {
-                setTimeout(() => {
-                  window.open(docUrlToOpen, '_blank');
-                }, 800);
-              }
+              onUpdate(formData, () => {
+                setIsSaving(false);
+                if (docUrlToOpen && (docUrlToOpen.startsWith('http://') || docUrlToOpen.startsWith('https://'))) {
+                  setTimeout(() => {
+                    window.open(docUrlToOpen, '_blank');
+                  }, 300);
+                }
+              });
             }} 
             style={{ display: 'flex', alignItems: 'center', gap: 8 }}
           >
-            Save & {formData.docUrl?.trim() ? 'View Google Docs' : 'Close'}
+            {isSaving ? 'Saving...' : `Save & ${formData.docUrl?.trim() ? 'View Google Docs' : 'Close'}`}
           </button>
         </div>
       </div>
@@ -1559,7 +1566,7 @@ const EditMeetingModal = ({ meeting, onCancel, onSubmit }) => {
   );
 };
 
-const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onUpdateMeeting, onDeleteTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport }) => {
+const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onUpdateMeeting, onDeleteTechCard, onUpdateTechCard, onArchiveTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport }) => {
   const [meetingSearch, setMeetingSearch] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -1979,9 +1986,15 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
           <EditTechnicalCardModal
             card={editTechCard}
             onCancel={() => setEditTechCard(null)}
-            onUpdate={(updatedData) => {
+            onUpdate={(updatedData, onComplete) => {
+              console.log("Home component received update request");
               onUpdateTechCard(updatedData);
-              setEditTechCard(null);
+              if (onComplete) {
+                setTimeout(() => {
+                  onComplete();
+                  setEditTechCard(null);
+                }, 1000);
+              }
             }}
           />
         )
@@ -2076,6 +2089,123 @@ const AttendancePredictor = ({ meetings }) => {
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+
+const MeetingAndEmailForm = ({ teamMembers = [], onCancel, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    title: "",
+    date: "",
+    time: "",
+    duration: 1,
+    description: "",
+    useGoogleMeet: true,
+    selectedInvitees: []
+  });
+
+  const toggleInvitee = (email) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedInvitees: prev.selectedInvitees.includes(email)
+        ? prev.selectedInvitees.filter(e => e !== email)
+        : [...prev.selectedInvitees, email]
+    }));
+  };
+
+  return (
+    <div className="form-overlay fade-in">
+      <div className="premium-form" style={{ maxWidth: 600 }}>
+        <div className="form-header">
+          <div className="header-content">
+            <div className="header-meta"><span className="meta-text">CREATE MEETING & SEND INVITES</span></div>
+            <h2>Coordinate via Google Calendar & Email</h2>
+          </div>
+          <button className="close-btn" onClick={onCancel}>×</button>
+        </div>
+
+        <div className="form-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          <div className="input-group-premium">
+            <label className="section-label">Meeting Title</label>
+            <input className="form-input-title" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="e.g., Monthly Coordination" />
+          </div>
+
+          <div className="form-grid mt-4" style={{ gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="field-group">
+              <label>Date</label>
+              <input type="date" className="premium-input" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+            </div>
+            <div className="field-group">
+              <label>Time</label>
+              <input type="time" className="premium-input" value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="field-group mt-4">
+            <label>Duration (hours)</label>
+            <input type="number" className="premium-input" min="0.5" step="0.5" value={formData.duration} onChange={e => setFormData({ ...formData, duration: parseFloat(e.target.value) })} />
+          </div>
+
+          <div className="field-group mt-4">
+            <label>Description (optional)</label>
+            <textarea className="premium-textarea" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Meeting details and agenda..." style={{ height: 80 }} />
+          </div>
+
+          <div className="switch-row mt-4" onClick={() => setFormData({ ...formData, useGoogleMeet: !formData.useGoogleMeet })} style={{ background: 'rgba(58, 150, 221, 0.1)', padding: '16px 20px', borderRadius: 12 }}>
+            <span style={{ fontWeight: 700 }}>Include Google Meet Link</span>
+            <div className={`ios-switch ${formData.useGoogleMeet ? 'on' : ''}`}></div>
+          </div>
+
+          <div className="mt-6" style={{ borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: 20 }}>
+            <label className="section-label">Select Team Members to Invite</label>
+            <div style={{ marginTop: 12, maxHeight: 300, overflowY: 'auto', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: 12 }}>
+              {teamMembers.map(member => (
+                <div 
+                  key={member.email} 
+                  className="list-item" 
+                  onClick={() => toggleInvitee(member.email)}
+                  style={{ 
+                    background: formData.selectedInvitees.includes(member.email) ? 'rgba(0, 113, 227, 0.1)' : 'rgba(255,255,255,0.05)',
+                    border: formData.selectedInvitees.includes(member.email) ? '2px solid #0071e3' : '2px solid transparent',
+                    cursor: 'pointer',
+                    marginBottom: 8,
+                    padding: 12
+                  }}
+                >
+                  <input 
+                    type="checkbox" 
+                    checked={formData.selectedInvitees.includes(member.email)} 
+                    onChange={() => {}}
+                    style={{ marginRight: 12, cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{member.name}</div>
+                    <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{member.email}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: '#888', marginTop: 8 }}>Selected: {formData.selectedInvitees.length} members</p>
+          </div>
+        </div>
+
+        <div className="form-footer-premium">
+          <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
+          <button 
+            className="btn-primary-premium ripple" 
+            onClick={() => {
+              if (!formData.title.trim()) return alert("Meeting title is required");
+              if (!formData.date) return alert("Date is required");
+              if (!formData.time) return alert("Time is required");
+              if (formData.selectedInvitees.length === 0) return alert("Select at least one team member");
+              onSubmit(formData);
+            }}
+          >
+            Create & Send Invites
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -2494,6 +2624,8 @@ export default function App() {
 
   const [meetings, setMeetings] = useState([]);
   const [techCards, setTechCards] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [showMeetingEmailForm, setShowMeetingEmailForm] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -2502,6 +2634,7 @@ export default function App() {
       .then(data => {
         setMeetings(data.meetings || []);
         setTechCards(data.techCards || []);
+        setTeamMembers(data.teamMembers || []);
         setRefCounter(data.refCounter || 1);
       });
   }, []);
@@ -2527,8 +2660,14 @@ export default function App() {
     })
       .then(res => res.json())
       .then(saved => {
-        setTechCards([saved, ...techCards]);
-        setRefCounter(prev => prev + 1);
+        const updatedCards = [saved, ...techCards];
+        setTechCards(updatedCards);
+        // Recalculate refCounter from all cards
+        const maxRef = Math.max(...updatedCards.map(tc => {
+          const refNum = parseInt(tc.reference.split('/')[0]);
+          return isNaN(refNum) ? 0 : refNum;
+        }), 0);
+        setRefCounter(maxRef + 1);
         setPage('home');
       });
   };
@@ -2544,8 +2683,15 @@ export default function App() {
   const handleDeleteTechCard = (id) => {
     fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
       .then(() => {
-        setTechCards(prev => prev.filter(tc => tc.id !== id));
-        console.log("Deleted from database successfully");
+        const updatedCards = techCards.filter(tc => tc.id !== id);
+        setTechCards(updatedCards);
+        // Recalculate refCounter from remaining cards
+        const maxRef = Math.max(...updatedCards.map(tc => {
+          const refNum = parseInt(tc.reference.split('/')[0]);
+          return isNaN(refNum) ? 0 : refNum;
+        }), 0);
+        setRefCounter(maxRef + 1);
+        console.log("Deleted from database successfully. New ref counter:", maxRef + 1);
       });
   };
 
@@ -2563,27 +2709,40 @@ export default function App() {
   };
 
   const handleUpdateTechCard = (updatedCard) => {
-    console.log("Saving tech card:", updatedCard);
-    fetch(`${API_URL}/tech-cards/${updatedCard.id}`, {
+    console.log("handleUpdateTechCard called with:", updatedCard);
+    console.log("API URL:", API_URL);
+    
+    const saveUrl = `${API_URL}/tech-cards/${updatedCard.id}`;
+    console.log("Sending PATCH request to:", saveUrl);
+    
+    fetch(saveUrl, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(updatedCard)
     })
       .then(res => {
-        console.log("Save response status:", res.status);
+        console.log("Response received! Status:", res.status, res.statusText);
         if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+          throw new Error(`Server responded with status ${res.status}`);
         }
         return res.json();
       })
       .then(saved => {
-        console.log("Tech card saved successfully:", saved);
-        setTechCards(prev => prev.map(tc => tc.id === saved.id ? saved : tc));
-        alert("Technical card saved successfully!");
+        console.log("Save successful! Updated card:", saved);
+        const updatedCards = techCards.map(tc => tc.id === saved.id ? saved : tc);
+        setTechCards(updatedCards);
+        // Recalculate refCounter from all cards
+        const maxRef = Math.max(...updatedCards.map(tc => {
+          const refNum = parseInt(tc.reference.split('/')[0]);
+          return isNaN(refNum) ? 0 : refNum;
+        }), 0);
+        setRefCounter(maxRef + 1);
       })
       .catch(error => {
-        console.error("Error saving tech card:", error);
-        alert("Error saving technical card: " + error.message);
+        console.error("FAILED to save tech card:", error);
+        alert("ERROR: Could not save technical card!\n\n" + error.message + "\n\nCheck browser console for details.");
       });
   };
 
