@@ -104,6 +104,7 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
   const [formData, setFormData] = useState({
     title: "",
     theme: "",
+    activityType: "scientific", // scientific, cultural, sport
     duration: "One Day", // Hours, One Day, Multi-Day
     startTime: "",
     endTime: "",
@@ -119,6 +120,12 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
     isIndoor: true
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const [externalInput, setExternalInput] = useState({
     name: "",
@@ -150,8 +157,9 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
         nationalId: ""
       });
       setShowGuestForm(false);
+      showNotification('✓ Guest added successfully');
     } else {
-      alert("Please fill in the Name and a valid ID Number (Student or National ID)");
+      showNotification('⚠️ Please fill in Name and ID Number', 'error');
     }
   };
 
@@ -164,6 +172,11 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
 
   return (
     <div className="form-overlay fade-in">
+      {notification && (
+        <div className={`toast-notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
       <div className="premium-form tech-card-premium">
         <div className="form-header">
           <div className="header-content">
@@ -211,12 +224,31 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
             </div>
           </div>
 
-          <div className="form-grid">
+          <div className="form-section-premium">
+            <label className="section-label">Activity Type</label>
+            <div className="segmented-control">
+              {[
+                { value: "scientific", label: "Scientific" },
+                { value: "cultural", label: "Cultural" },
+                { value: "sport", label: "Sport" }
+              ].map(type => (
+                <button
+                  key={type.value}
+                  className={`segment-btn ${formData.activityType === type.value ? 'active' : ''}`}
+                  onClick={() => setFormData({ ...formData, activityType: type.value })}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-grid mt-4">
             <div className="field-group">
               <label>Domain / Theme</label>
               <input
                 type="text"
-                placeholder="Robotics, Marketing, HR..."
+                placeholder="e.g., Robotics, Marketing, Entrepreneurship..."
                 className="premium-input"
                 value={formData.theme}
                 onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
@@ -305,7 +337,32 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
             )}
           </div>
 
-          <div className="form-section-premium mb-0">
+          <div className="form-section-premium">
+            <label className="section-label">Target Audience</label>
+            <div className="segmented-control">
+              {[
+                { value: "School", label: "School Only", desc: "ENSIA students only" },
+                { value: "Outside", label: "External", desc: "Non-ENSIA participants" },
+                { value: "Mixed", label: "Mixed", desc: "ENSIA + External" }
+              ].map(type => (
+                <button
+                  key={type.value}
+                  className={`segment-btn ${formData.attendeeType === type.value ? 'active' : ''}`}
+                  onClick={() => setFormData({ ...formData, attendeeType: type.value })}
+                  title={type.desc}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: 11, color: '#888', marginTop: 8 }}>
+              {formData.attendeeType === 'School' && '🎓 Only ENSIA students will attend'}
+              {formData.attendeeType === 'Outside' && '🌍 External guests only (no ENSIA students)'}
+              {formData.attendeeType === 'Mixed' && '🤝 Both ENSIA students and external guests'}
+            </p>
+          </div>
+
+          <div className="form-section-premium d-none mb-0">
             <div className="flex-between items-center mb-4">
               <label className="section-label mb-0">Attendance Scope</label>
               <div className="segmented-control tiny">
@@ -385,7 +442,10 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
         <div className="form-footer-premium">
           <button className="btn-tertiary" onClick={onCancel} disabled={isSaving}>Discard</button>
           <button className="btn-primary-premium ripple" disabled={isSaving} onClick={async () => {
-            if (!formData.title) return alert("Please enter the activity title");
+            if (!formData.title) {
+              showNotification('⚠️ Please enter the activity title', 'error');
+              return;
+            }
 
             setIsSaving(true);
             let docUrl = null;
@@ -399,7 +459,7 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
               const payload = {
                 ref_num: formData.reference,
                 date_write: new Date().toLocaleDateString('en-GB'),
-                type: formData.theme.toLowerCase(),
+                type: formData.activityType, // scientific, cultural, sport
                 title: formData.title,
                 place_name: formData.location || "TBD",
                 is_inside: formData.isIndoor,
@@ -418,15 +478,19 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
 
               // Use simple text/plain to avoid CORS preflight, although response parsing depends on GAS CORS headers. 
               // We'll try standard JSON first.
-              const res = await fetch("https://script.google.com/macros/s/AKfycbwNX0MtzLsbOZsU9sSGC3q8LTjIwzkwFuBfPgZ6YtrrPpJVWqoId4i5idCbP3QO6ssU6Q/exec", {
+              const res = await fetch("https://script.google.com/macros/s/AKfycbyehjXK9isbudF-O6JIRIo3Wx0KZpnKENSKJcPYlybi_79UubGsH7dJXUNnKsqQAcwGZw/exec", {
                 method: "POST",
                 body: JSON.stringify(payload)
               });
 
               const data = await res.json();
-              if (data.status === 'success') {
+
+              if (data.status === 'success' && data.url) {
                 docUrl = data.url;
-                // alert("Google Doc generated successfully!");
+                showNotification('✓ Google Doc created successfully!');
+              } else {
+                console.error("Google Doc generation incomplete:", data);
+                showNotification('⚠️ Google Doc not generated. Card saved without link.', 'error');
               }
             } catch (e) {
               console.error("Google Doc Sync Failed", e);
@@ -1647,9 +1711,35 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                     </div>
 
                     <div className="premium-card-footer">
+                      {/* Copy All Info Button */}
+                      <button
+                        className="footer-action-btn"
+                        title="Copy All Card Info"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const info = `Technical Card: ${tc.reference}\n\nTitle: ${tc.title}\nTheme: ${tc.theme}\nDuration: ${tc.duration}\nLocation: ${tc.location || 'Not specified'}\nAttendee Type: ${tc.attendeeType}\n\nObjectives:\n${tc.objectives || 'N/A'}\n\nAgenda:\n${tc.agenda || 'N/A'}\n\nNeeds & Logistics:\n${tc.needs || 'N/A'}\n\nExternal Guests: ${tc.externalAttendees?.length || 0}\n${tc.externalAttendees?.map(g => `- ${g.name} (${g.email || 'No email'})`).join('\n') || ''}\n\nSponsored: ${tc.isSponsored ? 'Yes - ' + (tc.sponsorName || 'N/A') : 'No'}\n\nGoogle Doc: ${tc.docUrl || 'Not linked'}`;
+                          navigator.clipboard.writeText(info).then(() => {
+                            alert('✓ Card info copied to clipboard!');
+                          }).catch(() => {
+                            alert('Failed to copy. Please try again.');
+                          });
+                        }}
+                        style={{ background: 'rgba(255, 193, 7, 0.1)', color: '#FFC107' }}
+                      >
+                        <Copy size={14} />
+                      </button>
+
                       {/* Google Doc Button */}
                       {tc.docUrl ? (
-                        <button className="footer-action-btn" title="Open Google Doc" onClick={() => window.open(tc.docUrl, '_blank')} style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34c759' }}>
+                        <button
+                          className="footer-action-btn"
+                          title="Open Google Doc"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(tc.docUrl, '_blank', 'noopener,noreferrer');
+                          }}
+                          style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34c759' }}
+                        >
                           <FileText size={14} />
                         </button>
                       ) : (
@@ -1659,14 +1749,29 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                       )}
 
                       {/* Edit & Invites Button */}
-                      <button className="footer-action-btn" title="Edit Card & Managing Invites" onClick={() => setEditTechCard(tc)} style={{ background: 'rgba(0, 113, 227, 0.1)', color: '#0071e3' }}>
+                      <button
+                        className="footer-action-btn"
+                        title="Edit Card & Managing Invites"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditTechCard(tc);
+                        }}
+                        style={{ background: 'rgba(0, 113, 227, 0.1)', color: '#0071e3' }}
+                      >
                         <Edit3 size={14} />
                       </button>
 
-                      {/* Archive Button */}
-                      <button className="footer-delete-btn" title="Archive Technical Card" onClick={() => {
-                        if (window.confirm(`Move this card to 2025 Archive?`)) onArchiveTechCard(tc.id);
-                      }}>
+                      {/* Delete Button (Permanent) */}
+                      <button
+                        className="footer-delete-btn"
+                        title="Permanently Delete Technical Card"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`⚠️ PERMANENTLY DELETE "${tc.title}"?\n\nThis action cannot be undone. The card will be completely removed from the system.`)) {
+                            onDeleteTechCard(tc.id);
+                          }
+                        }}
+                      >
                         <Trash size={16} />
                       </button>
                     </div>
