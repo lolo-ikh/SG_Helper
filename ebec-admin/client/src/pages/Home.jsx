@@ -73,10 +73,10 @@ const EBEC_TEAM = [
   { name: "Oumaima Boucekkine", role: "Vice President" },
   { name: "Berbaoui Ashref Abderrahmane", role: "Vice President" },
   { name: "Leena IKHLEF", role: "Secretary General" },
-  { name: "Dorsaf Messaoudi", role: "Relations and Communications" },
+  { name: "Dorsaf Messaoudi", role: "Relex department" },
   { name: "Maissa Lakel", role: "Relex department" },
   { name: "Khoumari Aya", role: "Co-Manager in Relex" },
-  { name: "Mouhsine Abdelhakim Alouit", role: "Finance department" },
+  { name: "Mouhsine Abdelhakim Alouit", role: "Finance & Legal department" },
   { name: "Benzergua Djihene Chaimaa", role: "Finance & Legal Manager" },
   { name: "HACENE Serine Nour el Imane", role: "Finance & Legal Manager" },
   { name: "Youcef Belaib", role: "Co-manager Finance" },
@@ -95,12 +95,168 @@ const EBEC_TEAM = [
   { name: "Mouhoun Cilia", role: "Events Logistics Co-manager" },
   { name: "Tazgart Kaouther", role: "Event Co-manager" },
   { name: "Wissal Oulem", role: "Project Manager" },
-  { name: "BOULEFAA Mustapha", role: "Events" }
+  { name: "BOULEFAA Mustapha", role: "Events Co-manager" }
 ];
+
+// --- Helpers ---
+const formatBullets = (text) => {
+  if (!text) return "";
+  return text.split('\n')
+    .map(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return "";
+      // Don't add if it already has a bullet or number
+      if (/^[\u2022\u25CF\u25CB\u25AA\u25AB\u25B6\u25C6\u25E6*-\d+]/.test(trimmed)) return trimmed;
+      return `• ${trimmed}`;
+    })
+    .filter(line => line)
+    .join('\n');
+};
+
+const formatNumbered = (text) => {
+  if (!text) return "";
+  let count = 1;
+  return text.split('\n')
+    .map(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return "";
+      // If user already typed "1." or "1-", keep it but normalize spacing
+      if (/^\d+[\.\-]/.test(trimmed)) return trimmed;
+      return `${count++}. ${trimmed}`;
+    })
+    .filter(line => line)
+    .join('\n');
+};
+
+// --- Statistics & Visualization Components ---
+
+const ActivitiesDash = ({ techCards }) => {
+  const activeCards = techCards.filter(tc => !tc.isArchived);
+
+  // Stats Calculation
+  const total = activeCards.length;
+  const scientific = activeCards.filter(c => c.activityType === 'scientific').length;
+  const cultural = activeCards.filter(c => c.activityType === 'cultural').length;
+  const sport = activeCards.filter(c => c.activityType === 'sport').length;
+
+  const totalGuests = activeCards.reduce((acc, c) => acc + (c.externalAttendees?.length || 0), 0);
+  const sponsoredCount = activeCards.filter(c => c.isSponsored).length;
+  const sponsorRate = total > 0 ? Math.round((sponsoredCount / total) * 100) : 0;
+
+  return (
+    <div className="dashboard-content fade-in">
+      <div className="glass-panel-wide mb-10" style={{ textAlign: 'center' }}>
+        <h2 style={{ color: '#fff', fontSize: '32px', marginBottom: '10px' }}>Activities Hub</h2>
+        <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto' }}>
+          Overview of EBEC's logistical and technical performance for the 2026 mandate.
+        </p>
+      </div>
+
+      <div className="quick-summary mb-10">
+        <div className="stat-card">
+          <div className="stat-value">{total}</div>
+          <div className="stat-label">Total Activities</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{totalGuests}</div>
+          <div className="stat-label">Total Guests</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{sponsorRate}%</div>
+          <div className="stat-label">Sponsorship Rate</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '40px' }}>
+        {/* Activity Distribution Simulation */}
+        <div className="glass-panel-wide" style={{ padding: '30px' }}>
+          <h4 style={{ color: '#fff', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            Type Distribution
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {[
+              { label: 'Scientific', count: scientific, color: '#0071e3' },
+              { label: 'Cultural', count: cultural, color: '#34c759' },
+              { label: 'Sport', count: sport, color: '#ffc107' }
+            ].map(item => (
+              <div key={item.label}>
+                <div className="flex-between" style={{ marginBottom: '8px' }}>
+                  <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600 }}>{item.label}</span>
+                  <span style={{ color: '#fff', fontSize: '13px', fontWeight: 800 }}>{item.count}</span>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.05)', height: '10px', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      background: item.color,
+                      height: '100%',
+                      width: total > 0 ? `${(item.count / total) * 100}%` : '0%',
+                      transition: 'width 1s ease-out',
+                      boxShadow: `0 0 15px ${item.color}40`
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Global Progress Simulation */}
+        <div className="glass-panel-wide" style={{ padding: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h4 style={{ color: '#fff', marginBottom: '20px' }}>Partnership Strength</h4>
+          <div style={{ position: 'relative', width: '150px', height: '150px' }}>
+            <svg width="150" height="150" viewBox="0 0 150 150">
+              <circle cx="75" cy="75" r="65" stroke="rgba(255,255,255,0.05)" strokeWidth="12" fill="none" />
+              <circle
+                cx="75" cy="75" r="65"
+                stroke="#ffc107"
+                strokeWidth="12"
+                fill="none"
+                strokeDasharray={408}
+                strokeDashoffset={408 - (408 * sponsorRate / 100)}
+                strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 1.5s ease-out' }}
+              />
+            </svg>
+            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+              <div style={{ color: '#fff', fontSize: '28px', fontWeight: 900 }}>{sponsorRate}%</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: 700 }}>FUNDED</div>
+            </div>
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginTop: '20px', textAlign: 'center' }}>
+            Percentage of activities secured through external sponsorship.
+          </p>
+        </div>
+      </div>
+
+      <h4 style={{ color: '#fff', marginBottom: '20px' }}>Recent activity timeline</h4>
+      <div className="glass-panel-wide" style={{ padding: '20px' }}>
+        {activeCards.length === 0 ? (
+          <p style={{ color: '#888', textAlign: 'center' }}>No activities recorded yet.</p>
+        ) : (
+          activeCards.slice(-5).reverse().map((tc, i) => (
+            <div key={tc.id} className="list-item" style={{ marginBottom: i === 4 ? 0 : 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: '50%',
+                  background: tc.activityType === 'scientific' ? '#0071e3' : tc.activityType === 'cultural' ? '#34c759' : '#ffc107'
+                }} />
+                <div>
+                  <h4 className="meet-title">{tc.title}</h4>
+                  <p style={{ margin: 0, fontSize: 12, color: '#888' }}>{tc.reference} • {tc.theme}</p>
+                </div>
+              </div>
+              <span className="tag">{tc.isSponsored ? 'SPONSORED' : 'INTERNAL'}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
 
 // --- Components ---
 
-const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
+const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef, techCards = [] }) => {
   const [formData, setFormData] = useState({
     title: "",
     theme: "",
@@ -199,6 +355,22 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               autoFocus
+            />
+          </div>
+
+          <div className="field-group mb-6" style={{ background: 'rgba(0, 113, 227, 0.05)', padding: '12px 20px', borderRadius: 16, border: '1px solid rgba(0, 113, 227, 0.2)' }}>
+            <div className="flex-between items-center">
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#0071e3' }}>Reference Number</label>
+              {techCards.some(tc => tc.reference === formData.reference) && (
+                <span style={{ fontSize: 10, color: '#ff3b30', fontWeight: 700 }}>⚠️ DUPLICATE DETECTED</span>
+              )}
+            </div>
+            <input
+              type="text"
+              className="premium-input-small"
+              style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1.5px solid #0071e3', padding: '8px 0', fontSize: 14, fontWeight: 700, outline: 'none' }}
+              value={formData.reference}
+              onChange={e => setFormData({ ...formData, reference: e.target.value })}
             />
           </div>
 
@@ -341,9 +513,9 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
             <label className="section-label">Target Audience</label>
             <div className="segmented-control">
               {[
-                { value: "School", label: "School Only", desc: "ENSIA students only" },
-                { value: "Outside", label: "External", desc: "Non-ENSIA participants" },
-                { value: "Mixed", label: "Mixed", desc: "ENSIA + External" }
+                { value: "School", label: "School Only", desc: "ENSIA Students" },
+                { value: "Outside", label: "External", desc: "Professionals / Visitors" },
+                { value: "Mixed", label: "Mixed", desc: "Students + External" }
               ].map(type => (
                 <button
                   key={type.value}
@@ -351,7 +523,10 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
                   onClick={() => setFormData({ ...formData, attendeeType: type.value })}
                   title={type.desc}
                 >
-                  {type.label}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 13 }}>{type.label}</span>
+                    <span style={{ fontSize: 8, opacity: 0.7, fontWeight: 500 }}>{type.desc}</span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -469,10 +644,10 @@ const NewTechnicalCardForm = ({ onCancel, onSubmit, currentRef }) => {
                 time_to: dateEndObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
                 target_group: formData.attendeeType,
                 coordination: "",
-                objectives: formData.objectives,
+                objectives: formatBullets(formData.objectives),
                 themes: formData.theme,
-                needs: formData.needs,
-                agenda: formData.agenda,
+                needs: formatNumbered(formData.needs),
+                agenda: formatBullets(formData.agenda),
                 is_sponsored: formData.isSponsored
               };
 
@@ -515,6 +690,12 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
   const [isSaving, setIsSaving] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const addExternal = () => {
     if (!externalInput.name) return alert("Guest Name is required");
@@ -545,6 +726,11 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
 
   return (
     <div className="form-overlay fade-in">
+      {notification && (
+        <div className={`toast-notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
       <div className="premium-form" style={{ maxWidth: 950, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         <div className="form-header" style={{ flexShrink: 0 }}>
           <div className="header-content">
@@ -760,29 +946,77 @@ const EditTechnicalCardModal = ({ card, onCancel, onUpdate }) => {
         </div>
 
         {/* Footer */}
-        <div className="form-footer-premium" style={{ flexShrink: 0, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-          <button className="btn-tertiary" onClick={onCancel} disabled={isSaving}>Cancel</button>
-          <button 
-            className="btn-primary-premium ripple" 
-            disabled={isSaving}
-            onClick={() => {
-              setIsSaving(true);
-              console.log("Save button clicked! Card ID:", formData.id);
-              console.log("Card data to save:", formData);
-              const docUrlToOpen = formData.docUrl?.trim();
-              onUpdate(formData, () => {
-                setIsSaving(false);
-                if (docUrlToOpen && (docUrlToOpen.startsWith('http://') || docUrlToOpen.startsWith('https://'))) {
-                  setTimeout(() => {
-                    window.open(docUrlToOpen, '_blank');
-                  }, 300);
+        <div className="form-footer-premium" style={{ flexShrink: 0, borderTop: '1px solid rgba(0,0,0,0.05)', justifyContent: 'space-between' }}>
+          <div>
+            <button className="btn-tertiary" onClick={onCancel} disabled={isSaving}>Discard Changes</button>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              className="btn-apple-light ripple"
+              disabled={isSaving}
+              onClick={async () => {
+                setIsSaving(true);
+                try {
+                  const dateObj = new Date(formData.startTime || Date.now());
+                  const dateEndObj = new Date(formData.endTime || Date.now());
+                  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+                  const payload = {
+                    ref_num: formData.reference,
+                    date_write: new Date().toLocaleDateString('en-GB'),
+                    type: formData.activityType || 'scientific',
+                    title: formData.title,
+                    place_name: formData.location || "TBD",
+                    is_inside: formData.isIndoor,
+                    day_name: days[dateObj.getDay()],
+                    date_activity: dateObj.toLocaleDateString('en-GB'),
+                    time_from: dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                    time_to: dateEndObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                    target_group: formData.attendeeType,
+                    coordination: "",
+                    objectives: formatBullets(formData.objectives),
+                    themes: formData.theme,
+                    needs: formatNumbered(formData.needs),
+                    agenda: formatBullets(formData.agenda),
+                    is_sponsored: formData.isSponsored
+                  };
+
+                  const res = await fetch("https://script.google.com/macros/s/AKfycbyehjXK9isbudF-O6JIRIo3Wx0KZpnKENSKJcPYlybi_79UubGsH7dJXUNnKsqQAcwGZw/exec", {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                  });
+                  const data = await res.json();
+                  if (data.status === 'success' && data.url) {
+                    const newFormData = { ...formData, docUrl: data.url };
+                    setFormData(newFormData);
+                    onUpdate(newFormData);
+                    showNotification('✓ Google Doc Updated!');
+                    window.open(data.url, '_blank');
+                  }
+                } catch (e) {
+                  showNotification('⚠️ Sync Failed', 'error');
+                } finally {
+                  setIsSaving(false);
                 }
-              });
-            }} 
-            style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            {isSaving ? 'Saving...' : `Save & ${formData.docUrl?.trim() ? 'View Google Docs' : 'Close'}`}
-          </button>
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(52, 199, 89, 0.1)', color: '#34c759', border: '1px solid rgba(52, 199, 89, 0.2)' }}
+            >
+              Update Google Doc & Save
+            </button>
+            <button
+              className="btn-primary-premium ripple"
+              disabled={isSaving}
+              onClick={() => {
+                setIsSaving(true);
+                onUpdate(formData, () => {
+                  setIsSaving(false);
+                  showNotification('✓ Changes Saved Locally');
+                });
+              }}
+            >
+              {isSaving ? 'Saving...' : 'Simple Save'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1573,6 +1807,12 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
   const [isDeleting, setIsDeleting] = useState(false);
   const [typingSpeed, setTypingSpeed] = useState(150);
   const [activeCard, setActiveCard] = useState(0);
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const phrases = [
     "SG? No, DIVA!",
@@ -1653,6 +1893,11 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
 
   return (
     <>
+      {notification && (
+        <div className={`toast-notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
       <div className="hero fade-in">
         <div className="phrase-container">
           <h1 className="typing-display">
@@ -1869,9 +2114,9 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                           e.stopPropagation();
                           const info = `Technical Card: ${tc.reference}\n\nTitle: ${tc.title}\nTheme: ${tc.theme}\nDuration: ${tc.duration}\nLocation: ${tc.location || 'Not specified'}\nAttendee Type: ${tc.attendeeType}\n\nObjectives:\n${tc.objectives || 'N/A'}\n\nAgenda:\n${tc.agenda || 'N/A'}\n\nNeeds & Logistics:\n${tc.needs || 'N/A'}\n\nExternal Guests: ${tc.externalAttendees?.length || 0}\n${tc.externalAttendees?.map(g => `- ${g.name} (${g.email || 'No email'})`).join('\n') || ''}\n\nSponsored: ${tc.isSponsored ? 'Yes - ' + (tc.sponsorName || 'N/A') : 'No'}\n\nGoogle Doc: ${tc.docUrl || 'Not linked'}`;
                           navigator.clipboard.writeText(info).then(() => {
-                            alert('✓ Card info copied to clipboard!');
+                            showNotification('✓ Copied to clipboard!');
                           }).catch(() => {
-                            alert('Failed to copy. Please try again.');
+                            showNotification('Failed to copy', 'error');
                           });
                         }}
                         style={{ background: 'rgba(255, 193, 7, 0.1)', color: '#FFC107' }}
@@ -1911,6 +2156,22 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                         <Edit3 size={14} />
                       </button>
 
+                      {/* Archive Button */}
+                      <button
+                        className="footer-action-btn"
+                        title="Move to Archive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Archive "${tc.title}" documentation?`)) {
+                            onArchiveTechCard(tc.id);
+                            showNotification('✓ Card archived successfully');
+                          }
+                        }}
+                        style={{ background: 'rgba(102, 107, 128, 0.1)', color: '#666b80' }}
+                      >
+                        <ArchiveIcon size={14} />
+                      </button>
+
                       {/* Delete Button (Permanent) */}
                       <button
                         className="footer-delete-btn"
@@ -1919,6 +2180,7 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
                           e.stopPropagation();
                           if (window.confirm(`⚠️ PERMANENTLY DELETE "${tc.title}"?\n\nThis action cannot be undone. The card will be completely removed from the system.`)) {
                             onDeleteTechCard(tc.id);
+                            showNotification('Card deleted permanently', 'error');
                           }
                         }}
                       >
@@ -2161,11 +2423,11 @@ const MeetingAndEmailForm = ({ teamMembers = [], onCancel, onSubmit }) => {
             <label className="section-label">Select Team Members to Invite</label>
             <div style={{ marginTop: 12, maxHeight: 300, overflowY: 'auto', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: 12 }}>
               {teamMembers.map(member => (
-                <div 
-                  key={member.email} 
-                  className="list-item" 
+                <div
+                  key={member.email}
+                  className="list-item"
                   onClick={() => toggleInvitee(member.email)}
-                  style={{ 
+                  style={{
                     background: formData.selectedInvitees.includes(member.email) ? 'rgba(0, 113, 227, 0.1)' : 'rgba(255,255,255,0.05)',
                     border: formData.selectedInvitees.includes(member.email) ? '2px solid #0071e3' : '2px solid transparent',
                     cursor: 'pointer',
@@ -2173,10 +2435,10 @@ const MeetingAndEmailForm = ({ teamMembers = [], onCancel, onSubmit }) => {
                     padding: 12
                   }}
                 >
-                  <input 
-                    type="checkbox" 
-                    checked={formData.selectedInvitees.includes(member.email)} 
-                    onChange={() => {}}
+                  <input
+                    type="checkbox"
+                    checked={formData.selectedInvitees.includes(member.email)}
+                    onChange={() => { }}
                     style={{ marginRight: 12, cursor: 'pointer' }}
                   />
                   <div style={{ flex: 1 }}>
@@ -2192,8 +2454,8 @@ const MeetingAndEmailForm = ({ teamMembers = [], onCancel, onSubmit }) => {
 
         <div className="form-footer-premium">
           <button className="btn-tertiary" onClick={onCancel}>Cancel</button>
-          <button 
-            className="btn-primary-premium ripple" 
+          <button
+            className="btn-primary-premium ripple"
             onClick={() => {
               if (!formData.title.trim()) return alert("Meeting title is required");
               if (!formData.date) return alert("Date is required");
@@ -2270,10 +2532,10 @@ const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechC
                 <button className="footer-action-btn" style={{ color: '#fff' }} onClick={() => alert(`Logistics: ${tc.needs}`)}>
                   <Package size={12} />
                 </button>
-                <button 
-                  className="footer-action-btn" 
-                  title="Delete Permanently" 
-                  style={{ color: '#ff3b30' }} 
+                <button
+                  className="footer-action-btn"
+                  title="Delete Permanently"
+                  style={{ color: '#ff3b30' }}
                   onClick={() => {
                     if (confirm(`Delete "${tc.title}" permanently? This cannot be undone.`)) {
                       onDeleteTechCard(tc.id);
@@ -2711,13 +2973,13 @@ export default function App() {
   const handleUpdateTechCard = (updatedCard) => {
     console.log("handleUpdateTechCard called with:", updatedCard);
     console.log("API URL:", API_URL);
-    
+
     const saveUrl = `${API_URL}/tech-cards/${updatedCard.id}`;
     console.log("Sending PATCH request to:", saveUrl);
-    
+
     fetch(saveUrl, {
       method: "PATCH",
-      headers: { 
+      headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(updatedCard)
@@ -3432,6 +3694,30 @@ export default function App() {
         .sign-out-btn { background: #fff !important; color: #000 !important; border: 1px solid rgba(255,255,255,0.2) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: 0.2s; height: 40px; display: flex; align-items: center; }
         .sign-out-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 16px rgba(0,0,0,0.15); background: #f5f5f7 !important; }
 
+        .toast-notification {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1d1d1f;
+            color: #fff;
+            padding: 16px 32px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: toastIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toast-notification.success { border-left: 4px solid #34c759; }
+        .toast-notification.error { border-left: 4px solid #ff3b30; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
 
       `}</style>
 
@@ -3441,7 +3727,7 @@ export default function App() {
         </div>
         <div className="nav-links">
           <span className={page === 'home' ? 'active' : ''} onClick={() => setPage('home')}>Home</span>
-          <span>Activities</span>
+          <span className={page === 'activities' ? 'active' : ''} onClick={() => setPage('activities')}>Activities</span>
           <span className={page === 'attendance-tracking' ? 'active' : ''} onClick={() => setPage('attendance-tracking')}>Attendance</span>
           <span className={page === 'archive' ? 'active' : ''} onClick={() => setPage('archive')}>Archive</span>
         </div>
@@ -3475,6 +3761,7 @@ export default function App() {
           onCancel={() => setPage('home')}
           onSubmit={handleAddTechCard}
           currentRef={currentRef}
+          techCards={techCards}
         />
       )}
 
@@ -3486,6 +3773,10 @@ export default function App() {
           onUpdateTechCard={handleUpdateTechCard}
           onDeleteTechCard={handleDeleteTechCard}
         />
+      )}
+
+      {page === 'activities' && (
+        <ActivitiesDash techCards={techCards} />
       )}
 
       {page === 'attendance-tracking' && <AttendanceTracking meetings={meetings} />}
