@@ -856,33 +856,113 @@
       "attendeeType": "Mixed",
       "externalAttendees": [],
       "reference": "01/26",
-      "location": "The Main Library.",
+      "location": " Main Library.",
       "isIndoor": false,
       "id": 1771174434409,
       "docUrl": "https://docs.google.com/open?id=1farhi-Rc4yQt7wEXhK0LDpOVmA_FN_-QE-CU3UDmdC8"
     }
   ],
   "teamMembers": [
-    { "name": "Enzo Chaabnia", "email": "enzo.chaabnia@ensia.edu.dz", "role": "President" },
-    { "name": "Oumaima Boucekkine", "email": "oumaima.boucekkine@ensia.edu.dz", "role": "Vice President" },
-    { "name": "Ashref Abderrahmane Berbaoui", "email": "ashref.abderrahmane.berbaoui@ensia.edu.dz", "role": "Member" },
-    { "name": "Leena Ikhlef", "email": "leena.ikhlef@ensia.edu.dz", "role": "Secretary General" },
-    { "name": "Dorsaf Messaoudi", "email": "dorsaf.messaoudi@ensia.edu.dz", "role": "Member" },
-    { "name": "Maissa Lakel", "email": "maissa.lakel@ensia.edu.dz", "role": "Member" },
-    { "name": "Aya Khoumari", "email": "aya.khoumari@ensia.edu.dz", "role": "Member" },
-    { "name": "Chaimaa Djihene Benzergua", "email": "chaimaa-djihene.benzergua@ensia.edu.dz", "role": "Member" },
-    { "name": "Cilia Mouhoun", "email": "cilia.mouhoun@ensia.edu.dz", "role": "Member" },
-    { "name": "Imad Eddine Ahsatal", "email": "imad.eddine.ahsatal@ensia.edu.dz", "role": "Member" },
-    { "name": "Maria Ines Raheb", "email": "maria-ines.raheb@ensia.edu.dz", "role": "Member" },
-    { "name": "Maroua Bouzira", "email": "maroua.bouzira@ensia.edu.dz", "role": "Member" },
-    { "name": "Mouhsine Abdelhakim Alouit", "email": "mouhsine.abdelhakim.alouit@ensia.edu.dz", "role": "Member" },
-    { "name": "Kaouter Tazgart", "email": "kaouter.tazgart@ensia.edu.dz", "role": "Member" },
-    { "name": "Oussama Bouziane", "email": "oussama.bouziane@ensia.edu.dz", "role": "Member" },
-    { "name": "Salah Badreddine", "email": "salah.badreddine@ensia.edu.dz", "role": "Member" },
-    { "name": "Takoua Hidoussi", "email": "takoua.hidoussi@ensia.edu.dz", "role": "Member" },
-    { "name": "Youcef Belaib", "email": "youcef.belaib@ensia.edu.dz", "role": "Member" },
-    { "name": "Yani Ameziane", "email": "yani.ameziane@ensia.edu.dz", "role": "Member" },
-    { "name": "Mustapha Boulefa", "email": "mustapha.boulefa@ensia.edu.dz", "role": "Member" }
+    {
+      "name": "Enzo Chaabnia",
+      "email": "enzo.chaabnia@ensia.edu.dz",
+      "role": "President"
+    },
+    {
+      "name": "Oumaima Boucekkine",
+      "email": "oumaima.boucekkine@ensia.edu.dz",
+      "role": "Vice President"
+    },
+    {
+      "name": "Ashref Abderrahmane Berbaoui",
+      "email": "ashref.abderrahmane.berbaoui@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Leena Ikhlef",
+      "email": "leena.ikhlef@ensia.edu.dz",
+      "role": "Secretary General"
+    },
+    {
+      "name": "Dorsaf Messaoudi",
+      "email": "dorsaf.messaoudi@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Maissa Lakel",
+      "email": "maissa.lakel@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Aya Khoumari",
+      "email": "aya.khoumari@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Chaimaa Djihene Benzergua",
+      "email": "chaimaa-djihene.benzergua@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Cilia Mouhoun",
+      "email": "cilia.mouhoun@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Imad Eddine Ahsatal",
+      "email": "imad.eddine.ahsatal@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Maria Ines Raheb",
+      "email": "maria-ines.raheb@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Maroua Bouzira",
+      "email": "maroua.bouzira@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Mouhsine Abdelhakim Alouit",
+      "email": "mouhsine.abdelhakim.alouit@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Kaouter Tazgart",
+      "email": "kaouter.tazgart@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Oussama Bouziane",
+      "email": "oussama.bouziane@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Salah Badreddine",
+      "email": "salah.badreddine@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Takoua Hidoussi",
+      "email": "takoua.hidoussi@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Youcef Belaib",
+      "email": "youcef.belaib@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Yani Ameziane",
+      "email": "yani.ameziane@ensia.edu.dz",
+      "role": "Member"
+    },
+    {
+      "name": "Mustapha Boulefa",
+      "email": "mustapha.boulefa@ensia.edu.dz",
+      "role": "Member"
+    }
   ],
-  "refCounter": 5
+  "refCounter": 6
 }
