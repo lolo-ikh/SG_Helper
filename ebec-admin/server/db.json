@@ -1,6 +1,41 @@
 {
   "meetings": [
     {
+      "title": "StudUps Saving ",
+      "date": "2026-02-16",
+      "time": "18:00",
+      "description": "saving StUdUPS ",
+      "attendees": [
+        "Leena IKHLEF",
+        "Salah Badreddin",
+        "Oussama Bouzaine",
+        "Sanna toutah",
+        "Dorsaf Messaoudi",
+        "Benzergua Djihene Chaimaa",
+        "BOULEFAA Mustapha",
+        "Berbaoui Ashref Abderrahmane"
+      ],
+      "useMeet": true,
+      "sendEmail": true,
+      "id": 1771260590346,
+      "notes": "<div>20 max start ups (21) in the school..<div>team hadil + roomies.. she wanna participate..</div><div>in the school 21..</div><div>yeah, 9rrna bli lazm ndiro sponser</div><div>hr: send email and invistigate the people who are not attending.</div><div>meeting in deatils.. (leading + brainstorm, inform + one of the presdents..)</div><div>...</div><div>ideathon in first of april + sponser..&nbsp;</div><div><br></div></div>",
+      "attendance": {
+        "Leena IKHLEF": "present",
+        "Salah Badreddin": "present",
+        "Oussama Bouzaine": "present",
+        "Sanna toutah": "present",
+        "Dorsaf Messaoudi": "present",
+        "Benzergua Djihene Chaimaa": "present",
+        "BOULEFAA Mustapha": "present"
+      },
+      "report": {
+        "type": "pdf",
+        "content": "",
+        "fileName": "EBECMeetingReport_16_02_2026 .pdf",
+        "fileUrl": "/uploads/reports/1771289253935-538002902-EBECMeetingReport_16_02_2026 .pdf"
+      }
+    },
+    {
       "title": "Online October Rose Meeting",
       "date": "2025-10-09",
       "time": "20:00",

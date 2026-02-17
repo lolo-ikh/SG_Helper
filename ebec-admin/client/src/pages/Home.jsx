@@ -138,6 +138,14 @@ const ActivitiesDash = ({ techCards }) => {
   const scientific = activeCards.filter(c => c.activityType === 'scientific').length;
   const cultural = activeCards.filter(c => c.activityType === 'cultural').length;
   const sport = activeCards.filter(c => c.activityType === 'sport').length;
+  
+  const indoor = activeCards.filter(c => c.isIndoor).length;
+  const outdoor = activeCards.filter(c => !c.isIndoor).length;
+  
+  // Duration Stats
+  const hours = activeCards.filter(c => c.duration === 'Hours').length;
+  const oneDay = activeCards.filter(c => c.duration === 'One Day').length;
+  const multiDay = activeCards.filter(c => c.duration === 'Multi-Day').length;
 
   const totalGuests = activeCards.reduce((acc, c) => acc + (c.externalAttendees?.length || 0), 0);
   const sponsoredCount = activeCards.filter(c => c.isSponsored).length;
@@ -145,14 +153,14 @@ const ActivitiesDash = ({ techCards }) => {
 
   return (
     <div className="dashboard-content fade-in">
-      <div className="glass-panel-wide mb-10" style={{ textAlign: 'center' }}>
+      <div className="glass-panel-wide" style={{ textAlign: 'center', marginBottom: '60px' }}>
         <h2 style={{ color: '#fff', fontSize: '32px', marginBottom: '10px' }}>Activities Hub</h2>
         <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto' }}>
           Overview of EBEC's logistical and technical performance for the 2026 mandate.
         </p>
       </div>
 
-      <div className="quick-summary mb-10">
+      <div className="quick-summary" style={{ marginBottom: '60px' }}>
         <div className="stat-card">
           <div className="stat-value">{total}</div>
           <div className="stat-label">Total Activities</div>
@@ -167,7 +175,7 @@ const ActivitiesDash = ({ techCards }) => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '40px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '60px' }}>
         {/* Activity Distribution Simulation */}
         <div className="glass-panel-wide" style={{ padding: '30px' }}>
           <h4 style={{ color: '#fff', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -227,8 +235,44 @@ const ActivitiesDash = ({ techCards }) => {
           </p>
         </div>
       </div>
+      
+      {/* New Stats Row: Venue & Duration */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '60px' }}>
+         <div className="glass-panel-wide" style={{ padding: '30px' }}>
+            <h4 style={{ color: '#fff', marginBottom: '20px' }}>Venue Analytics</h4>
+            <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
+                <div style={{ textAlign: 'center', background: 'rgba(52, 199, 89, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: '#34c759' }}>{indoor}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Indoor Events</div>
+                </div>
+                <div style={{ textAlign: 'center', background: 'rgba(255, 193, 7, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--ebec-gold)' }}>{outdoor}</div>
+                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Outdoor Events</div>
+                </div>
+            </div>
+         </div>
+         
+         <div className="glass-panel-wide" style={{ padding: '30px' }}>
+            <h4 style={{ color: '#fff', marginBottom: '20px' }}>Duration Breakdown</h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingBottom: 10 }}>
+                {[{l:'Hours', c: hours}, {l:'1 Day', c: oneDay}, {l:'Multi', c: multiDay}].map((d, i) => (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                        <div style={{ 
+                            width: 40, 
+                            height: total > 0 ? Math.max((d.c / total) * 80, 5) : 5, 
+                            background: '#0071e3', 
+                            borderRadius: '8px 8px 0 0',
+                            marginBottom: 8
+                        }}></div>
+                        <span style={{ fontSize: 11, color: '#ccc' }}>{d.l}</span>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{d.c}</span>
+                    </div>
+                ))}
+            </div>
+         </div>
+      </div>
 
-      <h4 style={{ color: '#fff', marginBottom: '20px' }}>Recent activity timeline</h4>
+      <h4 style={{ color: '#fff', marginBottom: '30px' }}>Recent activity timeline</h4>
       <div className="glass-panel-wide" style={{ padding: '20px' }}>
         {activeCards.length === 0 ? (
           <p style={{ color: '#888', textAlign: 'center' }}>No activities recorded yet.</p>
@@ -2535,14 +2579,14 @@ const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechC
                 <button
                   className="footer-action-btn"
                   title="Delete Permanently"
-                  style={{ color: '#ff3b30' }}
+                  style={{ color: '#ff3b30', background: 'rgba(255, 59, 48, 0.1)', padding: '6px 12px', width: 'auto', gap: 6 }}
                   onClick={() => {
                     if (confirm(`Delete "${tc.title}" permanently? This cannot be undone.`)) {
                       onDeleteTechCard(tc.id);
                     }
                   }}
                 >
-                  <Trash size={12} />
+                  <Trash size={12} /> <span style={{fontSize: 11, fontWeight: 700}}>DELETE</span>
                 </button>
               </div>
             </div>
