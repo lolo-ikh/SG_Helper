@@ -1,12 +1,18 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const DB_FILE = path.join(__dirname, 'db.json');
+
+// Supabase Configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors());
 app.use(express.json());
@@ -28,47 +34,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Initialize DB file if it doesn't exist
-const initialData = {
-    meetings: [
-        {
-            id: 1,
-            title: "Board Weekly Sync",
-            date: "2026-02-15",
-            time: "18:00",
-            attendees: ["Enzo Chaabnia", "Oumaima Boucekkine", "Leena IKHLEF"],
-            description: "Standard weekly synchronization."
-        }
-    ],
-    techCards: [
-        {
-            id: 101,
-            title: "Arduino Workshop",
-            theme: "Electronics",
-            duration: "3 Hours",
-            reference: "01/26",
-            isSponsored: true,
-            sponsorName: "TechCorp",
-            agenda: "1. Intro, 2. Circuit building, 3. Coding",
-            needs: "20 Arduinos, 40 LEDs, Breadboards"
-        }
-    ],
-    refCounter: 2
-};
-
-if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
-}
-
-const readDB = () => JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-
 // Routes
 app.get('/', (req, res) => {
     res.send(`
         <div style="font-family: sans-serif; padding: 50px; text-align: center;">
             <h1 style="color: #6366f1;">EBEC Admin API</h1>
-            <p>The SG Helper Backend is live and running.</p>
+            <p>The SG Helper Backend is live and running with Supabase.</p>
             <div style="background: #f4f4f5; padding: 20px; border-radius: 12px; display: inline-block; margin-top: 20px;">
                 <code>Status: Online</code><br>
                 <code>Port: ${PORT}</code>
@@ -77,60 +48,143 @@ app.get('/', (req, res) => {
     `);
 });
 
-app.get('/api/data', (req, res) => {
-    res.json(readDB());
+app.get('/api/data', async (req, res) => {
+    try {
+        const { data: meetings, error: meetingsError } = await supabase
+            .from('meetings')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (meetingsError) throw meetingsError;
+
+        const { data: techCards, error: techCardsError } = await supabase
+            .from('tech_cards')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (techCardsError) throw techCardsError;
+
+        // Calculate refCounter based on max reference number
+        let maxRef = 0;
+        if (techCards && techCards.length > 0) {
+            const refs = techCards.map(tc => {
+                if (!tc.reference) return 0;
+                const parts = tc.reference.split('/');
+                return parseInt(parts[0]) || 0;
+            });
+            maxRef = Math.max(...refs);
+        }
+
+        res.json({ meetings, techCards, refCounter: maxRef + 1 });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.post('/api/meetings', (req, res) => {
-    const db = readDB();
-    const newMeeting = { ...req.body, id: Date.now() };
-    db.meetings.unshift(newMeeting);
-    writeDB(db);
-    res.status(201).json(newMeeting);
+app.post('/api/meetings', async (req, res) => {
+    try {
+        const newMeeting = { ...req.body, id: Date.now() };
+        const { error } = await supabase
+            .from('meetings')
+            .insert([newMeeting]);
+
+        if (error) throw error;
+
+        res.status(201).json(newMeeting);
+    } catch (error) {
+        console.error('Error creating meeting:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.delete('/api/meetings/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    db.meetings = db.meetings.filter(m => m.id !== id);
-    writeDB(db);
-    res.status(204).send();
+app.delete('/api/meetings/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { error } = await supabase
+            .from('meetings')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.status(204).send();
+    } catch (error) {
+        console.error('Error deleting meeting:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.patch('/api/meetings/:id/notes', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const { notes } = req.body;
-    db.meetings = db.meetings.map(m => m.id === id ? { ...m, notes } : m);
-    writeDB(db);
-    res.json({ success: true });
+app.patch('/api/meetings/:id/notes', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { notes } = req.body;
+        const { error } = await supabase
+            .from('meetings')
+            .update({ notes })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating meeting notes:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.patch('/api/meetings/:id/attendance', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const { attendance } = req.body;
-    db.meetings = db.meetings.map(m => m.id === id ? { ...m, attendance } : m);
-    writeDB(db);
-    res.json({ success: true });
+app.patch('/api/meetings/:id/attendance', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { attendance } = req.body;
+        const { error } = await supabase
+            .from('meetings')
+            .update({ attendance })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating meeting attendance:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.patch('/api/meetings/:id/report', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const { report } = req.body;
-    db.meetings = db.meetings.map(m => m.id === id ? { ...m, report } : m);
-    writeDB(db);
-    res.json({ success: true });
+app.patch('/api/meetings/:id/report', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { report } = req.body;
+        const { error } = await supabase
+            .from('meetings')
+            .update({ report })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating meeting report:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-app.put('/api/meetings/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const updatedMeeting = { ...req.body, id };
-    db.meetings = db.meetings.map(m => m.id === id ? updatedMeeting : m);
-    writeDB(db);
-    res.json(updatedMeeting);
+app.put('/api/meetings/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const updatedMeeting = { ...req.body, id };
+        const { error } = await supabase
+            .from('meetings')
+            .update(updatedMeeting)
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json(updatedMeeting);
+    } catch (error) {
+        console.error('Error updating meeting:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.post('/api/upload-report', upload.single('reportFile'), (req, res) => {
@@ -142,14 +196,17 @@ app.post('/api/upload-report', upload.single('reportFile'), (req, res) => {
     res.json({ success: true, fileName: req.file.originalname, fileUrl: fileUrl });
 });
 
-app.post('/api/tech-cards', (req, res) => {
+app.post('/api/tech-cards', async (req, res) => {
     try {
-        const db = readDB();
         const newCard = { ...req.body, id: Date.now() };
         console.log("[POST /api/tech-cards] Creating new tech card:", newCard);
-        db.techCards.unshift(newCard);
-        db.refCounter += 1;
-        writeDB(db);
+
+        const { error } = await supabase
+            .from('tech_cards')
+            .insert([newCard]);
+
+        if (error) throw error;
+
         console.log("New tech card created with ID:", newCard.id);
         res.status(201).json(newCard);
     } catch (error) {
@@ -158,16 +215,19 @@ app.post('/api/tech-cards', (req, res) => {
     }
 });
 
-app.delete('/api/tech-cards/:id', (req, res) => {
+app.delete('/api/tech-cards/:id', async (req, res) => {
     try {
-        const db = readDB();
         const id = parseInt(req.params.id);
         console.log(`[DELETE /api/tech-cards/${id}] Deleting tech card...`);
-        const beforeCount = db.techCards.length;
-        db.techCards = db.techCards.filter(tc => tc.id !== id);
-        const afterCount = db.techCards.length;
-        writeDB(db);
-        console.log(`Tech card deleted. Count: ${beforeCount} -> ${afterCount}`);
+
+        const { error } = await supabase
+            .from('tech_cards')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        console.log(`Tech card deleted.`);
         res.status(204).send();
     } catch (error) {
         console.error("Error deleting tech card:", error);
@@ -175,21 +235,23 @@ app.delete('/api/tech-cards/:id', (req, res) => {
     }
 });
 
-app.patch('/api/tech-cards/:id', (req, res) => {
+app.patch('/api/tech-cards/:id', async (req, res) => {
     try {
-        const db = readDB();
         const id = parseInt(req.params.id);
         console.log(`[PATCH /api/tech-cards/${id}] Updating tech card...`);
         console.log("Request body:", req.body);
-        
-        const index = db.techCards.findIndex(tc => tc.id === id);
-        console.log(`Card index found: ${index}`);
-        
-        if (index !== -1) {
-            db.techCards[index] = { ...db.techCards[index], ...req.body };
-            writeDB(db);
+
+        const { data, error } = await supabase
+            .from('tech_cards')
+            .update(req.body)
+            .eq('id', id)
+            .select();
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
             console.log("Card updated and saved to database");
-            res.json(db.techCards[index]);
+            res.json(data[0]);
         } else {
             console.log(`Card with ID ${id} not found in database`);
             res.status(404).json({ error: `Tech card ${id} not found` });
