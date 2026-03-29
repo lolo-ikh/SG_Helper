@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ebecLogo from '../assets/EBEC.jfif';
 
 // --- Custom SVG Icons ---
@@ -138,10 +138,10 @@ const ActivitiesDash = ({ techCards }) => {
   const scientific = activeCards.filter(c => c.activityType === 'scientific').length;
   const cultural = activeCards.filter(c => c.activityType === 'cultural').length;
   const sport = activeCards.filter(c => c.activityType === 'sport').length;
-  
+
   const indoor = activeCards.filter(c => c.isIndoor).length;
   const outdoor = activeCards.filter(c => !c.isIndoor).length;
-  
+
   // Duration Stats
   const hours = activeCards.filter(c => c.duration === 'Hours').length;
   const oneDay = activeCards.filter(c => c.duration === 'One Day').length;
@@ -235,41 +235,41 @@ const ActivitiesDash = ({ techCards }) => {
           </p>
         </div>
       </div>
-      
+
       {/* New Stats Row: Venue & Duration */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '60px' }}>
-         <div className="glass-panel-wide" style={{ padding: '30px' }}>
-            <h4 style={{ color: '#fff', marginBottom: '20px' }}>Venue Analytics</h4>
-            <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
-                <div style={{ textAlign: 'center', background: 'rgba(52, 199, 89, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: '#34c759' }}>{indoor}</div>
-                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Indoor Events</div>
-                </div>
-                <div style={{ textAlign: 'center', background: 'rgba(255, 193, 7, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--ebec-gold)' }}>{outdoor}</div>
-                    <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Outdoor Events</div>
-                </div>
+        <div className="glass-panel-wide" style={{ padding: '30px' }}>
+          <h4 style={{ color: '#fff', marginBottom: '20px' }}>Venue Analytics</h4>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center', background: 'rgba(52, 199, 89, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#34c759' }}>{indoor}</div>
+              <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Indoor Events</div>
             </div>
-         </div>
-         
-         <div className="glass-panel-wide" style={{ padding: '30px' }}>
-            <h4 style={{ color: '#fff', marginBottom: '20px' }}>Duration Breakdown</h4>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingBottom: 10 }}>
-                {[{l:'Hours', c: hours}, {l:'1 Day', c: oneDay}, {l:'Multi', c: multiDay}].map((d, i) => (
-                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                        <div style={{ 
-                            width: 40, 
-                            height: total > 0 ? Math.max((d.c / total) * 80, 5) : 5, 
-                            background: '#0071e3', 
-                            borderRadius: '8px 8px 0 0',
-                            marginBottom: 8
-                        }}></div>
-                        <span style={{ fontSize: 11, color: '#ccc' }}>{d.l}</span>
-                        <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{d.c}</span>
-                    </div>
-                ))}
+            <div style={{ textAlign: 'center', background: 'rgba(255, 193, 7, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--ebec-gold)' }}>{outdoor}</div>
+              <div style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>Outdoor Events</div>
             </div>
-         </div>
+          </div>
+        </div>
+
+        <div className="glass-panel-wide" style={{ padding: '30px' }}>
+          <h4 style={{ color: '#fff', marginBottom: '20px' }}>Duration Breakdown</h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingBottom: 10 }}>
+            {[{ l: 'Hours', c: hours }, { l: '1 Day', c: oneDay }, { l: 'Multi', c: multiDay }].map((d, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                <div style={{
+                  width: 40,
+                  height: total > 0 ? Math.max((d.c / total) * 80, 5) : 5,
+                  background: '#0071e3',
+                  borderRadius: '8px 8px 0 0',
+                  marginBottom: 8
+                }}></div>
+                <span style={{ fontSize: 11, color: '#ccc' }}>{d.l}</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{d.c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <h4 style={{ color: '#fff', marginBottom: '30px' }}>Recent activity timeline</h4>
@@ -1844,7 +1844,7 @@ const EditMeetingModal = ({ meeting, onCancel, onSubmit }) => {
   );
 };
 
-const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onUpdateMeeting, onDeleteTechCard, onUpdateTechCard, onArchiveTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport }) => {
+const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting, onUpdateMeeting, onDeleteTechCard, onUpdateTechCard, onArchiveTechCard, onSaveMeetingNotes, onSaveMeetingAttendance, onSaveMeetingReport, isSGVerified, judgments }) => {
   const [meetingSearch, setMeetingSearch] = useState("");
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
@@ -2241,6 +2241,58 @@ const Home = ({ setPage, refNum, setRefNum, meetings, techCards, onDeleteMeeting
             <button className="mgmt-btn secondary">Sync Google Drive</button>
             <button className="mgmt-btn primary" onClick={() => setPage('archive')}>Full Archive</button>
           </div>
+
+          {isSGVerified && (
+            <div className="mt-12" style={{ background: 'rgba(0,0,0,0.02)', padding: '40px', borderRadius: '40px', border: '1px solid rgba(0,0,0,0.05)' }}>
+              <div className="flex-between items-center mb-8">
+                <div>
+                  <h2 className="mgmt-heading" style={{ color: '#1d1d1f' }}>The Judgment Board</h2>
+                  <p className="mgmt-sub">The truth revealed. Who is loyal and who is not?</p>
+                </div>
+                <div style={{ background: '#000', color: '#fff', padding: '10px 20px', borderRadius: '100px', fontSize: '12px', fontWeight: '800' }}>
+                  SG EXCLUSIVE ACCESS
+                </div>
+              </div>
+
+              <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
+                <div className="judgment-column">
+                  <h3 style={{ color: '#ff3b30', fontSize: '14px', fontWeight: '900', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>🛑 Traitors (Said you are annoying)</h3>
+                  {judgments.filter(j => j.judgment === 'annoying').length === 0 ? (
+                    <p style={{ color: '#888', fontSize: '13px' }}>Clear skies. No traitors detected... yet.</p>
+                  ) : (
+                    judgments.filter(j => j.judgment === 'annoying').map(j => (
+                      <div key={j.id} className="list-item" style={{ background: '#fff5f5', border: '1px solid rgba(255, 59, 48, 0.1)' }}>
+                        <div className="member-avatar" style={{ background: '#ff3b30', color: '#fff' }}>{j.name.split(' ').map(n => n[0]).join('')}</div>
+                        <div className="member-info">
+                          <span className="member-name" style={{ color: '#ff3b30' }}>{j.name}</span>
+                          <span className="member-role">{j.role}</span>
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#ff3b30', fontWeight: '800' }}>TREASON</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="judgment-column">
+                  <h3 style={{ color: '#34c759', fontSize: '14px', fontWeight: '900', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>✨ Loyalists (Said you are amazing)</h3>
+                  {judgments.filter(j => j.judgment === 'amazing').length === 0 ? (
+                    <p style={{ color: '#888', fontSize: '13px' }}>Nobody has confessed their love today.</p>
+                  ) : (
+                    judgments.filter(j => j.judgment === 'amazing').map(j => (
+                      <div key={j.id} className="list-item" style={{ background: '#f5fff5', border: '1px solid rgba(52, 199, 89, 0.1)' }}>
+                        <div className="member-avatar" style={{ background: '#34c759', color: '#fff' }}>{j.name.split(' ').map(n => n[0]).join('')}</div>
+                        <div className="member-info">
+                          <span className="member-name" style={{ color: '#34c759' }}>{j.name}</span>
+                          <span className="member-role">{j.role}</span>
+                        </div>
+                        <div style={{ fontSize: '10px', color: '#34c759', fontWeight: '800' }}>LOYAL</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -2586,7 +2638,7 @@ const Archive = ({ meetings = [], techCards = [], onUpdateMeeting, onUpdateTechC
                     }
                   }}
                 >
-                  <Trash size={12} /> <span style={{fontSize: 11, fontWeight: 700}}>DELETE</span>
+                  <Trash size={12} /> <span style={{ fontSize: 11, fontWeight: 700 }}>DELETE</span>
                 </button>
               </div>
             </div>
@@ -2824,7 +2876,7 @@ const AttendanceTracking = ({ meetings }) => {
   );
 };
 
-const SGProof = ({ onVerify }) => {
+const SGProof = ({ onVerify, onBack }) => {
   const [answer, setAnswer] = useState("");
   const [isError, setIsError] = useState(false);
 
@@ -2869,9 +2921,10 @@ const SGProof = ({ onVerify }) => {
           </div>
         )}
 
-        <button className="btn-primary-premium ripple w-full mt-8 classy-btn" onClick={handleSubmit}>
-          Verify Identity
-        </button>
+        <div style={{ marginTop: '30px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button className="classy-btn" onClick={handleSubmit}>Verify Identity</button>
+          <button className="btn-tertiary" onClick={onBack} style={{ color: '#fff', fontSize: '14px' }}>Back to Selection</button>
+        </div>
       </div>
     </div>
   );
@@ -2924,26 +2977,47 @@ const Footer = () => {
 const API_URL = "http://localhost:5000/api";
 
 export default function App() {
-  const [page, setPage] = useState('home');
+  const [page, setPage] = useState('landing');
   const [refCounter, setRefCounter] = useState(1);
   const currentRef = `${String(refCounter).padStart(2, '0')}/26`;
 
   const [meetings, setMeetings] = useState([]);
   const [techCards, setTechCards] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [judgments, setJudgments] = useState([]);
+  const [selectedManager, setSelectedManager] = useState(null);
+  const [isSGVerified, setIsSGVerified] = useState(false);
+  const [isGlitching, setIsGlitching] = useState(false);
   const [showMeetingEmailForm, setShowMeetingEmailForm] = useState(false);
 
   // Load initial data
   useEffect(() => {
+    console.log("🔄 Fetching initial data from:", API_URL);
     fetch(`${API_URL}/data`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
       .then(data => {
+        console.log("✅ Data received successfully:", data);
         setMeetings(data.meetings || []);
         setTechCards(data.techCards || []);
         setTeamMembers(data.teamMembers || []);
         setRefCounter(data.refCounter || 1);
+      })
+      .catch(err => {
+        console.error("❌ FAILED to fetch data:", err);
+        // Optionally show a notification or error state
       });
   }, []);
+
+  useEffect(() => {
+    if (isSGVerified) {
+      fetch(`${API_URL}/sg-judgments`)
+        .then(res => res.json())
+        .then(data => setJudgments(data || []));
+    }
+  }, [isSGVerified]);
 
   const handleAddMeeting = (newMeeting) => {
     fetch(`${API_URL}/meetings`, {
@@ -2964,7 +3038,12 @@ export default function App() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newCard)
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Server responded with status ${res.status}`);
+        }
+        return res.json();
+      })
       .then(saved => {
         const updatedCards = [saved, ...techCards];
         setTechCards(updatedCards);
@@ -3091,10 +3170,34 @@ export default function App() {
       .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance } : m)));
   };
 
+  const handleSaveSGJudgment = (judgment) => {
+    const payload = {
+      name: selectedManager?.name || "Unknown",
+      role: selectedManager?.role || "Unknown",
+      judgment: judgment
+    };
 
+    // Immediate UI Feedback to prevent "freezing" perception
+    if (judgment === 'annoying') {
+      setIsGlitching(true);
+      setTimeout(() => {
+        setIsGlitching(false);
+        setPage('banned');
+      }, 2500);
+    } else {
+      setPage('amazing-success');
+    }
+
+    // Background log to Supabase
+    fetch(`${API_URL}/sg-judgments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(err => console.error("Judgment failed to log:", err));
+  };
 
   return (
-    <div className="apple-bg">
+    <div className={`apple-bg ${isGlitching ? 'glitch-active' : ''}`}>
       <style>{`
         :root {
           --apple-blue: #0071e3;
@@ -3763,6 +3866,46 @@ export default function App() {
             to { opacity: 1; transform: translate(-50%, 0); }
         }
 
+        @keyframes glitch {
+          0% { transform: translate(0); clip-path: inset(44% 0 1% 0); }
+          10% { transform: translate(-5px, -5px); clip-path: inset(10% 0 50% 0); }
+          20% { transform: translate(5px, 5px); clip-path: inset(80% 0 10% 0); }
+          30% { transform: translate(-5px, 5px); clip-path: inset(5% 0 70% 0); }
+          40% { transform: translate(5px, -5px); clip-path: inset(60% 0 20% 0); }
+          50% { transform: translate(-5px, -5px); clip-path: inset(10% 0 60% 0); }
+          60% { transform: translate(5px, 5px); clip-path: inset(80% 0 10% 0); }
+          70% { transform: translate(-5px, 5px); clip-path: inset(5% 0 70% 0); }
+          80% { transform: translate(5px, -5px); clip-path: inset(40% 0 40% 0); }
+          90% { transform: translate(-5px, -2px); clip-path: inset(20% 0 20% 0); }
+          100% { transform: translate(0); }
+        }
+
+        .glitch-active {
+          animation: glitch 0.15s infinite;
+          background: #000 !important;
+          filter: contrast(300%) brightness(200%) invert(1);
+          z-index: 99999;
+        }
+
+        .glitch-active * {
+          color: #ff3b30 !important;
+          border-color: #ff3b30 !important;
+          text-shadow: 2px 2px #000;
+        }
+
+        .banned-screen {
+          background: #000;
+          height: 100vh;
+          width: 100vw;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          z-index: 100000;
+          position: fixed;
+          inset: 0;
+        }
       `}</style>
 
       <nav className="glass-nav">
@@ -3775,7 +3918,10 @@ export default function App() {
           <span className={page === 'attendance-tracking' ? 'active' : ''} onClick={() => setPage('attendance-tracking')}>Attendance</span>
           <span className={page === 'archive' ? 'active' : ''} onClick={() => setPage('archive')}>Archive</span>
         </div>
-        <button className="sign-out-btn" onClick={() => setPage('proving-sg')}>Sign Out</button>
+        <button className="sign-out-btn" onClick={() => {
+          setIsSGVerified(false);
+          setPage('landing');
+        }}>Sign Out</button>
       </nav>
 
       {page === 'home' && (
@@ -3793,6 +3939,8 @@ export default function App() {
           onSaveMeetingNotes={handleSaveMeetingNotes}
           onSaveMeetingAttendance={handleSaveMeetingAttendance}
           onSaveMeetingReport={handleSaveMeetingReport}
+          isSGVerified={isSGVerified}
+          judgments={judgments}
         />
       )}
 
@@ -3825,12 +3973,117 @@ export default function App() {
 
       {page === 'attendance-tracking' && <AttendanceTracking meetings={meetings} />}
 
+      {page === 'landing' && (
+        <div className="proof-overlay bubble-theme">
+          <div className="bubble bubble-1"></div>
+          <div className="bubble bubble-2"></div>
+          <div className="bubble-card">
+            <h1 className="proof-heading">Welcome, EBECian.</h1>
+            <p className="proof-subtext">Is the Secretary General attempting to access her workspace?</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <button className="classy-btn" onClick={() => setPage('proving-sg')}>Yes, I am the SG</button>
+              <div style={{ marginTop: '20px' }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', display: 'block', marginBottom: '10px' }}>Not the SG?</span>
+                <button
+                  style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '10px 20px', borderRadius: '100px', cursor: 'pointer', fontSize: '14px' }}
+                  onClick={() => setPage('manager-role-selection')}
+                >
+                  I am an EBEC Manager
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {page === 'manager-role-selection' && (
+        <div className="proof-overlay bubble-theme">
+          <div className="bubble-card" style={{ width: '600px' }}>
+            <h1 className="proof-heading">Who are you?</h1>
+            <p className="proof-subtext">Select your identity to continue.</p>
+            <div className="modern-attendee-grid" style={{ background: 'rgba(255,255,255,0.05)', maxHeight: '400px' }}>
+              {EBEC_TEAM.map(member => (
+                <div key={member.name} className="attendee-item" onClick={() => {
+                  setSelectedManager(member);
+                  setPage('loyalty-test');
+                }}>
+                  <div className="member-avatar">{member.name.split(' ').map(n => n[0]).join('')}</div>
+                  <div className="member-info">
+                    <span className="member-name">{member.name}</span>
+                    <span className="member-role">{member.role}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="btn-tertiary" onClick={() => setPage('landing')} style={{ marginTop: '20px', color: '#fff' }}>Back</button>
+          </div>
+        </div>
+      )}
+
+      {page === 'loyalty-test' && (
+        <div className="proof-overlay bubble-theme">
+          <div className="bubble-card">
+            <div style={{ fontSize: '50px', marginBottom: '20px' }}>🤨</div>
+            <h1 className="proof-heading">The Ultimate Test</h1>
+            <p className="proof-subtext">Be honest, {selectedManager?.name}...</p>
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '30px', borderRadius: '30px', textAlign: 'left', marginBottom: '30px' }}>
+              <p style={{ color: '#fff', fontSize: '18px', fontWeight: '700', textAlign: 'center' }}>
+                Do you think the Secretary General (Leena) is annoying?
+              </p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button className="classy-btn" style={{ background: '#ff3b30', color: '#fff' }} onClick={() => handleSaveSGJudgment('annoying')}>
+                Yes, a lot
+              </button>
+              <button className="classy-btn" style={{ background: '#34c759', color: '#fff' }} onClick={() => handleSaveSGJudgment('amazing')}>
+                No, on the contrary, she is amazing!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {page === 'banned' && (
+        <div className="banned-screen">
+          <div className="fade-in" style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: '10vw', fontWeight: '900', letterSpacing: '20px', textTransform: 'uppercase', color: '#ff3b30', margin: 0, filter: 'blur(1px)' }}>
+              TRAITORS
+            </h1>
+            <p className="mt-8" style={{ fontSize: '16px', fontWeight: '200', letterSpacing: '8px', opacity: 0.5, textTransform: 'uppercase' }}>
+              The SG will know..
+            </p>
+          </div>
+          <div style={{ position: 'absolute', bottom: '40px', fontSize: '10px', opacity: 0.2, letterSpacing: '4px' }}>
+            ID: {selectedManager?.role}_BREACH_DETECTED
+          </div>
+        </div>
+      )}
+
+      {page === 'amazing-success' && (
+        <div className="proof-overlay bubble-theme">
+          <div className="bubble-card">
+            <div className="pulsate" style={{ fontSize: '80px', marginBottom: '20px' }}>✨</div>
+            <h1 className="proof-heading">THANK YOU!</h1>
+            <p className="proof-subtext">You have excellent taste, {selectedManager?.name}.</p>
+            <p style={{ color: '#fff', fontSize: '20px', marginBottom: '40px' }}>
+              The Secretary General appreciates your loyalty and wisdom.
+            </p>
+            <button className="classy-btn" onClick={() => setPage('home')}>Access Workspace</button>
+            <div style={{ marginTop: '20px' }} className="fade-in">🥳 🎉 🎊</div>
+          </div>
+        </div>
+      )}
+
       {page === 'proving-sg' && (
-        <SGProof onVerify={(success) => {
-          if (success) {
-            setPage('home');
-          }
-        }} />
+        <SGProof
+          onVerify={(success) => {
+            if (success) {
+              setIsSGVerified(true);
+              setPage('home');
+            }
+          }}
+          onBack={() => setPage('landing')}
+        />
       )}
 
       <Footer />

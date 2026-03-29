@@ -48,6 +48,10 @@ app.get('/', (req, res) => {
     `);
 });
 
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/data', async (req, res) => {
     try {
         const { data: meetings, error: meetingsError } = await supabase
@@ -78,6 +82,39 @@ app.get('/api/data', async (req, res) => {
         res.json({ meetings, techCards, refCounter: maxRef + 1 });
     } catch (error) {
         console.error('Error fetching data:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// --- SG Judgments (Traitors Detection) ---
+app.get('/api/sg-judgments', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('sg_judgments')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/sg-judgments', async (req, res) => {
+    try {
+        const { name, role, judgment } = req.body;
+        const { data, error } = await supabase
+            .from('sg_judgments')
+            .insert([{ name, role, judgment }]);
+
+        if (error) throw error;
+
+        // Mocking "Email sent to SG"
+        console.log(`[ALERT] ${name} (${role}) just said the SG is ${judgment}!`);
+
+        res.status(201).json({ success: true });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
@@ -241,9 +278,12 @@ app.patch('/api/tech-cards/:id', async (req, res) => {
         console.log(`[PATCH /api/tech-cards/${id}] Updating tech card...`);
         console.log("Request body:", req.body);
 
+        const updateData = { ...req.body };
+        delete updateData.id;
+
         const { data, error } = await supabase
             .from('tech_cards')
-            .update(req.body)
+            .update(updateData)
             .eq('id', id)
             .select();
 
