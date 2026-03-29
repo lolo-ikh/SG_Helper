@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import ebecLogo from '../assets/EBEC.jfif';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://mfacvnugnhnwzousvtzz.supabase.co";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mYWN2bnVnbmhud3pvdXN2dHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjA3NzgsImV4cCI6MjA4Njg5Njc3OH0.lldbuWTVES4Ih9563sYV7ES465Mwn7tr5wmHWP_nOg4";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // --- Custom SVG Icons ---
 const ChevronLeft = ({ size = 24 }) => (
@@ -1412,17 +1417,21 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
 
     setIsUploading(true);
     try {
-      const resp = await fetch('http://localhost:5000/api/upload-report', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await resp.json();
-      if (data.success) {
-        setReportData({ ...reportData, type: 'pdf', fileName: data.fileName, fileUrl: data.fileUrl });
-      }
+      const filePath = `${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('reports')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('reports')
+        .getPublicUrl(filePath);
+
+      setReportData({ ...reportData, type: 'pdf', fileName: file.name, fileUrl: publicUrl });
     } catch (err) {
       console.error("Upload failed", err);
-      alert("Upload failed. Make sure the server is running.");
+      // alert("Note: Make sure the 'reports' bucket exists in Supabase storage and is public.");
     } finally {
       setIsUploading(false);
     }
@@ -1472,7 +1481,7 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{reportData.fileName}</span>
               </div>
               <a
-                href={`http://localhost:5000${reportData.fileUrl}`}
+                href={reportData.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="pill-btn"
@@ -1499,7 +1508,7 @@ const MeetingReportModal = ({ meeting, onClose, onSave }) => {
           {reportData.type === 'pdf' && reportData.fileUrl && (
             <div className="mt-8" style={{ height: '500px', borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)' }}>
               <iframe
-                src={`http://localhost:5000${reportData.fileUrl}`}
+                src={reportData.fileUrl}
                 title="Report Viewer"
                 style={{ width: '100%', height: '100%', border: 'none' }}
               />
@@ -2974,7 +2983,7 @@ const Footer = () => {
   );
 };
 
-const API_URL = "http://localhost:5000/api";
+
 
 export default function App() {
   const [page, setPage] = useState('landing');
@@ -2992,185 +3001,190 @@ export default function App() {
 
   // Load initial data
   useEffect(() => {
-    console.log("🔄 Fetching initial data from:", API_URL);
-    fetch(`${API_URL}/data`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        console.log("✅ Data received successfully:", data);
-        setMeetings(data.meetings || []);
-        setTechCards(data.techCards || []);
-        setTeamMembers(data.teamMembers || []);
-        setRefCounter(data.refCounter || 1);
-      })
-      .catch(err => {
+    async function loadData() {
+      try {
+        const { data: meetingsData } = await supabase
+          .from('meetings')
+          .select('*')
+          .order('id', { ascending: false });
+
+        const { data: techCardsData } = await supabase
+          .from('tech_cards')
+          .select('*')
+          .order('id', { ascending: false });
+
+        // Calculate refCounter based on max reference number
+        let maxRef = 0;
+        if (techCardsData && techCardsData.length > 0) {
+          const refs = techCardsData.map(tc => {
+            if (!tc.reference) return 0;
+            const parts = tc.reference.split('/');
+            return parseInt(parts[0]) || 0;
+          });
+          maxRef = Math.max(...refs);
+        }
+
+        setMeetings(meetingsData || []);
+        setTechCards(techCardsData || []);
+        setRefCounter(maxRef + 1);
+      } catch (err) {
         console.error("❌ FAILED to fetch data:", err);
-        // Optionally show a notification or error state
-      });
+      }
+    }
+    loadData();
   }, []);
 
   useEffect(() => {
     if (isSGVerified) {
-      fetch(`${API_URL}/sg-judgments`)
-        .then(res => res.json())
-        .then(data => setJudgments(data || []));
+      supabase
+        .from('sg_judgments')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .then(({ data }) => setJudgments(data || []));
     }
   }, [isSGVerified]);
 
-  const handleAddMeeting = (newMeeting) => {
-    fetch(`${API_URL}/meetings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newMeeting)
-    })
-      .then(res => res.json())
-      .then(saved => {
-        setMeetings([saved, ...meetings]);
-        setPage('home');
-      });
+  const handleAddMeeting = async (newMeeting) => {
+    const meetingToSave = { ...newMeeting, id: Date.now() };
+    const { error } = await supabase
+      .from('meetings')
+      .insert([meetingToSave]);
+
+    if (!error) {
+      setMeetings([meetingToSave, ...meetings]);
+      setPage('home');
+    }
   };
 
-  const handleAddTechCard = (newCard) => {
-    fetch(`${API_URL}/tech-cards`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newCard)
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Server responded with status ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(saved => {
-        const updatedCards = [saved, ...techCards];
-        setTechCards(updatedCards);
-        // Recalculate refCounter from all cards
-        const maxRef = Math.max(...updatedCards.map(tc => {
-          const refNum = parseInt(tc.reference.split('/')[0]);
-          return isNaN(refNum) ? 0 : refNum;
-        }), 0);
-        setRefCounter(maxRef + 1);
-        setPage('home');
-      });
+  const handleAddTechCard = async (newCard) => {
+    const cardToSave = { ...newCard, id: Date.now() };
+    const { error } = await supabase
+      .from('tech_cards')
+      .insert([cardToSave]);
+
+    if (!error) {
+      const updatedCards = [cardToSave, ...techCards];
+      setTechCards(updatedCards);
+      const maxRef = Math.max(...updatedCards.map(tc => {
+        const refNum = parseInt(tc.reference.split('/')[0]);
+        return isNaN(refNum) ? 0 : refNum;
+      }), 0);
+      setRefCounter(maxRef + 1);
+      setPage('home');
+    }
   };
 
-  const handleDeleteMeeting = (id) => {
-    fetch(`${API_URL}/meetings/${id}`, { method: "DELETE" })
-      .then(() => {
-        setMeetings(prev => prev.filter(m => m.id !== id));
-        console.log("Deleted from database successfully");
-      });
+  const handleDeleteMeeting = async (id) => {
+    const { error } = await supabase
+      .from('meetings')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      setMeetings(prev => prev.filter(m => m.id !== id));
+    }
   };
 
-  const handleDeleteTechCard = (id) => {
-    fetch(`${API_URL}/tech-cards/${id}`, { method: "DELETE" })
-      .then(() => {
-        const updatedCards = techCards.filter(tc => tc.id !== id);
-        setTechCards(updatedCards);
-        // Recalculate refCounter from remaining cards
-        const maxRef = Math.max(...updatedCards.map(tc => {
-          const refNum = parseInt(tc.reference.split('/')[0]);
-          return isNaN(refNum) ? 0 : refNum;
-        }), 0);
-        setRefCounter(maxRef + 1);
-        console.log("Deleted from database successfully. New ref counter:", maxRef + 1);
-      });
+  const handleDeleteTechCard = async (id) => {
+    const { error } = await supabase
+      .from('tech_cards')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      const updatedCards = techCards.filter(tc => tc.id !== id);
+      setTechCards(updatedCards);
+      const maxRef = Math.max(...updatedCards.map(tc => {
+        const refNum = parseInt(tc.reference.split('/')[0]);
+        return isNaN(refNum) ? 0 : refNum;
+      }), 0);
+      setRefCounter(maxRef + 1);
+    }
   };
 
-  const onArchiveTechCard = (id) => {
-    // We update the card on the server via PATCH
-    fetch(`${API_URL}/tech-cards/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isArchived: true })
-    })
-      .then(res => res.json())
-      .then(updated => {
-        setTechCards(prev => prev.map(tc => tc.id === id ? updated : tc));
-      });
+  const onArchiveTechCard = async (id) => {
+    const { data, error } = await supabase
+      .from('tech_cards')
+      .update({ isArchived: true })
+      .eq('id', id)
+      .select();
+
+    if (!error && data && data.length > 0) {
+      setTechCards(prev => prev.map(tc => tc.id === id ? data[0] : tc));
+    }
   };
 
-  const handleUpdateTechCard = (updatedCard) => {
-    console.log("handleUpdateTechCard called with:", updatedCard);
-    console.log("API URL:", API_URL);
+  const handleUpdateTechCard = async (updatedCard) => {
+    const { id, ...updateData } = updatedCard;
+    const { data, error } = await supabase
+      .from('tech_cards')
+      .update(updateData)
+      .eq('id', id)
+      .select();
 
-    const saveUrl = `${API_URL}/tech-cards/${updatedCard.id}`;
-    console.log("Sending PATCH request to:", saveUrl);
-
-    fetch(saveUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(updatedCard)
-    })
-      .then(res => {
-        console.log("Response received! Status:", res.status, res.statusText);
-        if (!res.ok) {
-          throw new Error(`Server responded with status ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(saved => {
-        console.log("Save successful! Updated card:", saved);
-        const updatedCards = techCards.map(tc => tc.id === saved.id ? saved : tc);
-        setTechCards(updatedCards);
-        // Recalculate refCounter from all cards
-        const maxRef = Math.max(...updatedCards.map(tc => {
-          const refNum = parseInt(tc.reference.split('/')[0]);
-          return isNaN(refNum) ? 0 : refNum;
-        }), 0);
-        setRefCounter(maxRef + 1);
-      })
-      .catch(error => {
-        console.error("FAILED to save tech card:", error);
-        alert("ERROR: Could not save technical card!\n\n" + error.message + "\n\nCheck browser console for details.");
-      });
+    if (!error && data && data.length > 0) {
+      const saved = data[0];
+      const updatedCards = techCards.map(tc => tc.id === saved.id ? saved : tc);
+      setTechCards(updatedCards);
+      const maxRef = Math.max(...updatedCards.map(tc => {
+        const refNum = parseInt(tc.reference.split('/')[0]);
+        return isNaN(refNum) ? 0 : refNum;
+      }), 0);
+      setRefCounter(maxRef + 1);
+    } else if (error) {
+      console.error("FAILED to save tech card:", error);
+      alert("ERROR: Could not save technical card!\n\n" + error.message);
+    }
   };
 
-  const handleUpdateMeeting = (updatedMeeting) => {
-    fetch(`${API_URL}/meetings/${updatedMeeting.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedMeeting)
-    })
-      .then(res => res.json())
-      .then(saved => {
-        setMeetings(prev => prev.map(m => m.id === saved.id ? saved : m));
-      });
+  const handleUpdateMeeting = async (updatedMeeting) => {
+    const { id, ...updateData } = updatedMeeting;
+    const { data, error } = await supabase
+      .from('meetings')
+      .update(updateData)
+      .eq('id', id)
+      .select();
+
+    if (!error && data && data.length > 0) {
+      const saved = data[0];
+      setMeetings(prev => prev.map(m => m.id === saved.id ? saved : m));
+    }
   };
 
-  const handleSaveMeetingReport = (meetingId, report) => {
-    fetch(`${API_URL}/meetings/${meetingId}/report`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ report })
-    })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m)));
+  const handleSaveMeetingReport = async (meetingId, report) => {
+    const { error } = await supabase
+      .from('meetings')
+      .update({ report })
+      .eq('id', meetingId);
+
+    if (!error) {
+      setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m));
+    }
   };
 
-  const handleSaveMeetingNotes = (meetingId, html) => {
-    fetch(`${API_URL}/meetings/${meetingId}/notes`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: html })
-    })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m)));
+  const handleSaveMeetingNotes = async (meetingId, html) => {
+    const { error } = await supabase
+      .from('meetings')
+      .update({ notes: html })
+      .eq('id', meetingId);
+
+    if (!error) {
+      setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m));
+    }
   };
 
-  const handleSaveMeetingAttendance = (meetingId, attendance) => {
-    fetch(`${API_URL}/meetings/${meetingId}/attendance`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ attendance })
-    })
-      .then(() => setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance } : m)));
+  const handleSaveMeetingAttendance = async (meetingId, attendance) => {
+    const { error } = await supabase
+      .from('meetings')
+      .update({ attendance })
+      .eq('id', meetingId);
+
+    if (!error) {
+      setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance } : m));
+    }
   };
 
-  const handleSaveSGJudgment = (judgment) => {
+  const handleSaveSGJudgment = async (judgment) => {
     const payload = {
       name: selectedManager?.name || "Unknown",
       role: selectedManager?.role || "Unknown",
@@ -3189,11 +3203,9 @@ export default function App() {
     }
 
     // Background log to Supabase
-    fetch(`${API_URL}/sg-judgments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    }).catch(err => console.error("Judgment failed to log:", err));
+    await supabase
+      .from('sg_judgments')
+      .insert([payload]);
   };
 
   return (
