@@ -3990,7 +3990,7 @@ export default function App() {
           <div className="bubble bubble-1"></div>
           <div className="bubble bubble-2"></div>
           <div className="bubble-card">
-            <h1 className="proof-heading">Welcome, EBECian.</h1>
+            <h1 className="proof-heading">Welcome,.</h1>
             <p className="proof-subtext">Is the Secretary General attempting to access her workspace?</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <button className="classy-btn" onClick={() => setPage('proving-sg')}>Yes, I am the SG</button>
