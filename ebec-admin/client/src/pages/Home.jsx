@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import ebecLogo from '../assets/EBEC.jfif';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://mfacvnugnhnwzousvtzz.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mYWN2bnVnbmhud3pvdXN2dHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjA3NzgsImV4cCI6MjA4Njg5Njc3OH0.lldbuWTVES4Ih9563sYV7ES465Mwn7tr5wmHWP_nOg4";
+const supabaseUrl = "https://mfacvnugnhnwzousvtzz.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mYWN2bnVnbmhud3pvdXN2dHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjA3NzgsImV4cCI6MjA4Njg5Njc3OH0.lldbuWTVES4Ih9563sYV7ES465Mwn7tr5wmHWP_nOg4";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // --- Custom SVG Icons ---
