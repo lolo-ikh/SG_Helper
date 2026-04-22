@@ -3045,32 +3045,42 @@ export default function App() {
   }, [isSGVerified]);
 
   const handleAddMeeting = async (newMeeting) => {
-    const meetingToSave = { ...newMeeting, id: Date.now() };
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('meetings')
-      .insert([meetingToSave]);
+      .insert([{ ...newMeeting, id: Date.now() }])
+      .select();
 
-    if (!error) {
-      setMeetings([meetingToSave, ...meetings]);
+    if (!error && data && data.length > 0) {
+      setMeetings([data[0], ...meetings]);
       setPage('home');
+    } else if (error) {
+      console.error("❌ FAILED to add meeting:", error);
+      alert("Error: Could not create meeting. " + error.message);
     }
   };
 
   const handleAddTechCard = async (newCard) => {
-    const cardToSave = { ...newCard, id: Date.now() };
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('tech_cards')
-      .insert([cardToSave]);
+      .insert([{ ...newCard, id: Date.now() }])
+      .select();
 
-    if (!error) {
-      const updatedCards = [cardToSave, ...techCards];
+    if (!error && data && data.length > 0) {
+      const savedCard = data[0];
+      const updatedCards = [savedCard, ...techCards];
       setTechCards(updatedCards);
+      
       const maxRef = Math.max(...updatedCards.map(tc => {
+        if (!tc.reference) return 0;
         const refNum = parseInt(tc.reference.split('/')[0]);
         return isNaN(refNum) ? 0 : refNum;
       }), 0);
+      
       setRefCounter(maxRef + 1);
       setPage('home');
+    } else if (error) {
+      console.error("❌ FAILED to add tech card:", error);
+      alert("Error: Could not create technical card. " + error.message);
     }
   };
 
@@ -3095,10 +3105,14 @@ export default function App() {
       const updatedCards = techCards.filter(tc => tc.id !== id);
       setTechCards(updatedCards);
       const maxRef = Math.max(...updatedCards.map(tc => {
+        if (!tc.reference) return 0;
         const refNum = parseInt(tc.reference.split('/')[0]);
         return isNaN(refNum) ? 0 : refNum;
       }), 0);
       setRefCounter(maxRef + 1);
+    } else {
+      console.error("❌ FAILED to delete tech card:", error);
+      alert("Error: Could not delete card. " + error.message);
     }
   };
 
@@ -3148,39 +3162,83 @@ export default function App() {
     if (!error && data && data.length > 0) {
       const saved = data[0];
       setMeetings(prev => prev.map(m => m.id === saved.id ? saved : m));
+    } else if (error) {
+      console.error("❌ FAILED to update meeting:", error);
+      alert("Error: Could not update meeting. " + error.message);
     }
   };
 
   const handleSaveMeetingReport = async (meetingId, report) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('meetings')
       .update({ report })
-      .eq('id', meetingId);
+      .eq('id', meetingId)
+      .select();
 
-    if (!error) {
-      setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, report } : m));
+    if (!error && data && data.length > 0) {
+      setMeetings(prev => prev.map(m => m.id === meetingId ? data[0] : m));
+    } else if (error) {
+      console.error("❌ FAILED to save report:", error);
+      alert("Error: Could not save report. " + error.message);
     }
   };
 
   const handleSaveMeetingNotes = async (meetingId, html) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('meetings')
       .update({ notes: html })
-      .eq('id', meetingId);
+      .eq('id', meetingId)
+      .select();
 
-    if (!error) {
-      setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, notes: html } : m));
+    if (!error && data && data.length > 0) {
+      setMeetings(prev => prev.map(m => m.id === meetingId ? data[0] : m));
+    } else if (error) {
+      console.error("❌ FAILED to save notes:", error);
+      alert("Error: Could not save meeting notes. " + error.message);
+    } else {
+      console.warn("⚠️ No rows updated for meetingId:", meetingId);
+      // Maybe the ID is a string in the DB and we're sending a number? 
+      // Let's try converting to string if it didn't find anything.
+      const { data: dataStr, error: errorStr } = await supabase
+        .from('meetings')
+        .update({ notes: html })
+        .eq('id', String(meetingId))
+        .select();
+        
+      if (!errorStr && dataStr && dataStr.length > 0) {
+        setMeetings(prev => prev.map(m => m.id === meetingId ? dataStr[0] : m));
+      } else if (errorStr) {
+        alert("Error: " + errorStr.message);
+      }
     }
   };
 
   const handleSaveMeetingAttendance = async (meetingId, attendance) => {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('meetings')
       .update({ attendance })
-      .eq('id', meetingId);
+      .eq('id', meetingId)
+      .select();
 
-    if (!error) {
-      setMeetings(prev => prev.map(m => m.id === meetingId ? { ...m, attendance } : m));
+    if (!error && data && data.length > 0) {
+      setMeetings(prev => prev.map(m => m.id === meetingId ? data[0] : m));
+    } else if (error) {
+      console.error("❌ FAILED to save attendance:", error);
+      alert("Error: Could not save attendance. " + error.message);
+    } else {
+      console.warn("⚠️ No rows updated for meetingId:", meetingId);
+      // Try string ID just in case
+      const { data: dataStr, error: errorStr } = await supabase
+        .from('meetings')
+        .update({ attendance })
+        .eq('id', String(meetingId))
+        .select();
+        
+      if (!errorStr && dataStr && dataStr.length > 0) {
+        setMeetings(prev => prev.map(m => m.id === meetingId ? dataStr[0] : m));
+      } else if (errorStr) {
+        alert("Error: " + errorStr.message);
+      }
     }
   };
 
