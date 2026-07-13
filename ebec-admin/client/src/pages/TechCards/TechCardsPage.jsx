@@ -51,7 +51,7 @@ export default function TechCardsPage() {
         </button>
       </div>
 
-      <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+      <div className="mgmt-grid">
         {activeCards.length === 0 ? (
           <div className="empty-state">
             <p>No active technical cards.</p>

@@ -50,7 +50,7 @@ export default function AttendancePredictor() {
   };
 
   return (
-    <div className="premium-card" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', padding: 32, borderRadius: 32 }}>
+    <div className="premium-card stat-panel-inner" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 32 }}>
       <div className="flex-between" style={{ alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 20, marginBottom: 30 }}>
         <div>
           <h3 style={{ color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>

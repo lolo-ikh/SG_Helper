@@ -74,7 +74,7 @@ export default function AttendancePortal() {
     <div className="dashboard-content fade-in" style={{ maxWidth: '95vw' }}>
       <div className="flex-between items-center mb-8">
         <div>
-          <h2 className="section-title" style={{ color: '#fff', fontSize: '36px', margin: 0 }}>Secretariat Attendance Portal</h2>
+          <h2 className="section-title" style={{ color: '#fff', margin: 0 }}>Secretariat Attendance Portal</h2>
           <p style={{ color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Bird's eye view of EBEC engagement across all sync sessions.</p>
         </div>
         <div className="stat-card" style={{ background: 'rgba(52, 199, 89, 0.1)', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
@@ -90,7 +90,7 @@ export default function AttendancePortal() {
         ))}
       </div>
 
-      <div className="mgmt-grid mb-10" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+      <div className="mgmt-grid mb-10">
         <div className="premium-card" style={{ background: 'rgba(52, 199, 89, 0.05)', border: '1px solid rgba(52, 199, 89, 0.14)', padding: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <div style={{ background: '#34c759', color: '#fff', borderRadius: 8, padding: 6 }}><UserCheck size={16} /></div>
@@ -116,9 +116,9 @@ export default function AttendancePortal() {
         </div>
       </div>
 
-      <div style={{ marginTop: 60, marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ marginTop: 32, marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <p style={{ color: '#fff', opacity: 0.8, fontWeight: 700, margin: 0, fontSize: 18 }}>Raw Attendance Ledger</p>
-        <div className="premium-search-container" style={{ width: 350 }}>
+        <div className="premium-search-container" style={{ maxWidth: 350, width: '100%' }}>
           <div className="search-icon-wrapper"><Search size={14} /></div>
           <input type="text" placeholder="Filter member by name or role..." className="cute-search-input"
             style={{ width: '100%' }} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />

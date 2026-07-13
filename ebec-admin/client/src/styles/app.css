@@ -527,6 +527,15 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
 .delete-guest:hover { background: #ff3b30; color: #fff; }
 
 /* --- Global Utilities --- */
+.stats-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.report-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.attendee-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.edit-tab-bar { padding: 16px 40px 0; display: flex; gap: 4px; overflow-x: auto; }
+.edit-content { padding: 32px 40px; }
+.report-iframe { width: 100%; height: 500px; border: none; border-radius: 20px; }
+.notes-editor-area { width: 100%; min-height: 400px; padding: 20px; border: 1px solid rgba(0,0,0,0.08); border-radius: 20px; font-family: inherit; font-size: 14px; resize: vertical; background: rgba(255,255,255,0.7); }
+.archive-empty-state { padding: 60px 40px; text-align: center; border-radius: 32px; background: rgba(0,0,0,0.02); border: 1px dashed rgba(0,0,0,0.1); }
+.stat-panel-inner { padding: 30px; }
 .flex { display: flex; }
 .gap-2 { gap: 8px; }
 .flex-between { display: flex; justify-content: space-between; }
@@ -993,6 +1002,21 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
 
   /* Date visual square */
   .dv-day { font-size: 36px; }
+
+  /* Responsive grids */
+  .modern-attendee-grid { grid-template-columns: 1fr; max-height: none; padding: 16px; }
+  .time-row, .time-grid { grid-template-columns: 1fr; }
+  .stats-grid-2col { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .report-grid-2col { grid-template-columns: 1fr !important; }
+  .segmented-control { flex-wrap: wrap; }
+  .edit-tab-bar { padding: 12px 16px 0 !important; }
+  .edit-tab-bar .tab-btn { padding: 8px 12px !important; font-size: 12px !important; }
+  .edit-content { padding: 20px 16px !important; }
+  .attendee-grid-2col { grid-template-columns: 1fr; }
+  .report-iframe { height: 300px !important; }
+  .notes-editor-area { min-height: 250px !important; }
+  .archive-empty-state { padding: 30px 16px !important; }
+  .stat-panel-inner { padding: 16px !important; }
 }
 
 @media (max-width: 480px) {
@@ -1018,4 +1042,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
   .card-info-block h3 { font-size: 15px; }
   .card-info-block p { font-size: 12px; height: auto; }
   .glass-panel-wide { padding: 12px; }
+  .notes-editor-area { min-height: 200px !important; }
+  .report-iframe { height: 250px !important; }
+  .stat-panel-inner { padding: 12px !important; }
 }

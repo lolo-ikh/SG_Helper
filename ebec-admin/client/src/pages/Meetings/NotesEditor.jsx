@@ -30,8 +30,8 @@ export default function NotesEditor({ meeting, onClose, onSave }) {
             ref={editorRef}
             contentEditable
             suppressContentEditableWarning
-            className="notes-editor"
-            style={{ minHeight: 400, padding: 24, background: '#fff', borderRadius: 24, border: '1px solid rgba(0,0,0,0.05)', fontSize: 16, outline: 'none' }}
+            className="notes-editor notes-editor-area"
+            style={{ padding: 24, background: '#fff', borderRadius: 24, border: '1px solid rgba(0,0,0,0.05)', fontSize: 16, outline: 'none' }}
           />
         </div>
         <div className="form-footer-premium">

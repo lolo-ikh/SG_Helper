@@ -62,13 +62,13 @@ export default function MeetingsPage() {
         </button>
       </div>
 
-      <div className="premium-search-container" style={{ width: 400, marginBottom: 40 }}>
+      <div className="premium-search-container" style={{ marginBottom: 40 }}>
         <div className="search-icon-wrapper"><Search size={14} /></div>
         <input type="text" placeholder="Search meetings..." className="cute-search-input" style={{ width: '100%' }}
           value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
+      <div className="mgmt-grid">
         {filtered.length === 0 ? (
           <div className="empty-state">
             <p>No meetings found.</p>

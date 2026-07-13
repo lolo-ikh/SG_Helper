@@ -28,21 +28,21 @@ export default function TechCardStats() {
 
   return (
     <div className="dashboard-content fade-in">
-      <div className="glass-panel-wide" style={{ textAlign: 'center', marginBottom: '60px' }}>
+      <div className="glass-panel-wide" style={{ textAlign: 'center', marginBottom: '40px' }}>
         <h2 style={{ color: '#fff', fontSize: '32px', marginBottom: '10px' }}>Activities Hub</h2>
         <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '600px', margin: '0 auto' }}>
           Overview of EBEC's logistical and technical performance for the 2026 mandate.
         </p>
       </div>
 
-      <div className="quick-summary" style={{ marginBottom: '60px' }}>
+      <div className="quick-summary" style={{ marginBottom: '40px' }}>
         <div className="stat-card"><div className="stat-value">{total}</div><div className="stat-label">Total Activities</div></div>
         <div className="stat-card"><div className="stat-value">{totalGuests}</div><div className="stat-label">Total Guests</div></div>
         <div className="stat-card"><div className="stat-value">{sponsorRate}%</div><div className="stat-label">Sponsorship Rate</div></div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '60px' }}>
-        <div className="glass-panel-wide" style={{ padding: '30px' }}>
+      <div className="stats-grid-2col" style={{ marginBottom: '40px' }}>
+        <div className="glass-panel-wide stat-panel-inner">
           <h4 style={{ color: '#fff', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: 10 }}>Type Distribution</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {[{ label: 'Scientific', count: scientific, color: '#0071e3' }, { label: 'Cultural', count: cultural, color: '#34c759' }, { label: 'Sport', count: sport, color: '#ffc107' }].map(item => (
@@ -59,7 +59,7 @@ export default function TechCardStats() {
           </div>
         </div>
 
-        <div className="glass-panel-wide" style={{ padding: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="glass-panel-wide stat-panel-inner" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <h4 style={{ color: '#fff', marginBottom: '20px' }}>Partnership Strength</h4>
           <div style={{ position: 'relative', width: '150px', height: '150px' }}>
             <svg width="150" height="150" viewBox="0 0 150 150">
@@ -75,8 +75,8 @@ export default function TechCardStats() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '60px' }}>
-        <div className="glass-panel-wide" style={{ padding: '30px' }}>
+      <div className="stats-grid-2col" style={{ marginBottom: '40px' }}>
+        <div className="glass-panel-wide stat-panel-inner">
           <h4 style={{ color: '#fff', marginBottom: '20px' }}>Venue Analytics</h4>
           <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
             <div style={{ textAlign: 'center', background: 'rgba(52, 199, 89, 0.1)', padding: 20, borderRadius: 16, flex: 1 }}>
@@ -90,7 +90,7 @@ export default function TechCardStats() {
           </div>
         </div>
 
-        <div className="glass-panel-wide" style={{ padding: '30px' }}>
+        <div className="glass-panel-wide stat-panel-inner">
           <h4 style={{ color: '#fff', marginBottom: '20px' }}>Duration Breakdown</h4>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: 100, paddingBottom: 10 }}>
             {[{ l: 'Hours', c: hours }, { l: '1 Day', c: oneDay }, { l: 'Multi', c: multiDay }].map((d, i) => (

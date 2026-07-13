@@ -68,7 +68,7 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
         <div className="form-body">
           <p className="sub-text mb-8">Choose to upload an existing PDF or generate a professional LaTeX report using meeting notes.</p>
 
-          <div className="mgmt-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="report-grid-2col mgmt-grid">
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".pdf" onChange={handleFileUpload} />
             <div className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`}
               style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }}
@@ -107,7 +107,7 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
           )}
 
           {reportData.type === 'pdf' && reportData.fileUrl && (
-            <div className="mt-8" style={{ height: '500px', borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)' }}>
+            <div className="mt-8 report-iframe" style={{ borderRadius: 24, overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)' }}>
               <iframe src={reportData.fileUrl} title="Report Viewer" style={{ width: '100%', height: '100%', border: 'none' }} />
             </div>
           )}

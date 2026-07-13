@@ -195,7 +195,7 @@ export default function ManagersPage() {
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
         <div className="season-tabs">
           <button className={`season-tab ${seasonFilter === 'all' ? 'active' : ''}`} onClick={() => setSeasonFilter('all')}>All Seasons</button>
           {SEASONS.map(s => (
@@ -215,7 +215,7 @@ export default function ManagersPage() {
         </div>
       </div>
 
-      <div className="glass-panel-wide" style={{ padding: 30 }}>
+      <div className="glass-panel-wide stat-panel-inner">
         {loading ? (
           <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: 40 }}>Loading managers...</p>
         ) : managers.length === 0 ? (

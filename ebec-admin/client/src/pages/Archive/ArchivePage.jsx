@@ -48,13 +48,13 @@ export default function ArchivePage() {
     <div className="dashboard-content fade-in">
       <Toast message={notification?.msg} type={notification?.type} onDone={() => setNotification(null)} />
 
-      <div className="glass-panel-wide" style={{ textAlign: 'center', marginBottom: 40, position: 'relative' }}>
+      <div className="glass-panel-wide" style={{ textAlign: 'center', marginBottom: 24, position: 'relative' }}>
         <button onClick={() => navigate('/dashboard')} style={{ position: 'absolute', left: 24, top: 24, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 12, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontSize: 13, fontWeight: 700, transition: '0.2s' }}
           onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.2)'} onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.1)'}>
           <ArrowLeft size={16} /> Back
         </button>
-        <h2 style={{ color: '#fff', fontSize: 32, marginBottom: 10 }}>Mandate Archive</h2>
-        <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: 500, margin: '0 auto' }}>Browse all meetings, notes, reports, and technical cards across seasons.</p>
+        <h2 style={{ color: '#fff', fontSize: 28, marginBottom: 10 }}>Mandate Archive</h2>
+        <p style={{ color: 'rgba(255,255,255,0.6)', margin: '0 auto' }}>Browse all meetings, notes, reports, and technical cards across seasons.</p>
       </div>
 
       <div style={{ display: 'flex', gap: 12, justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
@@ -82,9 +82,9 @@ export default function ArchivePage() {
       </div>
 
       {expandedSection === 'meetings' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+        <div className="mgmt-grid">
           {filteredMeetings.length === 0 ? (
-            <div className="glass-panel-wide" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 40px' }}>
+            <div className="archive-empty-state" style={{ gridColumn: '1 / -1' }}>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>No meetings found for this season.</p>
             </div>
           ) : filteredMeetings.map(m => {
@@ -131,9 +131,9 @@ export default function ArchivePage() {
       )}
 
       {expandedSection === 'cards' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+        <div className="mgmt-grid">
           {filteredCards.length === 0 ? (
-            <div className="glass-panel-wide" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 40px' }}>
+            <div className="archive-empty-state" style={{ gridColumn: '1 / -1' }}>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>No tech cards found for this season.</p>
             </div>
           ) : filteredCards.map(tc => (

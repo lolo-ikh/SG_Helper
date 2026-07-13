@@ -108,18 +108,18 @@ export default function TechCardEdit() {
           <button className="close-btn" onClick={() => navigate(-1)}>×</button>
         </div>
 
-        <div style={{ display: 'flex', gap: 4, padding: '16px 40px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', flexShrink: 0 }}>
+        <div className="edit-tab-bar" style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(0,0,0,0.05)', flexShrink: 0 }}>
           {[{ id: 'basic', label: 'Basic Info' }, { id: 'details', label: 'Activity Details' }, { id: 'content', label: 'Content' }, { id: 'guests', label: 'Guests' }].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
               background: activeTab === tab.id ? '#fff' : 'transparent',
               border: activeTab === tab.id ? '2px solid #0071e3' : '2px solid transparent',
               padding: '10px 16px', borderRadius: '12px 12px 0 0', fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', color: activeTab === tab.id ? '#0071e3' : '#888', transition: '0.2s'
+              cursor: 'pointer', color: activeTab === tab.id ? '#0071e3' : '#888', transition: '0.2s', flexShrink: 0
             }}>{tab.label}</button>
           ))}
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
+        <div className="edit-content" style={{ flex: 1, overflowY: 'auto' }}>
           {activeTab === 'basic' && (
             <>
               <div className="input-group-premium mb-8">
@@ -130,11 +130,11 @@ export default function TechCardEdit() {
                 <label style={{ fontWeight: 700, color: '#0071e3' }}>Reference Number (Edit this)</label>
                 <input className="premium-input" value={formData.reference} onChange={e => setFormData({ ...formData, reference: e.target.value })} placeholder="e.g., 01/26" style={{ marginTop: 8, fontWeight: 700, fontSize: 16 }} />
               </div>
-              <div className="form-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="form-grid mb-8">
                 <div className="field-group"><label>Location / Venue</label><input className="premium-input" value={formData.location || ''} onChange={e => setFormData({ ...formData, location: e.target.value })} /></div>
                 <div className="field-group"><label>Domain / Theme</label><input className="premium-input" value={formData.theme || ''} onChange={e => setFormData({ ...formData, theme: e.target.value })} /></div>
               </div>
-              <div className="form-grid mt-4" style={{ gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div className="form-grid mt-4 mb-8">
                 <div className="field-group">
                   <label>Duration</label>
                   <select className="premium-input" value={formData.duration || 'One Day'} onChange={e => setFormData({ ...formData, duration: e.target.value })}>
