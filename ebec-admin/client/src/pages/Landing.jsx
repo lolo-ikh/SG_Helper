@@ -20,7 +20,7 @@ export default function Landing() {
     try {
       if (isSignUp) {
         const trimmedEmail = email.trim().toLowerCase();
-        const APPROVED_EMAILS = ['leena.ikhlef@ensia.edu.dz', 'dorsaf.messaoudi@ensia.edu.dz', 'oussama.bouziane@ensia.edu.dz', 'aya.hoggas@ensia.edu.dz'];
+        const APPROVED_EMAILS = ['leena.ikhlef@ensia.edu.dz', 'dorsaf.messaoudi@ensia.edu.dz', 'oussama.bouziane@ensia.edu.dz', 'aya.hoggas@ensia.edu.dz', 'ileena1618@gmail.com'];
 
         if (!APPROVED_EMAILS.includes(trimmedEmail)) {
           setError('This email is not pre-approved. Ask the VP to add you first.');
