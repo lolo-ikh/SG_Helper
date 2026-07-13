@@ -20,7 +20,7 @@ export default function Landing() {
     try {
       if (isSignUp) {
         const trimmedEmail = email.trim().toLowerCase();
-        const APPROVED_EMAILS = ['leena.ikhlef@ensia.edu.dz'];
+        const APPROVED_EMAILS = ['leena.ikhlef@ensia.edu.dz', 'dorsaf.messaoudi@ensia.edu.dz', 'oussama.bouziane@ensia.edu.dz', 'aya.hoggas@ensia.edu.dz'];
 
         if (!APPROVED_EMAILS.includes(trimmedEmail)) {
           setError('This email is not pre-approved. Ask the VP to add you first.');
@@ -85,6 +85,12 @@ export default function Landing() {
             {loading ? 'Please wait...' : (isSignUp ? 'Create Account' : 'Sign In')}
           </button>
         </form>
+
+        {isSignUp && (
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', textAlign: 'center', marginTop: '16px', lineHeight: '1.6' }}>
+            Please sign up with your <span style={{ color: 'var(--ebec-gold)', fontWeight: 700 }}>school email</span> address.
+          </p>
+        )}
 
         <div className="auth-toggle">
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}
