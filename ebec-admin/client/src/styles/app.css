@@ -909,9 +909,14 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
   .mgmt-heading { font-size: 22px; }
   .mgmt-sub { font-size: 13px; }
   .mgmt-grid { grid-template-columns: 1fr; gap: 14px; }
+  .mgmt-header-block { flex-direction: column !important; gap: 16px !important; align-items: stretch !important; }
+
+  /* Judgment Board */
+  .judgment-board-container { background: rgba(0,0,0,0.02); padding: 24px 16px !important; border-radius: 24px !important; border: 1px solid rgba(0,0,0,0.05); }
+  .judgment-grid { grid-template-columns: 1fr !important; }
 
   /* Page header */
-  .page-header { flex-direction: column; gap: 16px; align-items: flex-start; }
+  .page-header { flex-direction: column; gap: 16px; align-items: stretch !important; }
   .page-title { font-size: 24px; }
   .page-subtitle { font-size: 13px; }
 
@@ -1001,6 +1006,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
   .main-plus-btn { width: 50px; height: 50px; font-size: 20px; }
   .mgmt-section { padding: 30px 12px; }
   .mgmt-heading { font-size: 18px; }
+  .judgment-board-container { padding: 16px 12px !important; border-radius: 16px !important; }
   .auth-card { padding: 28px 16px; border-radius: 28px; }
   .auth-card h1 { font-size: 20px; }
   .auth-input { padding: 12px 14px; font-size: 14px; }
@@ -1011,4 +1017,5 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
   .dv-month { font-size: 11px; }
   .card-info-block h3 { font-size: 15px; }
   .card-info-block p { font-size: 12px; height: auto; }
+  .glass-panel-wide { padding: 12px; }
 }

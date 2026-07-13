@@ -470,17 +470,17 @@ export default function Dashboard() {
           </div>
 
           {isVP && (
-            <div className="mt-12" style={{ background: 'rgba(0,0,0,0.02)', padding: '40px', borderRadius: '40px', border: '1px solid rgba(0,0,0,0.05)' }}>
-              <div className="flex-between items-center mb-8">
+            <div className="judgment-board-container mt-12">
+              <div className="flex-between items-center mb-8" style={{ flexWrap: 'wrap', gap: 16 }}>
                 <div>
                   <h2 className="mgmt-heading" style={{ color: '#1d1d1f' }}>The Judgment Board</h2>
                   <p className="mgmt-sub">The truth revealed. Who is loyal and who is not?</p>
                 </div>
-                <div style={{ background: '#000', color: '#fff', padding: '10px 20px', borderRadius: '100px', fontSize: '12px', fontWeight: '800' }}>
+                <div style={{ background: '#000', color: '#fff', padding: '10px 20px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', flexShrink: 0 }}>
                   VP EXCLUSIVE ACCESS
                 </div>
               </div>
-              <div className="mgmt-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
+              <div className="mgmt-grid judgment-grid">
                 <div className="judgment-column">
                   <h3 style={{ color: '#ff3b30', fontSize: '14px', fontWeight: '900', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '1px' }}>Traitors (Said you are annoying)</h3>
                   {judgments.filter(j => j.judgment === 'annoying').length === 0 ? (
