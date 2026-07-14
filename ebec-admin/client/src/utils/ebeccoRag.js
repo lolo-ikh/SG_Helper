@@ -8,7 +8,8 @@ export async function generateRagAnswer(question, searchResults) {
   const context = searchResults
     .map((r, i) => {
       const meta = r.chunk_summary ? `Summary: ${r.chunk_summary}` : '';
-      return `[Source ${i + 1}: "${r.document_title}" (p.${r.page_number || '?'})]\n${meta}\n${r.chunk_content}`;
+      const catLabel = { admin_doc: 'Admin Doc', meeting_report: 'Meeting Report', presentation: 'Presentation', general: 'General' }[r.document_category] || r.document_category;
+      return `[Source ${i + 1}: "${r.document_title}" (${catLabel}, p.${r.page_number || '?'})]\n${meta}\n${r.chunk_content}`;
     })
     .join('\n\n');
 
@@ -22,7 +23,7 @@ export async function generateRagAnswer(question, searchResults) {
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
           messages: [
-            { role: 'system', content: 'You are EBECO, the EBEC Admin Hub knowledge assistant. You answer questions about EBEC meetings, reports, team activities, and admin documents. You are given relevant excerpts from uploaded documents. Synthesize the information to answer the question clearly and concisely. Always cite the source document name. If the context doesn\'t contain enough information to answer, say so. Never make up information.' },
+            { role: 'system', content: 'You are EBECO, the EBEC Admin Hub knowledge assistant. You answer questions about EBEC meetings, reports, team activities, and admin documents. You are given relevant excerpts from uploaded documents. Each source is labeled with its type (Admin Doc, Meeting Report, Presentation, General). Admin Documents and Presentations contain official roles, responsibilities, and structured plans — prioritize them over Meeting Reports when both are available. Meeting Reports contain discussion notes and action items. Synthesize the information to answer the question clearly and concisely. Always cite the source document name and type. If the context doesn\'t contain enough information to answer, say so. Never make up information.' },
             { role: 'user', content: `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.` },
           ],
           max_tokens: 800,

@@ -3,6 +3,13 @@ import { embedText } from './ebeccoEmbed';
 
 const STOP_WORDS = new Set(['the','a','an','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','shall','should','may','might','must','can','could','i','me','my','we','our','you','your','he','him','his','she','her','it','its','they','them','their','what','which','who','whom','where','when','why','how','in','on','at','to','for','of','with','by','from','as','into','through','during','before','after','above','below','between','out','off','over','under','again','further','then','once','that','this','these','those','and','but','or','nor','not','so','if']);
 
+const CATEGORY_WEIGHT = {
+  admin_doc: 1.6,
+  presentation: 1.3,
+  meeting_report: 1.0,
+  general: 0.8,
+};
+
 function extractKeywords(query) {
   return query
     .toLowerCase()
@@ -151,7 +158,43 @@ export async function searchDocuments(query, limit = 10) {
   }
 
   console.log(`[EBECO] Merged ${merged.length} unique results from all tiers`);
-  return merged.slice(0, limit);
+
+  // Boost by category weight
+  const boosted = merged.map(r => ({
+    ...r,
+    rank: (r.rank || 0) * (CATEGORY_WEIGHT[r.document_category] || 1),
+  }));
+
+  // Sort by boosted rank descending
+  boosted.sort((a, b) => b.rank - a.rank);
+
+  // Diversify: ensure at least 1 result from each non-meeting_report category if available
+  const byCategory = {};
+  for (const r of boosted) {
+    if (!byCategory[r.document_category]) byCategory[r.document_category] = [];
+    byCategory[r.document_category].push(r);
+  }
+
+  const diversified = [];
+  const seenIds = new Set();
+  // First pass: take best from each non-meeting_report category
+  for (const cat of ['admin_doc', 'presentation', 'general']) {
+    if (byCategory[cat] && byCategory[cat].length > 0) {
+      const best = byCategory[cat][0];
+      diversified.push(best);
+      seenIds.add(best.chunk_id);
+    }
+  }
+  // Second pass: fill remaining slots from all results by rank
+  for (const r of boosted) {
+    if (diversified.length >= limit) break;
+    if (!seenIds.has(r.chunk_id)) {
+      diversified.push(r);
+      seenIds.add(r.chunk_id);
+    }
+  }
+
+  return diversified.slice(0, limit);
 }
 
 export async function getDocumentChunks(documentId) {
