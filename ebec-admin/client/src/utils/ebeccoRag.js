@@ -1,7 +1,10 @@
 import { supabase } from '../lib/supabase';
+import { fetchAppDataSummary } from './ebeccoAppData';
 
 export async function generateRagAnswer(question, searchResults) {
   const hasResults = searchResults && searchResults.length > 0;
+
+  const appData = await fetchAppDataSummary();
 
   const context = hasResults ? (() => {
     const MAX_CONTEXT_CHARS = 6000;
@@ -65,10 +68,13 @@ DOCUMENT-BASED ANSWERS (use the provided excerpts):
 - Team Directories and Roles docs are the authoritative source for roles — prioritize them.
 - Do NOT confuse people who share a first name.
 - Be SHORT — 2-4 sentences max unless asked for detail. Cite sources using EXACTLY this format: (Source: "Doc Name"). No brackets, no numbers, no extra info. Always use parentheses.
-- If the context lacks info to answer, say "I don't have enough information." Never fabricate.` },
+- If the context lacks info to answer, say "I don't have enough information." Never fabricate.
+
+APP DATA (live data from the EBEC Admin Hub — use this for statistics, counts, and current status):
+${appData || '(No app data available)'}` },
             { role: 'user', content: hasResults
-              ? `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.`
-              : `Question: ${question}\n\n(No document excerpts available.)\n\nAnswer based on your self-knowledge. If this is a greeting, respond warmly and briefly. If it's about your identity or purpose, answer from your built-in knowledge without citing sources.` },
+              ? `Question: ${question}\n\nLive app data:\n${appData || 'None'}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question using the app data for statistics/counts and document excerpts for detailed info. Cite sources for document info.`
+              : `Question: ${question}\n\nLive app data:\n${appData || 'None'}\n\n(No document excerpts available.)\n\nAnswer using the app data for statistics/counts, or your self-knowledge for identity/greeting questions.` },
           ],
           max_tokens: 300,
           temperature: 0.3,
