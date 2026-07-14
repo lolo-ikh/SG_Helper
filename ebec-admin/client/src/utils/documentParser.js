@@ -12,6 +12,7 @@ export function parseDocumentStructure(fullText) {
   const sections = [];
   let title = '';
   let currentSection = null;
+  let orphanContent = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -42,17 +43,22 @@ export function parseDocumentStructure(fullText) {
     }
 
     // Sub-heading
-    if (SUBHEADING_RE.test(line) && line.length < 120) {
+    if (SUBHEADING_RE.test(line)) {
       if (currentSection) {
         currentSection.children.push({ type: 'subheading', content: line.replace(/\s+/g, ' ').trim() });
+      } else {
+        orphanContent.push(line.replace(/\s+/g, ' ').trim());
       }
       continue;
     }
 
-    // Bullet point
+    // Bullet line
     if (BULLET_RE.test(line)) {
+      const clean = line.replace(/\s+/g, ' ').trim();
       if (currentSection) {
-        currentSection.children.push({ type: 'bullet', content: line.replace(/\s+/g, ' ').trim() });
+        currentSection.children.push({ type: 'bullet', content: clean });
+      } else {
+        orphanContent.push(clean);
       }
       continue;
     }
@@ -61,6 +67,8 @@ export function parseDocumentStructure(fullText) {
     if (LABEL_RE.test(line)) {
       if (currentSection) {
         currentSection.children.push({ type: 'label', content: line.replace(/\s+/g, ' ').trim() });
+      } else {
+        orphanContent.push(line.replace(/\s+/g, ' ').trim());
       }
       continue;
     }
@@ -73,10 +81,21 @@ export function parseDocumentStructure(fullText) {
       } else {
         currentSection.children.push({ type: 'content', content: line.replace(/\s+/g, ' ').trim() });
       }
+    } else {
+      orphanContent.push(line.replace(/\s+/g, ' ').trim());
     }
   }
 
   if (currentSection) sections.push(currentSection);
+
+  // If no headings found, wrap all orphaned content into a single fallback section
+  if (sections.length === 0 && orphanContent.length > 0) {
+    sections.push({
+      type: 'heading',
+      content: title || 'Document Content',
+      children: orphanContent.map(c => ({ type: 'content', content: c }))
+    });
+  }
 
   return { title, sections };
 }
