@@ -71,7 +71,7 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
           const idx = titleToIndex[part.title] || 1;
           return <InlineSource key={i} index={idx} title={part.title} sources={sources} onOpenPdf={onOpenPdf} />;
         }
-        return part.value ? <Markdown key={i}>{part.value}</Markdown> : null;
+        return part.value ? <span key={i}>{part.value}</span> : null;
       })}
     </>
   );
