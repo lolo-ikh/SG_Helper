@@ -3,7 +3,7 @@ import { MessageCircle, X, Send, Bot, User, Loader2, ExternalLink } from 'lucide
 import Markdown from 'react-markdown';
 import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
-import { isAmbiguousQuery, reformulateQuery } from '../utils/ebeccoReformulate';
+import { isAmbiguousQuery, reformulateQuery, expandQuery } from '../utils/ebeccoReformulate';
 import { supabase } from '../lib/supabase';
 
 const WELCOME_MSG = { role: 'assistant', content: "Hi! I'm EBECO, your EBEC (Ensia Business and Entrepreneurship Club) knowledge assistant built by Leena Ikhlef. I can answer questions about meetings, team roles, events, and any uploaded documents. Click source badges [1] [2] to view the original PDFs." };
@@ -139,6 +139,8 @@ export default function EbeccoChat() {
         let searchQuery = q;
         if (isAmbiguousQuery(q)) {
           searchQuery = await reformulateQuery(q, messages);
+        } else if (isBroadQuery(q)) {
+          searchQuery = await expandQuery(q);
         }
         const searchLimit = isBroadQuery(q) ? 15 : 5;
         const results = await searchDocuments(searchQuery, searchLimit);

@@ -47,3 +47,35 @@ export async function reformulateQuery(query, conversationHistory) {
   }
   return query;
 }
+
+export async function expandQuery(query) {
+  const groqKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (!groqKey) return query;
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: 'Expand this short query into 4-6 specific search keywords/phrases for document retrieval. Include synonyms and related terms. Output ONLY the keywords separated by commas, nothing else.' },
+          { role: 'user', content: `Query: ${query}\n\nKeywords:` },
+        ],
+        max_tokens: 40,
+        temperature: 0,
+      }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      const expanded = data.choices?.[0]?.message?.content?.trim();
+      if (expanded && expanded.length > 5 && expanded.length < 200) {
+        console.log(`[EBECO] Expanded: "${query}" → "${expanded}"`);
+        return expanded;
+      }
+    }
+  } catch (err) {
+    console.warn('[EBECO] Query expansion failed:', err.message);
+  }
+  return query;
+}
