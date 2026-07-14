@@ -159,6 +159,53 @@ export async function searchDocuments(query, limit = 10) {
 
   console.log(`[EBECO] Merged ${merged.length} unique results from all tiers`);
 
+  // Targeted category fetch: if important categories missing, fetch directly
+  const hasCategory = (cat) => merged.some(r => r.document_category === cat);
+  const PRIORITY_CATS = ['admin_doc', 'presentation'];
+
+  for (const cat of PRIORITY_CATS) {
+    if (!hasCategory(cat) && keywords.length > 0) {
+      try {
+        const orFilters = keywords.map(kw => `content.ilike.%${kw}%`);
+        const { data: catChunks } = await supabase
+          .from('ebecco_chunks')
+          .select('id, document_id, content, page_number')
+          .or(orFilters.join(','))
+          .limit(5);
+
+        if (catChunks && catChunks.length > 0) {
+          const chunkIds = catChunks.map(c => c.id);
+          const { data: catDocs } = await supabase
+            .from('ebecco_documents')
+            .select('id, title, category')
+            .in('id', [...new Set(catChunks.map(c => c.document_id))]);
+
+          const docMap = {};
+          (catDocs || []).forEach(d => { docMap[d.id] = d; });
+
+          for (const row of catChunks) {
+            if (docMap[row.document_id]?.category === cat && !seen.has(row.id)) {
+              const lower = row.content.toLowerCase();
+              const matchCount = keywords.filter(kw => lower.includes(kw)).length;
+              merged.push({
+                chunk_id: row.id,
+                document_id: row.document_id,
+                document_title: docMap[row.document_id]?.title || 'Unknown',
+                document_category: cat,
+                chunk_content: row.content,
+                page_number: row.page_number,
+                rank: matchCount / keywords.length,
+              });
+              seen.add(row.id);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[EBECO] Targeted ${cat} fetch failed:`, err.message);
+      }
+    }
+  }
+
   // Boost by category weight
   const boosted = merged.map(r => ({
     ...r,
