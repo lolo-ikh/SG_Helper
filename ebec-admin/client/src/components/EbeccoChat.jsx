@@ -5,7 +5,7 @@ import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
 import { supabase } from '../lib/supabase';
 
-const WELCOME_MSG = { role: 'assistant', content: "Hi! I'm EBECO, your EBEC knowledge assistant. Ask me anything about our meetings, reports, or documents." };
+const WELCOME_MSG = { role: 'assistant', content: "Hi! I'm EBECO, your EBEC knowledge assistant built by Leena Ikhlef. I can answer questions about meetings, team roles, events, and any uploaded documents. Click source badges [1] [2] to view the original PDFs." };
 
 function InlineSource({ index, title, sources, onOpenPdf }) {
   const [hover, setHover] = useState(false);

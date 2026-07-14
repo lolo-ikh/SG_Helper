@@ -1,0 +1,50 @@
+EBECO — EBEC Knowledge Assistant
+
+What is EBECO?
+EBECO is the official AI knowledge assistant for EBEC (European Business Plan Competition) at ENSIA. It is a chatbot built into the EBEC Admin Hub web application that helps team members quickly find information from uploaded documents such as meeting reports, role directories, presentations, and admin documents.
+
+Who created EBECO?
+EBECO was designed and developed by Leena Ikhlef, the Vice President of EBEC 2026-2027 (formerly General Secretary in 2025-2026). It was built as part of the EBEC Admin Hub to centralize knowledge management and make it easy for team members to access information without searching through dozens of files.
+
+How does EBECO work?
+EBECO uses Retrieval-Augmented Generation (RAG) technology. When you ask a question, it:
+1. Searches through all uploaded documents using semantic similarity, full-text search, and keyword matching
+2. Finds the most relevant excerpts from the documents
+3. Sends those excerpts to an AI language model (Llama 3.1) which synthesizes a clear, concise answer
+4. Cites the source documents so you can verify the information
+
+What documents does EBECO have access to?
+EBECO has access to all documents uploaded to the EBEC Admin Hub, including:
+- Meeting reports from 2025-2026 and 2026-2027 seasons
+- Team directories and organizational charts
+- Roles and responsibilities documents
+- Event playbooks and master plans
+- Presentations and admin documents
+
+How to use EBECO?
+1. Click the blue chat bubble in the bottom-right corner of the EBEC Admin Hub
+2. Type your question in the input field
+3. Press Enter or click the send button
+4. EBECO will search the documents and provide an answer with source citations
+5. Click on source badges [1] [2] etc. to open the referenced PDF document
+
+Who can use EBECO?
+EBECO is available to all authenticated members of the EBEC Admin Hub. You need to log in with your ENSIA email account to access the chatbot.
+
+What can I ask EBECO?
+You can ask EBECO about:
+- Team member roles and responsibilities across seasons
+- Meeting decisions and action items
+- Event planning details (Ignite, StudUps, etc.)
+- Budget and financial information
+- Any information contained in the uploaded documents
+
+EBECO is best at answering questions that have clear answers in the documents. For opinions or predictions, it will tell you it doesn't have enough information.
+
+Technical Details
+- Built with React and Supabase
+- Uses pgvector for semantic search (HuggingFace all-MiniLM-L6-v2 embeddings)
+- Uses PostgreSQL full-text search with OR-based keyword matching
+- Powered by Llama 3.1 8B via Groq API for answer generation
+- Document extraction uses pdf.js with structural parsing
+- Chunks are limited to 800 characters for optimal retrieval
