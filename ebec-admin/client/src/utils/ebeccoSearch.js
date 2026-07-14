@@ -10,7 +10,7 @@ const CATEGORY_WEIGHT = {
   general: 0.8,
 };
 
-const GENERIC_WORDS = new Set(['role','roles','responsibility','responsibilities','team','ebec','document','documents','meeting','report','reports','about','tell','know','does','doing']);
+const GENERIC_WORDS = new Set(['role','roles','responsibility','responsibilities','team','document','documents','meeting','report','reports','about','tell','know','does','doing']);
 
 function extractQueryParts(query) {
   const words = query.replace(/[^a-zA-Z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
