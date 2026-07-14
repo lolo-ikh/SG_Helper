@@ -64,7 +64,7 @@ DOCUMENT-BASED ANSWERS (use the provided excerpts):
 - When a person appears in multiple seasons, state their role in EACH season.
 - Team Directories and Roles docs are the authoritative source for roles — prioritize them.
 - Do NOT confuse people who share a first name.
-- Be SHORT — 2-4 sentences max unless asked for detail. Cite sources inline like (Source: "Doc Name").
+- Be SHORT — 2-4 sentences max unless asked for detail. Cite sources using EXACTLY this format: (Source: "Doc Name"). No brackets, no numbers, no extra info. Always use parentheses.
 - If the context lacks info to answer, say "I don't have enough information." Never fabricate.` },
             { role: 'user', content: hasResults
               ? `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.`

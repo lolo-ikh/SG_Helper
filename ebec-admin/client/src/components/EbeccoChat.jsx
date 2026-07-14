@@ -43,7 +43,7 @@ function InlineSource({ index, title, sources, onOpenPdf }) {
 }
 
 function SourceMarkdown({ content, sources, onOpenPdf }) {
-  const SOURCE_RE = /\(Source\s*\d*\s*:\s*"([^"]*)"[^)]*\)/g;
+  const SOURCE_RE = /[\[(]Source\s*\d*\s*:\s*"([^"]*)"[^\])]*[\])]|[\[(]Source\s*\d+[\])]/g;
   const parts = [];
   let lastIndex = 0;
   let match;
@@ -52,7 +52,8 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
     if (match.index > lastIndex) {
       parts.push({ type: 'text', value: content.slice(lastIndex, match.index) });
     }
-    parts.push({ type: 'source', title: match[1], raw: match[0] });
+    const title = match[1] || null;
+    parts.push({ type: 'source', title, raw: match[0] });
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < content.length) {
@@ -68,8 +69,8 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
     <>
       {parts.map((part, i) => {
         if (part.type === 'source') {
-          const idx = titleToIndex[part.title] || 1;
-          return <InlineSource key={i} index={idx} title={part.title} sources={sources} onOpenPdf={onOpenPdf} />;
+          const idx = part.title ? (titleToIndex[part.title] || 1) : 1;
+          return <InlineSource key={i} index={idx} title={part.title || ''} sources={sources} onOpenPdf={onOpenPdf} />;
         }
         return part.value ? <span key={i}>{part.value}</span> : null;
       })}
