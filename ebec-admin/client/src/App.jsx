@@ -39,7 +39,7 @@ function AppRoutes() {
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/meetings" element={<MeetingsPage />} />
-          <Route path="/tech-cards" element={<TechCardsPage />} />
+          <Route path="/techcards" element={<TechCardsPage />} />
           <Route path="/activities" element={<TechCardStats />} />
           <Route path="/attendance" element={<AttendancePortal />} />
           <Route path="/archive" element={<ArchivePage />} />
@@ -57,7 +57,7 @@ function AppRoutes() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/meetings" element={<MeetingsPage />} />
-          <Route path="/tech-cards" element={<TechCardsPage />} />
+          <Route path="/techcards" element={<TechCardsPage />} />
           <Route path="/activities" element={<TechCardStats />} />
           <Route path="/attendance" element={<AttendancePortal />} />
           <Route path="/archive" element={<ArchivePage />} />
@@ -77,9 +77,9 @@ function AppRoutes() {
         <Route path="/meetings" element={<MeetingsPage />} />
         <Route path="/meetings/new" element={<MeetingForm />} />
         <Route path="/meetings/:id/edit" element={<MeetingForm />} />
-        <Route path="/tech-cards" element={<TechCardsPage />} />
-        <Route path="/tech-cards/new" element={<TechCardForm />} />
-        <Route path="/tech-cards/:id/edit" element={<TechCardEdit />} />
+        <Route path="/techcards" element={<TechCardsPage />} />
+        <Route path="/techcards/new" element={<TechCardForm />} />
+        <Route path="/techcards/:id/edit" element={<TechCardEdit />} />
         <Route path="/activities" element={<TechCardStats />} />
         <Route path="/attendance" element={<AttendancePortal />} />
         <Route path="/managers" element={<ManagersPage />} />
