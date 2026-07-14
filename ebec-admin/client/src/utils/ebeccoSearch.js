@@ -10,12 +10,23 @@ const CATEGORY_WEIGHT = {
   general: 0.8,
 };
 
-function extractKeywords(query) {
-  return query
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter(w => w.length > 2 && !STOP_WORDS.has(w));
+const GENERIC_WORDS = new Set(['role','roles','responsibility','responsibilities','team','ebec','document','documents','meeting','report','reports','about','tell','know','does','doing']);
+
+function extractQueryParts(query) {
+  const words = query.replace(/[^a-zA-Z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const nameWords = [];
+  const topicWords = [];
+  for (const w of words) {
+    const lower = w.toLowerCase();
+    if (STOP_WORDS.has(lower) || lower.length < 2) continue;
+    if (GENERIC_WORDS.has(lower)) continue;
+    if (/^[A-Z]/.test(w) && w.length > 1) {
+      nameWords.push(lower);
+    } else if (!STOP_WORDS.has(lower) && !GENERIC_WORDS.has(lower)) {
+      topicWords.push(lower);
+    }
+  }
+  return { nameWords, topicWords, allKeywords: [...new Set([...nameWords, ...topicWords])] };
 }
 
 function normalizeResult(row) {
@@ -35,7 +46,8 @@ export async function searchDocuments(query, limit = 10) {
   if (!query || !query.trim()) return [];
 
   const trimmed = query.trim();
-  const keywords = extractKeywords(trimmed);
+  const { nameWords, topicWords, allKeywords } = extractQueryParts(trimmed);
+  const hasNames = nameWords.length > 0;
   const seen = new Set();
   const merged = [];
 
@@ -47,6 +59,15 @@ export async function searchDocuments(query, limit = 10) {
         merged.push(r);
       }
     }
+  };
+
+  const scoreChunk = (content) => {
+    const lower = content.toLowerCase();
+    const nameHits = nameWords.filter(kw => lower.includes(kw)).length;
+    const topicHits = topicWords.filter(kw => lower.includes(kw)).length;
+    const nameScore = hasNames ? (nameHits / nameWords.length) * 2 : 0;
+    const topicScore = topicWords.length > 0 ? (topicHits / topicWords.length) : (allKeywords.length > 0 ? allKeywords.filter(kw => lower.includes(kw)).length / allKeywords.length : 0);
+    return nameScore + topicScore;
   };
 
   // Tier 0: Semantic search via client-side embedding + pgvector RPC
@@ -80,15 +101,29 @@ export async function searchDocuments(query, limit = 10) {
     console.warn('[EBECO] RPC search failed:', err.message);
   }
 
-  // Tier 2: LIKE search with individual keywords (OR logic)
-  if (keywords.length > 0) {
+  // Tier 2: LIKE search — AND for names, OR for topics
+  if (allKeywords.length > 0) {
     try {
-      const orFilters = keywords.map(kw => `content.ilike.%${kw}%`);
+      let filters;
+      if (hasNames) {
+        // Require ALL name words to match (AND), then any topic word (OR)
+        const nameFilter = nameWords.map(kw => `content.ilike.%${kw}%`);
+        const topicFilter = topicWords.map(kw => `content.ilike.%${kw}%`);
+        filters = nameFilter;
+        if (topicFilter.length > 0) {
+          filters.push(`and(${topicFilter.join(',')}),(${nameFilter.join(',')})`);
+        }
+        // Simple AND: all name words must be present
+        filters = nameWords.map(kw => `content.ilike.%${kw}%`);
+      } else {
+        filters = allKeywords.map(kw => `content.ilike.%${kw}%`);
+      }
+
       const { data: likeChunks, error: likeErr } = await supabase
         .from('ebecco_chunks')
         .select('id, document_id, content, page_number')
-        .or(orFilters.join(','))
-        .limit(limit);
+        .or(filters.join(','))
+        .limit(hasNames ? 20 : limit);
 
       if (!likeErr && likeChunks && likeChunks.length > 0) {
         const docIds = [...new Set(likeChunks.map(c => c.document_id))];
@@ -100,19 +135,22 @@ export async function searchDocuments(query, limit = 10) {
         const docMap = {};
         (docs || []).forEach(d => { docMap[d.id] = d; });
 
-        addResults(likeChunks.map(row => {
-          const lower = row.content.toLowerCase();
-          const matchCount = keywords.filter(kw => lower.includes(kw)).length;
-          return {
-            chunk_id: row.id,
-            document_id: row.document_id,
-            document_title: docMap[row.document_id]?.title || 'Unknown',
-            document_category: docMap[row.document_id]?.category || 'general',
-            chunk_content: row.content,
-            page_number: row.page_number,
-            rank: matchCount / keywords.length,
-          };
+        const scored = likeChunks.map(row => ({
+          chunk_id: row.id,
+          document_id: row.document_id,
+          document_title: docMap[row.document_id]?.title || 'Unknown',
+          document_category: docMap[row.document_id]?.category || 'general',
+          chunk_content: row.content,
+          page_number: row.page_number,
+          rank: scoreChunk(row.content),
         }));
+
+        // If names present, filter to only chunks matching ALL name words
+        const filtered = hasNames
+          ? scored.filter(r => nameWords.every(kw => r.chunk_content.toLowerCase().includes(kw)))
+          : scored;
+
+        addResults(filtered.sort((a, b) => b.rank - a.rank).slice(0, limit));
       }
     } catch (err) {
       console.warn('[EBECO] LIKE search failed:', err.message);
@@ -120,9 +158,9 @@ export async function searchDocuments(query, limit = 10) {
   }
 
   // Tier 3: Search by document title
-  if (keywords.length > 0) {
+  if (allKeywords.length > 0) {
     try {
-      const orTitleFilters = keywords.map(kw => `title.ilike.%${kw}%`);
+      const orTitleFilters = allKeywords.map(kw => `title.ilike.%${kw}%`);
       const { data: titleData } = await supabase
         .from('ebecco_documents')
         .select('id, title, category')
@@ -164,9 +202,9 @@ export async function searchDocuments(query, limit = 10) {
   const PRIORITY_CATS = ['admin_doc', 'presentation'];
 
   for (const cat of PRIORITY_CATS) {
-    if (!hasCategory(cat) && keywords.length > 0) {
+    if (!hasCategory(cat) && allKeywords.length > 0) {
       try {
-        const orFilters = keywords.map(kw => `content.ilike.%${kw}%`);
+        const orFilters = allKeywords.map(kw => `content.ilike.%${kw}%`);
         const { data: catChunks } = await supabase
           .from('ebecco_chunks')
           .select('id, document_id, content, page_number')
@@ -185,19 +223,15 @@ export async function searchDocuments(query, limit = 10) {
 
           const catResults = catChunks
             .filter(row => docMap[row.document_id]?.category === cat && !seen.has(row.id))
-            .map(row => {
-              const lower = row.content.toLowerCase();
-              const matchCount = keywords.filter(kw => lower.includes(kw)).length;
-              return {
-                chunk_id: row.id,
-                document_id: row.document_id,
-                document_title: docMap[row.document_id]?.title || 'Unknown',
-                document_category: cat,
-                chunk_content: row.content,
-                page_number: row.page_number,
-                rank: matchCount / keywords.length,
-              };
-            })
+            .map(row => ({
+              chunk_id: row.id,
+              document_id: row.document_id,
+              document_title: docMap[row.document_id]?.title || 'Unknown',
+              document_category: cat,
+              chunk_content: row.content,
+              page_number: row.page_number,
+              rank: scoreChunk(row.content),
+            }))
             .sort((a, b) => b.rank - a.rank)
             .slice(0, 5);
 
