@@ -1145,6 +1145,22 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
   padding-top: 8px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
+.ebecco-msg-text { font-size: 13px; line-height: 1.6; }
+.ebecco-msg-text p { margin: 0 0 8px; }
+.ebecco-msg-text p:last-child { margin-bottom: 0; }
+.ebecco-msg-text h1, .ebecco-msg-text h2, .ebecco-msg-text h3 {
+  color: rgba(255,255,255,0.95); font-weight: 700; margin: 12px 0 6px; font-size: 14px;
+}
+.ebecco-msg-text ul, .ebecco-msg-text ol { margin: 4px 0 8px; padding-left: 20px; }
+.ebecco-msg-text li { margin-bottom: 4px; }
+.ebecco-msg-text strong { color: #fff; font-weight: 700; }
+.ebecco-msg-text em { color: rgba(255,255,255,0.6); }
+.ebecco-msg-text code {
+  background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px;
+  font-size: 12px; font-family: 'SF Mono', Monaco, monospace;
+}
+.ebecco-msg-text a { color: #0071e3; text-decoration: none; }
+.ebecco-msg-text a:hover { text-decoration: underline; }
 .ebecco-spinner { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .ebecco-chat-input {

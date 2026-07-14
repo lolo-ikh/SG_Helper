@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import Markdown from 'react-markdown';
 import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
 
@@ -95,7 +96,7 @@ export default function EbeccoChat() {
                   {msg.role === 'assistant' ? <Bot size={14} /> : <User size={14} />}
                 </div>
                 <div className="ebecco-msg-bubble">
-                  <div style={{ fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.content}</div>
+                  <div className="ebecco-msg-text"><Markdown>{msg.content}</Markdown></div>
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="ebecco-sources">
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Sources</div>
