@@ -36,6 +36,7 @@ export default function EbeccoDocuments() {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
   const [selected, setSelected] = useState(new Set());
+  const [selectMode, setSelectMode] = useState(false);
   const fileInputRef = useRef(null);
 
   const showNotification = (msg, type = 'success') => {
@@ -281,8 +282,15 @@ export default function EbeccoDocuments() {
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
         {filtered.length > 0 && (
+          <button className="pill-btn mini" onClick={() => { if (selectMode) { setSelectMode(false); setSelected(new Set()); } else { setSelectMode(true); } }}
+            style={{ flexShrink: 0, gap: 6, background: selectMode ? 'rgba(0,113,227,0.15)' : undefined, color: selectMode ? '#0071e3' : undefined }}>
+            {selectMode ? <SquareCheck size={13} /> : <Square size={13} />}
+            {selectMode ? 'Cancel selection' : 'Select'}
+          </button>
+        )}
+        {selectMode && (
           <button className="pill-btn mini" onClick={toggleSelectAll}
-            style={{ flexShrink: 0, gap: 6, background: selected.size > 0 ? 'rgba(0,113,227,0.15)' : undefined }}>
+            style={{ flexShrink: 0, gap: 6 }}>
             {selected.size === filtered.length ? <SquareCheck size={13} /> : <Square size={13} />}
             {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
           </button>
@@ -320,18 +328,20 @@ export default function EbeccoDocuments() {
         <div className="mgmt-grid">
           {filtered.map(doc => (
             <div key={doc.id} className="glass-panel-wide" style={{ padding: 20, position: 'relative', border: selected.has(doc.id) ? '1px solid rgba(0,113,227,0.5)' : undefined }}>
-              <button onClick={() => toggleSelect(doc.id)}
-                style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', color: selected.has(doc.id) ? '#0071e3' : 'rgba(255,255,255,0.3)', padding: 4 }}>
-                {selected.has(doc.id) ? <SquareCheck size={18} /> : <Square size={18} />}
-              </button>
+              {selectMode && (
+                <button onClick={() => toggleSelect(doc.id)}
+                  style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', color: selected.has(doc.id) ? '#0071e3' : 'rgba(255,255,255,0.3)', padding: 4 }}>
+                  {selected.has(doc.id) ? <SquareCheck size={18} /> : <Square size={18} />}
+                </button>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                   <div style={{ background: 'rgba(0,113,227,0.15)', borderRadius: 12, padding: 10, flexShrink: 0 }}>
                     <FileText size={20} style={{ color: '#0071e3' }} />
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <h4 style={{ color: '#fff', margin: 0, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.title}</h4>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: 11, marginTop: 2 }}>{doc.file_name}</p>
+                    <h4 title={doc.title} style={{ color: '#fff', margin: 0, fontSize: 14, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{doc.title}</h4>
+                    <p title={doc.file_name} style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{doc.file_name}</p>
                   </div>
                 </div>
               </div>
