@@ -12,14 +12,41 @@ export async function generateRagAnswer(question, searchResults) {
     })
     .join('\n\n');
 
+  // Try Groq (Llama 3.1) first, then Edge Function fallback
+  const groqKey = import.meta.env.VITE_GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: 'You are EBECO, the EBEC Admin Hub knowledge assistant. You answer questions about EBEC meetings, reports, team activities, and admin documents. You are given relevant excerpts from uploaded documents. Synthesize the information to answer the question clearly and concisely. Always cite the source document name. If the context doesn\'t contain enough information to answer, say so. Never make up information.' },
+            { role: 'user', content: `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.` },
+          ],
+          max_tokens: 800,
+          temperature: 0.3,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const answer = data.choices?.[0]?.message?.content;
+        if (answer) return answer;
+      }
+      console.warn('[EBECO] Groq error:', response.status);
+    } catch (err) {
+      console.warn('[EBECO] Groq unavailable:', err.message);
+    }
+  }
+
+  // Fallback: Edge Function
   try {
     const { data, error } = await supabase.functions.invoke('generate-answer', {
       body: { question, context },
     });
-
     if (error) throw error;
     if (data?.error) throw new Error(data.error);
-
     return data.answer;
   } catch (err) {
     console.warn('[EBECO] Edge function unavailable, using extractive fallback:', err.message);

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { embedText } from './ebeccoEmbed';
 
 const STOP_WORDS = new Set(['the','a','an','is','are','was','were','be','been','being','have','has','had','do','does','did','will','would','shall','should','may','might','must','can','could','i','me','my','we','our','you','your','he','him','his','she','her','it','its','they','them','their','what','which','who','whom','where','when','why','how','in','on','at','to','for','of','with','by','from','as','into','through','during','before','after','above','below','between','out','off','over','under','again','further','then','once','that','this','these','those','and','but','or','nor','not','so','if']);
 
@@ -29,15 +30,19 @@ export async function searchDocuments(query, limit = 10) {
   const trimmed = query.trim();
   const keywords = extractKeywords(trimmed);
 
-  // Tier 0: Semantic search via Edge Function (pgvector cosine similarity)
+  // Tier 0: Semantic search via client-side embedding + pgvector RPC
   try {
-    const { data, error } = await supabase.functions.invoke('search-semantic', {
-      body: { query: trimmed, match_count: limit },
-    });
-
-    if (!error && data?.results && data.results.length > 0) {
-      console.log(`[EBECO] Semantic search returned ${data.results.length} results`);
-      return data.results.map(normalizeResult);
+    const embedding = await embedText(trimmed);
+    if (embedding && embedding.length === 384) {
+      const vecStr = `[${embedding.join(',')}]`;
+      const { data, error } = await supabase.rpc('search_ebecco_semantic', {
+        query_embedding: vecStr,
+        match_count: limit,
+      });
+      if (!error && data && data.length > 0) {
+        console.log(`[EBECO] Semantic search returned ${data.length} results`);
+        return data.map(normalizeResult);
+      }
     }
   } catch (err) {
     console.warn('[EBECO] Semantic search unavailable, falling back to FTS:', err.message);

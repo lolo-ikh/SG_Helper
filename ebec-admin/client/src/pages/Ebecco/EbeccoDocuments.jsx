@@ -77,8 +77,8 @@ export default function EbeccoDocuments() {
           const { error: chunkErr } = await supabase.from('ebecco_chunks').insert(rows);
           if (chunkErr) console.error('[EBECO] Chunk insert failed:', chunkErr.message);
 
-          enhanceChunks(docRow.id).then(n => {
-            if (n > 0) console.log(`[EBECO] Enhanced ${n} chunks for doc ${docRow.id}`);
+          enhanceChunks(docRow.id).then(r => {
+            console.log(`[EBECO] Doc ${docRow.id}: ${r.embedded} embedded, ${r.enhanced} summarized`);
           });
         }
         return { ok: true, chunks: chunks.length };
