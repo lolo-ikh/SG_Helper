@@ -84,6 +84,7 @@ client/supabase/
 - `ebecco_documents` — Document metadata (title, category, file info, page/chunk counts)
 - `ebecco_chunks` — Text chunks + FTS vector + pgvector embedding(384) + summary/keywords
 - `ebecco_feedback` — Source click tracking (chunk_id, query, action, timestamp)
+- `ebecco_answer_feedback` — Like/dislike on assistant answers (user_id, query, action, chunk_ids)
 
 ## DEPLOYMENT
 - Vercel: https://sg-helper.vercel.app
@@ -93,7 +94,7 @@ client/supabase/
 - Embeddings: HuggingFace Inference API (all-MiniLM-L6-v2) — free
 
 ## ORPHANS & PENDING
-- `ebecco_feedback.sql` — needs to be run in Supabase SQL Editor (new table for click tracking)
+- `ebecco_answer_feedback.sql` — needs to be run in Supabase SQL Editor (like/dislike feedback table)
 
 ## DEPLOYMENT_STEPS
 1. Run `client/supabase/ebecco_tables.sql` in Supabase SQL Editor
@@ -101,7 +102,8 @@ client/supabase/
 3. Run `client/supabase/ebecco_enhance.sql` in Supabase SQL Editor
 4. Run `client/supabase/ebecco_vector.sql` in Supabase SQL Editor (pgvector + embedding column)
 5. Run `client/supabase/ebecco_feedback.sql` in Supabase SQL Editor (click feedback table)
-6. Create Storage bucket `ebecco-docs` (private) in Supabase Dashboard
+6. Run `client/supabase/ebecco_answer_feedback.sql` in Supabase SQL Editor (like/dislike feedback)
+7. Create Storage bucket `ebecco-docs` (private) in Supabase Dashboard
 6. Deploy Edge Functions:
    - `supabase functions deploy generate-answer`
    - `supabase functions deploy enhance-chunks`

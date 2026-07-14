@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Loader2, ExternalLink } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Loader2, ExternalLink, ThumbsUp, ThumbsDown } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
@@ -75,6 +75,51 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
         return part.value ? <span key={i}>{part.value}</span> : null;
       })}
     </>
+  );
+}
+
+function FeedbackButtons({ query, answerSummary, chunkIds }) {
+  const [active, setActive] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!query) return;
+    supabase.rpc('get_answer_feedback', { p_query: query })
+      .then(({ data }) => { if (data && data[0]) setActive(data[0].action); })
+      .catch(() => {});
+  }, [query]);
+
+  const toggle = async (action) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.rpc('toggle_answer_feedback', {
+        p_query: query,
+        p_action: action,
+        p_answer_summary: answerSummary?.substring(0, 500) || null,
+        p_chunk_ids: chunkIds || [],
+      });
+      if (!error) {
+        setActive(data === 'removed' ? null : action);
+        console.log(`[EBECO] Feedback: ${data} (${action})`);
+      }
+    } catch (err) {
+      console.warn('[EBECO] Feedback failed:', err.message);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: 6, marginTop: 6, opacity: 0.5 }}>
+      <button onClick={() => toggle('like')} disabled={saving} style={{
+        background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex',
+        color: active === 'like' ? '#34c759' : 'rgba(255,255,255,0.4)', transition: '0.15s',
+      }}><ThumbsUp size={12} fill={active === 'like' ? '#34c759' : 'none'} /></button>
+      <button onClick={() => toggle('dislike')} disabled={saving} style={{
+        background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex',
+        color: active === 'dislike' ? '#ff3b30' : 'rgba(255,255,255,0.4)', transition: '0.15s',
+      }}><ThumbsDown size={12} fill={active === 'dislike' ? '#ff3b30' : 'none'} /></button>
+    </div>
   );
 }
 
@@ -249,6 +294,12 @@ export default function EbeccoChat() {
                           ))}
                         </div>
                       );
+                    })()}
+                    {msg.role === 'assistant' && i > 0 && (() => {
+                      const prevUser = [...messages].reverse().find((m, idx) => m.role === 'user' && messages.indexOf(m) < i);
+                      const query = prevUser?.content || '';
+                      const chunkIds = (msg.sources || []).map(s => s.chunk_id).filter(Boolean);
+                      return <FeedbackButtons query={query} answerSummary={msg.content} chunkIds={chunkIds} />;
                     })()}
                   </div>
                 </div>
