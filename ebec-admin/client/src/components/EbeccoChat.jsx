@@ -105,6 +105,8 @@ export default function EbeccoChat() {
   const IDENTITY_RE = /^(?:(?:who|what)\s+(?:are|is)\s+(?:you|ebecco|ebec|the\s+bot|the\s+chatbot|the\s+assistant)\s*[?!.]*$|who\s+(?:made|created)\s+you\s*[?!.]*$|what\s+(?:is|are)\s+ebecco\s*[?!.]*$|what\s+can\s+you\s+do\s*[?!.]*$|how\s+(?:do\s+i|to)\s+(?:login|log\s*in|sign\s*in|access)\s*[?!.]*$)/i;
   const GREETING_RE = /^(?:hi|hello|hey|yo|sup|good\s+(?:morning|afternoon|evening)|thanks|thank\s+you|bye|goodbye)\s*[!.?]*$/i;
 
+  const IDENTITY_STOP = new Set(['the','a','an','is','are','was','were','be','have','has','had','do','does','did','will','would','can','could','i','me','my','we','our','you','your','he','him','his','she','her','it','its','they','them','their','what','which','who','whom','where','when','why','how','in','on','at','to','for','of','with','by','from','as','through','during','before','after','above','between','out','off','over','under','again','then','once','that','this','these','those','and','but','or','not','so','if','tell','about','know','about','think']);
+
   const isIdentityQuery = (q) => {
     const lower = q.toLowerCase().trim();
     const stripped = lower.replace(/[?!.,]/g, '').trim();
@@ -112,6 +114,11 @@ export default function EbeccoChat() {
     if (GREETING_RE.test(lower)) return true;
     if (['ebecco', 'ebec o', 'ebec', 'ebeco'].includes(stripped)) return true;
     return false;
+  };
+
+  const isBroadQuery = (q) => {
+    const words = q.replace(/[^a-zA-Z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !IDENTITY_STOP.has(w.toLowerCase()));
+    return words.length <= 2;
   };
 
   const handleSend = async () => {
@@ -128,7 +135,8 @@ export default function EbeccoChat() {
         const answer = await generateRagAnswer(q, []);
         setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
       } else {
-        const results = await searchDocuments(q, 5);
+        const searchLimit = isBroadQuery(q) ? 15 : 5;
+        const results = await searchDocuments(q, searchLimit);
         if (results.length === 0) {
           setMessages(prev => [...prev, { role: 'assistant', content: "I don't have enough information to answer that. Try rephrasing or upload relevant documents on the EBECO Documents page." }]);
         } else {

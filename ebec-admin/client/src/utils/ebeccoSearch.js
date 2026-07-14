@@ -263,20 +263,26 @@ export async function searchDocuments(query, limit = 10) {
 
   const diversified = [];
   const seenIds = new Set();
+  const seenDocIds = new Set();
   // First pass: take best from each non-meeting_report category
   for (const cat of ['admin_doc', 'presentation', 'general']) {
     if (byCategory[cat] && byCategory[cat].length > 0) {
       const best = byCategory[cat][0];
       diversified.push(best);
       seenIds.add(best.chunk_id);
+      seenDocIds.add(best.document_id);
     }
   }
-  // Second pass: fill remaining slots from all results by rank
+  // Second pass: fill remaining slots ensuring document diversity
+  // For broad queries (≤2 keywords), prefer chunks from new documents
+  const isBroad = allKeywords.length <= 2;
   for (const r of boosted) {
     if (diversified.length >= limit) break;
     if (!seenIds.has(r.chunk_id)) {
+      if (isBroad && seenDocIds.has(r.document_id) && diversified.length >= limit - 1) continue;
       diversified.push(r);
       seenIds.add(r.chunk_id);
+      seenDocIds.add(r.document_id);
     }
   }
 

@@ -3,16 +3,40 @@ import { supabase } from '../lib/supabase';
 export async function generateRagAnswer(question, searchResults) {
   const hasResults = searchResults && searchResults.length > 0;
 
-  const context = hasResults ? searchResults
-    .slice(0, 6)
-    .map((r, i) => {
+  const context = hasResults ? (() => {
+    const MAX_CONTEXT_CHARS = 6000;
+    const diversified = [];
+    const usedDocIds = new Set();
+    // First pass: one chunk per unique document
+    for (const r of searchResults) {
+      if (diversified.length >= 8) break;
+      if (!usedDocIds.has(r.document_id)) {
+        diversified.push(r);
+        usedDocIds.add(r.document_id);
+      }
+    }
+    // Second pass: fill remaining from top-ranked
+    for (const r of searchResults) {
+      if (diversified.length >= 8) break;
+      if (!diversified.find(d => d.chunk_id === r.chunk_id)) {
+        diversified.push(r);
+      }
+    }
+    let totalChars = 0;
+    const selected = [];
+    for (const r of diversified) {
+      if (totalChars + r.chunk_content.length > MAX_CONTEXT_CHARS) break;
+      selected.push(r);
+      totalChars += r.chunk_content.length;
+    }
+    return selected.map((r, i) => {
       const meta = r.chunk_summary ? `Summary: ${r.chunk_summary}` : '';
       const catLabel = { admin_doc: 'Admin Doc', meeting_report: 'Meeting Report', presentation: 'Presentation', general: 'General' }[r.document_category] || r.document_category;
       const seasonMatch = r.document_title.match(/20\d{2}[-–]\d{4}|20\d{2}[–—]\d{2}/);
       const seasonLabel = seasonMatch ? ` [Season: ${seasonMatch[0]}]` : '';
       return `[Source ${i + 1}: "${r.document_title}" (${catLabel}${seasonLabel}, p.${r.page_number || '?'})]\n${meta}\n${r.chunk_content}`;
-    })
-    .join('\n\n') : '';
+    }).join('\n\n');
+  })() : '';
 
   // Try Groq (Llama 3.1) first, then Edge Function fallback
   const groqKey = import.meta.env.VITE_GROQ_API_KEY;
