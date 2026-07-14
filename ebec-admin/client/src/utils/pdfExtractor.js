@@ -23,6 +23,33 @@ function cleanOcrArtifacts(text) {
   return c;
 }
 
+function reconstructPageText(items) {
+  if (!items || items.length === 0) return '';
+  const lines = [];
+  let currentLine = [];
+  let lastY = null;
+
+  for (const item of items) {
+    const y = Math.round(item.transform[5]);
+    const gap = lastY !== null ? Math.abs(lastY - y) : 0;
+
+    if (lastY !== null && gap > 5) {
+      lines.push(currentLine.join(' '));
+      currentLine = [];
+    }
+    if (item.str) currentLine.push(item.str);
+    lastY = y;
+
+    if (item.hasEOL) {
+      lines.push(currentLine.join(' '));
+      currentLine = [];
+      lastY = null;
+    }
+  }
+  if (currentLine.length > 0) lines.push(currentLine.join(' '));
+  return lines.join('\n');
+}
+
 export async function extractPdfText(file) {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await getDocument({ data: arrayBuffer }).promise;
@@ -31,7 +58,7 @@ export async function extractPdfText(file) {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const text = content.items.map(item => item.str).join(' ').trim();
+    const text = reconstructPageText(content.items).trim();
     if (text) fullText += '\n' + cleanOcrArtifacts(text);
   }
 

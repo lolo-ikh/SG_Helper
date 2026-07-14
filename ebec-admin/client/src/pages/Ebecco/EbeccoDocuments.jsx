@@ -64,6 +64,7 @@ export default function EbeccoDocuments() {
 
       let pageCount = 0;
       let chunkCount = 0;
+      let pdfNotified = false;
 
       if (uploadFile.type === 'application/pdf' || uploadFile.name.endsWith('.pdf')) {
         try {
@@ -93,7 +94,13 @@ export default function EbeccoDocuments() {
               page_number: c.page_number,
             }));
             const { error: chunkErr } = await supabase.from('ebecco_chunks').insert(rows);
-            if (chunkErr) console.error('[EBECO] Chunk insert failed:', chunkErr.message);
+            if (chunkErr) {
+              console.error('[EBECO] Chunk insert failed:', chunkErr.message);
+              showNotification('Document saved but indexing failed: ' + chunkErr.message, 'error');
+            } else {
+              showNotification(`Document uploaded — ${chunkCount} chunks indexed`);
+            }
+            pdfNotified = true;
 
             enhanceChunks(docRow.id).then(n => {
               if (n > 0) console.log(`[EBECO] Enhanced ${n} chunks for doc ${docRow.id}`);
@@ -123,7 +130,7 @@ export default function EbeccoDocuments() {
         if (dbErr) throw dbErr;
       }
 
-      showNotification('Document uploaded successfully');
+      if (!pdfNotified) showNotification('Document uploaded successfully');
       setUploadTitle('');
       setUploadCategory('general');
       setUploadFile(null);
