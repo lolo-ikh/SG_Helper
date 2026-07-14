@@ -51,11 +51,7 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
     });
   }
   return (
-    <Markdown
-      components={{
-        p: ({ children }) => <p>{children}</p>,
-      }}
-    >
+    <>
       {parts.map((part, i) => {
         const match = part.match(/^\(Source\s*(?::\s*"([^"]*)")?\)$/);
         if (match) {
@@ -68,9 +64,9 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
           if (!idx) idx = 1;
           return <InlineSource key={i} index={idx} title={title} sources={sources} onOpenPdf={onOpenPdf} />;
         }
-        return <span key={i}>{part}</span>;
+        return part ? <Markdown key={i}>{part}</Markdown> : null;
       })}
-    </Markdown>
+    </>
   );
 }
 
