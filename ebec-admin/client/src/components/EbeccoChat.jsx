@@ -101,15 +101,16 @@ export default function EbeccoChat() {
     if (!open && messages.length > 1) setUnread(true);
   }, [messages.length, open]);
 
-  const IDENTITY_RE = /^(?:who|what|how|where|tell\s+me\s+about)\s+(?:are|is|do|does|did|were|was|you|ur|u|ebeco|ebec\s*o|the\s+bot|the\s+chatbot|the\s+assistant|your\s+name|your\s+creator|your\s+purpose|this\s+app|this\s+website|this\s+system|login|sign\s*in|log\s*in|access)/i;
+  const BOT_SUBJECT = /(?:\s+(?:you|ebecco|ebec\s*o|ebec|ebeco|the\s+bot|the\s+chatbot|the\s+assistant)\s*$)/i;
+  const IDENTITY_RE = /^(?:(?:who|what)\s+(?:are|is)\s+(?:you|ebecco|ebec|the\s+bot|the\s+chatbot|the\s+assistant)\s*[?!.]*$|who\s+(?:made|created)\s+you\s*[?!.]*$|what\s+(?:is|are)\s+ebecco\s*[?!.]*$|what\s+can\s+you\s+do\s*[?!.]*$|how\s+(?:do\s+i|to)\s+(?:login|log\s*in|sign\s*in|access)\s*[?!.]*$)/i;
   const GREETING_RE = /^(?:hi|hello|hey|yo|sup|good\s+(?:morning|afternoon|evening)|thanks|thank\s+you|bye|goodbye)\s*[!.?]*$/i;
 
   const isIdentityQuery = (q) => {
     const lower = q.toLowerCase().trim();
-    if (IDENTITY_RE.test(lower)) return true;
-    if (GREETING_RE.test(lower)) return true;
     const stripped = lower.replace(/[?!.,]/g, '').trim();
-    if (['ebecco', 'ebec o', 'ebec', 'ebeco', 'who are you', 'what are you', 'who made you', 'who created you', 'what is ebeco', 'what is ebec'].includes(stripped)) return true;
+    if (IDENTITY_RE.test(stripped)) return true;
+    if (GREETING_RE.test(lower)) return true;
+    if (['ebecco', 'ebec o', 'ebec', 'ebeco'].includes(stripped)) return true;
     return false;
   };
 
