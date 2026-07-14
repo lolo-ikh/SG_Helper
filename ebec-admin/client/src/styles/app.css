@@ -50,6 +50,7 @@ body { margin: 0; font-family: var(--system-font); background: #000; overflow-x:
   margin-top: 24px;
 }
 .nav-links { display: flex; gap: 24px; align-items: center; }
+.nav-links a { text-decoration: none; }
 .nav-links span { color: #fff !important; cursor: pointer; transition: 0.3s; }
 .nav-links span:hover { color: var(--ebec-gold) !important; }
 .nav-links span.active { color: var(--ebec-gold) !important; font-weight: 800; text-shadow: 0 0 10px rgba(255, 193, 7, 0.3); }
