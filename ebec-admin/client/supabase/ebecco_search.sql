@@ -52,13 +52,7 @@ RETURNS TABLE (
 DECLARE
   or_query tsquery;
 BEGIN
-  SELECT string_agg(lexeme, ' | ')::tsquery INTO or_query
-  FROM ts_debug('simple', query_text)
-  WHERE token != '' AND array_length(regexp_split_to_array(token, '\s+'), 1) > 0;
-
-  IF or_query IS NULL THEN
-    RETURN;
-  END IF;
+  or_query := plainto_tsquery('simple', query_text);
 
   RETURN QUERY
   SELECT
