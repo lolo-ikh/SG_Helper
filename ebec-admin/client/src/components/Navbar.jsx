@@ -51,6 +51,11 @@ export default function Navbar() {
             <span className={isActive ? 'active' : ''}>Archive</span>
           )}
         </NavLink>
+        <NavLink to="/ebecco">
+          {({ isActive }) => (
+            <span className={isActive ? 'active' : ''}>EBECO</span>
+          )}
+        </NavLink>
       </div>
       {user ? (
         <button className="sign-out-btn" onClick={handleLogout}>Sign Out</button>

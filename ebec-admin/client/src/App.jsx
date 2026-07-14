@@ -14,6 +14,8 @@ import AttendancePortal from './pages/Attendance/AttendancePortal';
 import ManagersPage from './pages/Managers/ManagersPage';
 import ArchivePage from './pages/Archive/ArchivePage';
 import AttendancePredictor from './pages/Archive/AttendancePredictor';
+import EbeccoDocuments from './pages/Ebecco/EbeccoDocuments';
+import EbeccoChat from './components/EbeccoChat';
 import EmailVerification from './pages/EmailVerification';
 import './styles/app.css';
 
@@ -53,6 +55,7 @@ function AppRoutes() {
     return (
       <div className="apple-bg">
         <Navbar />
+        <EbeccoChat />
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -61,6 +64,7 @@ function AppRoutes() {
           <Route path="/activities" element={<TechCardStats />} />
           <Route path="/attendance" element={<AttendancePortal />} />
           <Route path="/archive" element={<ArchivePage />} />
+          <Route path="/ebecco" element={<EbeccoDocuments />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <Footer />
@@ -71,6 +75,7 @@ function AppRoutes() {
   return (
     <div className="apple-bg">
       <Navbar />
+      <EbeccoChat />
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -84,6 +89,7 @@ function AppRoutes() {
         <Route path="/attendance" element={<AttendancePortal />} />
         <Route path="/managers" element={<ManagersPage />} />
         <Route path="/archive" element={<ArchivePage />} />
+        <Route path="/ebecco" element={<EbeccoDocuments />} />
         <Route path="/predictor" element={<AttendancePredictor />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
