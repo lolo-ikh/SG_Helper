@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Bot, User, Loader2, ExternalLink } from 'lucide
 import Markdown from 'react-markdown';
 import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
+import { isAmbiguousQuery, reformulateQuery } from '../utils/ebeccoReformulate';
 import { supabase } from '../lib/supabase';
 
 const WELCOME_MSG = { role: 'assistant', content: "Hi! I'm EBECO, your EBEC (Ensia Business and Entrepreneurship Club) knowledge assistant built by Leena Ikhlef. I can answer questions about meetings, team roles, events, and any uploaded documents. Click source badges [1] [2] to view the original PDFs." };
@@ -135,12 +136,16 @@ export default function EbeccoChat() {
         const answer = await generateRagAnswer(q, []);
         setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
       } else {
+        let searchQuery = q;
+        if (isAmbiguousQuery(q)) {
+          searchQuery = await reformulateQuery(q, messages);
+        }
         const searchLimit = isBroadQuery(q) ? 15 : 5;
-        const results = await searchDocuments(q, searchLimit);
+        const results = await searchDocuments(searchQuery, searchLimit);
         if (results.length === 0) {
           setMessages(prev => [...prev, { role: 'assistant', content: "I don't have enough information to answer that. Try rephrasing or upload relevant documents on the EBECO Documents page." }]);
         } else {
-          const answer = await generateRagAnswer(q, results);
+          const answer = await generateRagAnswer(searchQuery, results);
           setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.slice(0, 5) }]);
         }
       }
