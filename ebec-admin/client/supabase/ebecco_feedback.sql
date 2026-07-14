@@ -2,8 +2,8 @@
 -- Used to boost ranking of chunks that users actually click
 
 CREATE TABLE IF NOT EXISTS ebecco_feedback (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  chunk_id UUID NOT NULL REFERENCES ebecco_chunks(id) ON DELETE CASCADE,
+  id BIGSERIAL PRIMARY KEY,
+  chunk_id BIGINT NOT NULL REFERENCES ebecco_chunks(id) ON DELETE CASCADE,
   query TEXT NOT NULL,
   action TEXT NOT NULL DEFAULT 'click',
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -24,8 +24,8 @@ CREATE POLICY "Authenticated users can insert feedback"
 CREATE INDEX IF NOT EXISTS idx_ebecco_feedback_chunk ON ebecco_feedback(chunk_id);
 
 -- RPC: get click counts for chunks (used by search ranking)
-CREATE OR REPLACE FUNCTION get_chunk_click_counts(chunk_ids UUID[])
-RETURNS TABLE (chunk_id UUID, click_count BIGINT)
+CREATE OR REPLACE FUNCTION get_chunk_click_counts(chunk_ids BIGINT[])
+RETURNS TABLE (chunk_id BIGINT, click_count BIGINT)
 LANGUAGE sql STABLE
 AS $$
   SELECT f.chunk_id, COUNT(*) as click_count
