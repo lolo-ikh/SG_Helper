@@ -29,6 +29,18 @@ export async function searchDocuments(query, limit = 10) {
 
   const trimmed = query.trim();
   const keywords = extractKeywords(trimmed);
+  const seen = new Set();
+  const merged = [];
+
+  const addResults = (results) => {
+    for (const r of results) {
+      const id = r.chunk_id || r.id;
+      if (!seen.has(id)) {
+        seen.add(id);
+        merged.push(r);
+      }
+    }
+  };
 
   // Tier 0: Semantic search via client-side embedding + pgvector RPC
   try {
@@ -41,7 +53,7 @@ export async function searchDocuments(query, limit = 10) {
       });
       if (!error && data && data.length > 0) {
         console.log(`[EBECO] Semantic search returned ${data.length} results`);
-        return data.map(normalizeResult);
+        addResults(data.map(normalizeResult));
       }
     }
   } catch (err) {
@@ -49,40 +61,39 @@ export async function searchDocuments(query, limit = 10) {
   }
 
   // Tier 1: FTS via RPC (OR-based)
-  const { data, error } = await supabase.rpc('search_ebecco', {
-    query_text: trimmed,
-    match_count: limit,
-  });
-
-  if (!error && data && data.length > 0) {
-    return data.map(normalizeResult);
-  }
-
-  if (error) {
-    console.warn('[EBECO] RPC search failed, falling back to LIKE:', error.message);
+  try {
+    const { data, error } = await supabase.rpc('search_ebecco', {
+      query_text: trimmed,
+      match_count: limit,
+    });
+    if (!error && data && data.length > 0) {
+      addResults(data.map(normalizeResult));
+    }
+  } catch (err) {
+    console.warn('[EBECO] RPC search failed:', err.message);
   }
 
   // Tier 2: LIKE search with individual keywords (OR logic)
   if (keywords.length > 0) {
-    const orFilters = keywords.map(kw => `content.ilike.%${kw}%`);
-    const { data: likeChunks, error: likeErr } = await supabase
-      .from('ebecco_chunks')
-      .select('id, document_id, content, page_number')
-      .or(orFilters.join(','))
-      .limit(limit);
+    try {
+      const orFilters = keywords.map(kw => `content.ilike.%${kw}%`);
+      const { data: likeChunks, error: likeErr } = await supabase
+        .from('ebecco_chunks')
+        .select('id, document_id, content, page_number')
+        .or(orFilters.join(','))
+        .limit(limit);
 
-    if (!likeErr && likeChunks && likeChunks.length > 0) {
-      const docIds = [...new Set(likeChunks.map(c => c.document_id))];
-      const { data: docs } = await supabase
-        .from('ebecco_documents')
-        .select('id, title, category')
-        .in('id', docIds);
+      if (!likeErr && likeChunks && likeChunks.length > 0) {
+        const docIds = [...new Set(likeChunks.map(c => c.document_id))];
+        const { data: docs } = await supabase
+          .from('ebecco_documents')
+          .select('id, title, category')
+          .in('id', docIds);
 
-      const docMap = {};
-      (docs || []).forEach(d => { docMap[d.id] = d; });
+        const docMap = {};
+        (docs || []).forEach(d => { docMap[d.id] = d; });
 
-      return likeChunks
-        .map(row => {
+        addResults(likeChunks.map(row => {
           const lower = row.content.toLowerCase();
           const matchCount = keywords.filter(kw => lower.includes(kw)).length;
           return {
@@ -94,46 +105,53 @@ export async function searchDocuments(query, limit = 10) {
             page_number: row.page_number,
             rank: matchCount / keywords.length,
           };
-        })
-        .sort((a, b) => b.rank - a.rank);
+        }));
+      }
+    } catch (err) {
+      console.warn('[EBECO] LIKE search failed:', err.message);
     }
   }
 
   // Tier 3: Search by document title
   if (keywords.length > 0) {
-    const orTitleFilters = keywords.map(kw => `title.ilike.%${kw}%`);
-    const { data: titleData } = await supabase
-      .from('ebecco_documents')
-      .select('id, title, category')
-      .or(orTitleFilters.join(','))
-      .limit(3);
+    try {
+      const orTitleFilters = keywords.map(kw => `title.ilike.%${kw}%`);
+      const { data: titleData } = await supabase
+        .from('ebecco_documents')
+        .select('id, title, category')
+        .or(orTitleFilters.join(','))
+        .limit(3);
 
-    if (titleData && titleData.length > 0) {
-      const docIds = titleData.map(d => d.id);
-      const { data: titleChunks } = await supabase
-        .from('ebecco_chunks')
-        .select('id, document_id, content, page_number')
-        .in('document_id', docIds)
-        .limit(limit);
+      if (titleData && titleData.length > 0) {
+        const docIds = titleData.map(d => d.id);
+        const { data: titleChunks } = await supabase
+          .from('ebecco_chunks')
+          .select('id, document_id, content, page_number')
+          .in('document_id', docIds)
+          .limit(limit);
 
-      if (titleChunks && titleChunks.length > 0) {
-        return titleChunks.map(row => {
-          const doc = titleData.find(d => d.id === row.document_id);
-          return {
-            chunk_id: row.id,
-            document_id: row.document_id,
-            document_title: doc?.title || 'Unknown',
-            document_category: doc?.category || 'general',
-            chunk_content: row.content,
-            page_number: row.page_number,
-            rank: 1,
-          };
-        });
+        if (titleChunks && titleChunks.length > 0) {
+          addResults(titleChunks.map(row => {
+            const doc = titleData.find(d => d.id === row.document_id);
+            return {
+              chunk_id: row.id,
+              document_id: row.document_id,
+              document_title: doc?.title || 'Unknown',
+              document_category: doc?.category || 'general',
+              chunk_content: row.content,
+              page_number: row.page_number,
+              rank: 1,
+            };
+          }));
+        }
       }
+    } catch (err) {
+      console.warn('[EBECO] Title search failed:', err.message);
     }
   }
 
-  return [];
+  console.log(`[EBECO] Merged ${merged.length} unique results from all tiers`);
+  return merged.slice(0, limit);
 }
 
 export async function getDocumentChunks(documentId) {

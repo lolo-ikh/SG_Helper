@@ -1,4 +1,5 @@
 const HEADING_RE = /^(?:(?:I{1,3}|IV|V|VI{0,3}|IX|X)\.|[1-9]\d*\.|[A-Z]\.)\s+\S/;
+const ROLE_HEADING_RE = /^[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)+\s*[-–—]\s*[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)+$/;
 const SUBHEADING_RE = /^\d+\.\d+\s+\S/;
 const BULLET_RE = /^[●○]\s/;
 const LABEL_RE = /^(?:Action|Venue|Date|Budget|Finance|Logistics|Schedule|Target|Deadline|Team|Game Title|Speaker|Format|Capacity|Timeline|Announcement|Registration|Contingency|Postponement|Event Order|Core Goal|Core Strategy|Milestone)\s*[:–-]/i;
@@ -36,7 +37,7 @@ export function parseDocumentStructure(fullText) {
     if (PREPARED_RE.test(line)) continue;
 
     // Section heading
-    if (HEADING_RE.test(line) && line.length < 120) {
+    if ((HEADING_RE.test(line) || ROLE_HEADING_RE.test(line)) && line.length < 120) {
       if (currentSection) sections.push(currentSection);
       currentSection = { type: 'heading', content: line.replace(/\s+/g, ' ').trim(), children: [] };
       continue;

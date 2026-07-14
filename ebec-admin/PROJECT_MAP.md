@@ -56,7 +56,7 @@ client/src/
 │   ├── legacyData.js
 │   ├── rolePhrases.js
 │   ├── pdfExtractor.js     — extractPdfText() + chunkDocument()
-│   ├── documentParser.js   — Structural text parser
+│   ├── documentParser.js   — Structural text parser (headings, fallback for no-heading PDFs)
 │   ├── semanticChunker.js  — Semantic block chunker (800 char max)
 │   ├── ebeccoSearch.js     — 4-tier search (semantic → FTS → LIKE → title)
 │   ├── ebeccoRag.js        — RAG generation (Edge Function + fallback)
