@@ -2,11 +2,12 @@
 
 ## TECH_STACK
 - React 19.2.7 + Vite 8.1.4
-- Supabase (Auth + Storage + PostgreSQL)
+- Supabase (Auth + Storage + PostgreSQL + pgvector)
 - react-router-dom 7.18.1
 - lucide-react 1.24.0
 - pdfjs-dist 5.6.205
-- OpenAI API gpt-4.1-mini (Edge Function)
+- Groq API (Llama 3.1 8B) — free LLM generation
+- HuggingFace Inference API (all-MiniLM-L6-v2) — free semantic embeddings
 
 ## SYSTEM_FLOW
 1. Auth → Supabase Auth (email/password, role-based: vp/admin/manager/viewer)
@@ -17,13 +18,15 @@
 6. Attendance → Portal with engagement matrix
 7. Managers → CRUD with season scoping, legacy seed
 8. Archive → Season tabs, read-only detail modals
-9. **EBECO** (NEW) → File management + RAG chatbot
-   - Upload PDFs → Supabase Storage bucket `ebecco-docs`
-   - Extract text client-side → pdfjs-dist
+9. **EBECO** → File management + RAG chatbot
+   - Upload PDFs (single or multi) → Supabase Storage bucket `ebecco-docs`
+   - Extract text → pdfjs-dist (Y-position line break reconstruction)
    - Parse structure → headings, sections, bullets, labels (documentParser.js)
    - Semantic chunking → 800 char max, complete sentences, breadcrumb prefix (semanticChunker.js)
-   - Store chunks in `ebecco_chunks` table with FTS + optional summary/keywords
-   - Chat widget → OR-based FTS search (content + summary + keywords) → OpenAI generation → answer with sources
+   - Store chunks in `ebecco_chunks` with FTS + pgvector embeddings (384-dim)
+   - Enhance: HuggingFace embeddings + Groq/Llama summaries/keywords
+   - Chat: 4-tier search → semantic (pgvector) → FTS (OR-based) → LIKE → title match
+   - Generate: Llama 3.1 8B via Groq (free) → answer with sources
 
 ## ARCHITECTURE
 ```
@@ -34,44 +37,41 @@ client/src/
 ├── components/
 │   ├── Navbar.jsx       — Glass nav, conditional VP items
 │   ├── Footer.jsx       — Dynamic year, Leena IKHLEF
-│   └── Toast.jsx        — Notification system
+│   ├── Toast.jsx        — Notification system
+│   └── EbeccoChat.jsx   — Floating chat widget (bottom-right)
 ├── pages/
 │   ├── Landing.jsx      — Auth page, APPROVED_EMAILS
 │   ├── EmailVerification.jsx
 │   ├── Dashboard.jsx    — Hero, typing effect, carousel, stats
 │   ├── TechCards/
-│   │   ├── TechCardsPage.jsx
-│   │   ├── TechCardForm.jsx
-│   │   └── TechCardEdit.jsx
 │   ├── Meetings/
-│   │   ├── MeetingsPage.jsx
-│   │   ├── MeetingForm.jsx
-│   │   ├── AttendanceModal.jsx
-│   │   ├── NotesEditor.jsx
-│   │   └── ReportGenerator.jsx
 │   ├── Activities/
-│   │   └── TechCardStats.jsx
 │   ├── Attendance/
-│   │   └── AttendancePortal.jsx
 │   ├── Managers/
-│   │   ├── ManagersPage.jsx
-│   │   └── ManagerForm.jsx
 │   ├── Archive/
-│   │   ├── ArchivePage.jsx
-│   │   └── AttendancePredictor.jsx
-│   └── Ebecco/          (NEW — M1)
-│       └── EbeccoDocuments.jsx
+│   └── Ebecco/
+│       └── EbeccoDocuments.jsx — Upload (multi) + file management
 ├── utils/
 │   ├── helpers.js
 │   ├── legacyData.js
 │   ├── rolePhrases.js
 │   ├── pdfExtractor.js     — extractPdfText() + chunkDocument()
-│   ├── documentParser.js   — Structural text parser (headings, bullets, labels)
+│   ├── documentParser.js   — Structural text parser
 │   ├── semanticChunker.js  — Semantic block chunker (800 char max)
-│   ├── ebeccoSearch.js     — 3-tier FTS search (RPC → LIKE → title)
+│   ├── ebeccoSearch.js     — 4-tier search (semantic → FTS → LIKE → title)
 │   ├── ebeccoRag.js        — RAG generation (Edge Function + fallback)
-│   └── ebeccoEnhance.js    — LLM chunk enhancement (summary + keywords)
+│   └── ebeccoEnhance.js    — LLM chunk enhancement + embeddings
 └── styles/app.css       — All CSS, responsive breakpoints
+
+client/supabase/
+├── ebecco_tables.sql    — Document + chunks tables + RLS
+├── ebecco_search.sql    — FTS indexes + search_ebecco RPC (OR-based)
+├── ebecco_enhance.sql   — summary/keywords columns + weighted search
+├── ebecco_vector.sql    — pgvector extension + embedding column + cosine search RPC
+└── functions/
+    ├── generate-answer/index.ts    — LLM generation (Groq/Llama primary, OpenAI fallback)
+    ├── enhance-chunks/index.ts     — HuggingFace embeddings + LLM summaries
+    └── search-semantic/index.ts    — Query embedding + pgvector cosine similarity
 ```
 
 ## DATABASE_TABLES
@@ -80,46 +80,30 @@ client/src/
 - `managers` — Season-scoped, unique index (name, season)
 - `profiles` — Auth user profiles with role
 - `ebecco_documents` — Document metadata (title, category, file info, page/chunk counts)
-- `ebecco_chunks` — Structured text chunks with FTS vector + optional summary/keywords
+- `ebecco_chunks` — Text chunks + FTS vector + pgvector embedding(384) + summary/keywords
 
 ## DEPLOYMENT
 - Vercel: https://sg-helper.vercel.app
 - Supabase: mfacvnugnhnwzousvtzz
 - VP_EMAIL: leena.ikhlef@ensia.edu.dz
+- LLM: Groq (Llama 3.1 8B) — free, no OpenAI needed
+- Embeddings: HuggingFace Inference API (all-MiniLM-L6-v2) — free
 
 ## ORPHANS & PENDING
-- [x] M1: Create SQL migration for ebecco_documents + ebecco_chunks tables
-- [x] M1: Create EbeccoDocuments.jsx (upload + file list)
-- [x] M1: Add route /ebecco to App.jsx
-- [x] M1: Add nav link to Navbar.jsx
-- [x] M2: Create pdfExtractor.js (pdfjs-dist text extraction)
-- [x] M2: Integrate extraction into upload flow
-- [x] M3: Create search_ebecco RPC function
-- [x] M3: Create ebeccoSearch.js utility
-- [x] M4: Create EbeccoChat.jsx widget component
-- [x] M4: Add to App.jsx as global overlay
-- [x] M5: Create OpenAI integration for RAG generation
-- [x] M5: Wire chat to search + generation
-- [x] M6: Loading states, error handling, mobile responsive
-- [x] BUGFIX: FTS `english` → `simple` dictionary (was breaking non-English content)
-- [x] BUGFIX: Added LIKE-based fallback search when RPC fails or returns empty
-- [x] BUGFIX: Search errors now surfaced to user instead of silent "no information"
-- [x] IMPROVEMENT: OCR ligature cleanup in pdfExtractor.js (fi/fl/ff splits + short-token merges)
-- [x] REDESIGN M1: Structural text parser (documentParser.js) — headings, bullets, labels
-- [x] REDESIGN M2: Semantic chunker (semanticChunker.js) — 800 char max, complete sentences
-- [x] REDESIGN M3: Rewrote pdfExtractor.js to use parser→chunkDocument() pipeline
-- [x] REDESIGN M4: enhance-chunks Edge Function (LLM summary + keywords)
-- [x] REDESIGN M5: Updated search_ebecco RPC to search content + summary + keywords
-- [x] BUGFIX: PDF text reconstruction using Y-position line breaks (chunks were empty)
-- [x] FEATURE: Multi-file upload — select multiple PDFs, sequential processing with progress
+(empty — all milestones complete)
 
 ## DEPLOYMENT_STEPS
 1. Run `client/supabase/ebecco_tables.sql` in Supabase SQL Editor
-2. Run `client/supabase/ebecco_search.sql` in Supabase SQL Editor (safe to re-run — uses CREATE OR REPLACE)
-3. Run `client/supabase/ebecco_enhance.sql` in Supabase SQL Editor (adds summary/keywords + weighted search)
-4. Create Storage bucket `ebecco-docs` (private) in Supabase Dashboard
-5. Deploy Edge Functions:
+2. Run `client/supabase/ebecco_search.sql` in Supabase SQL Editor
+3. Run `client/supabase/ebecco_enhance.sql` in Supabase SQL Editor
+4. Run `client/supabase/ebecco_vector.sql` in Supabase SQL Editor (pgvector + embedding column)
+5. Create Storage bucket `ebecco-docs` (private) in Supabase Dashboard
+6. Deploy Edge Functions:
    - `supabase functions deploy generate-answer`
    - `supabase functions deploy enhance-chunks`
-6. Set OpenAI API key: `supabase secrets set OPENAI_API_KEY=sk-...`
-7. Push to Vercel
+   - `supabase functions deploy search-semantic`
+7. Set API keys:
+   - `supabase secrets set GROQ_API_KEY=gsk_...` (Llama 3.1 via Groq — free)
+   - `supabase secrets set HF_API_KEY=hf_...` (HuggingFace — free, for embeddings)
+8. Push to Vercel
+9. Re-upload documents OR run retroactive embedding via EBECO Documents page

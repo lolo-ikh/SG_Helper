@@ -12,27 +12,35 @@ serve(async (req) => {
 
   try {
     const { question, context } = await req.json();
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
 
-    if (!openaiKey) {
+    // Groq (Llama 3.1) primary, OpenAI fallback
+    const groqKey = Deno.env.get("GROQ_API_KEY");
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    const apiKey = groqKey || openaiKey;
+
+    if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "OpenAI API key not configured" }),
+        JSON.stringify({ error: "No LLM API key configured (set GROQ_API_KEY)" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const systemPrompt = `You are EBECO, the EBEC Admin Hub knowledge assistant. You answer questions about EBEC meetings, reports, team activities, and admin documents. Be concise and helpful. When citing information, mention the source document name. If you don't know the answer based on the provided context, say so clearly.`;
+    const isGroq = !!groqKey;
+    const baseUrl = isGroq ? "https://api.groq.com/openai/v1" : "https://api.openai.com/v1";
+    const model = isGroq ? "llama-3.1-8b-instant" : "gpt-4.1-mini";
 
-    const userPrompt = `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Be concise and cite sources where possible.`;
+    const systemPrompt = `You are EBECO, the EBEC Admin Hub knowledge assistant. You answer questions about EBEC meetings, reports, team activities, and admin documents. You are given relevant excerpts from uploaded documents. Synthesize the information to answer the question clearly and concisely. Always cite the source document name. If the context doesn't contain enough information to answer, say so. Never make up information.`;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const userPrompt = `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.`;
+
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openaiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -44,7 +52,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const err = await response.text();
-      console.error("[EBECO] OpenAI error:", err);
+      console.error(`[EBECO] ${isGroq ? 'Groq' : 'OpenAI'} error:`, err);
       return new Response(
         JSON.stringify({ error: "Failed to generate answer" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -59,7 +67,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("[EBECO] Edge function error:", err);
+    console.error("[EBECO] generate-answer error:", err);
     return new Response(
       JSON.stringify({ error: "Internal error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

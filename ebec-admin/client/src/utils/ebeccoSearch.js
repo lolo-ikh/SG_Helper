@@ -10,27 +10,54 @@ function extractKeywords(query) {
     .filter(w => w.length > 2 && !STOP_WORDS.has(w));
 }
 
+function normalizeResult(row) {
+  return {
+    chunk_id: row.chunk_id || row.id,
+    document_id: row.document_id,
+    document_title: row.document_title || row.title || 'Unknown',
+    document_category: row.document_category || row.category || 'general',
+    chunk_content: row.chunk_content || row.content,
+    chunk_summary: row.chunk_summary || row.summary || null,
+    page_number: row.page_number,
+    rank: row.rank || row.similarity || 0,
+  };
+}
+
 export async function searchDocuments(query, limit = 10) {
   if (!query || !query.trim()) return [];
 
   const trimmed = query.trim();
   const keywords = extractKeywords(trimmed);
 
-  // 1. Try FTS via RPC (OR-based)
+  // Tier 0: Semantic search via Edge Function (pgvector cosine similarity)
+  try {
+    const { data, error } = await supabase.functions.invoke('search-semantic', {
+      body: { query: trimmed, match_count: limit },
+    });
+
+    if (!error && data?.results && data.results.length > 0) {
+      console.log(`[EBECO] Semantic search returned ${data.results.length} results`);
+      return data.results.map(normalizeResult);
+    }
+  } catch (err) {
+    console.warn('[EBECO] Semantic search unavailable, falling back to FTS:', err.message);
+  }
+
+  // Tier 1: FTS via RPC (OR-based)
   const { data, error } = await supabase.rpc('search_ebecco', {
     query_text: trimmed,
     match_count: limit,
   });
 
   if (!error && data && data.length > 0) {
-    return data;
+    return data.map(normalizeResult);
   }
 
   if (error) {
     console.warn('[EBECO] RPC search failed, falling back to LIKE:', error.message);
   }
 
-  // 2. Fallback: LIKE search with individual keywords (OR logic)
+  // Tier 2: LIKE search with individual keywords (OR logic)
   if (keywords.length > 0) {
     const orFilters = keywords.map(kw => `content.ilike.%${kw}%`);
     const { data: likeChunks, error: likeErr } = await supabase
@@ -49,7 +76,6 @@ export async function searchDocuments(query, limit = 10) {
       const docMap = {};
       (docs || []).forEach(d => { docMap[d.id] = d; });
 
-      // Rank by number of keyword matches
       return likeChunks
         .map(row => {
           const lower = row.content.toLowerCase();
@@ -68,7 +94,7 @@ export async function searchDocuments(query, limit = 10) {
     }
   }
 
-  // 3. Last resort: search by document title
+  // Tier 3: Search by document title
   if (keywords.length > 0) {
     const orTitleFilters = keywords.map(kw => `title.ilike.%${kw}%`);
     const { data: titleData } = await supabase

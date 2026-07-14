@@ -6,7 +6,10 @@ export async function generateRagAnswer(question, searchResults) {
   }
 
   const context = searchResults
-    .map((r, i) => `[Source ${i + 1}: "${r.document_title}" (p.${r.page_number || '?'})]\n${r.chunk_content}`)
+    .map((r, i) => {
+      const meta = r.chunk_summary ? `Summary: ${r.chunk_summary}` : '';
+      return `[Source ${i + 1}: "${r.document_title}" (p.${r.page_number || '?'})]\n${meta}\n${r.chunk_content}`;
+    })
     .join('\n\n');
 
   try {
