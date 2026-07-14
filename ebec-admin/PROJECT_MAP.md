@@ -26,6 +26,7 @@
    - Store chunks in `ebecco_chunks` with FTS + pgvector embeddings (384-dim)
    - Enhance: HuggingFace embeddings + Groq/Llama summaries/keywords
    - Chat: 4-tier search → semantic (pgvector) → FTS (OR-based) → LIKE → title match
+   - Feedback loops: conversation memory, source click tracking, query expansion
    - Generate: Llama 3.1 8B via Groq (free) → answer with sources
 
 ## ARCHITECTURE
@@ -58,8 +59,9 @@ client/src/
 │   ├── pdfExtractor.js     — extractPdfText() + chunkDocument()
 │   ├── documentParser.js   — Structural text parser (headings, fallback for no-heading PDFs)
 │   ├── semanticChunker.js  — Semantic block chunker (800 char max)
-│   ├── ebeccoSearch.js     — 4-tier search (semantic → FTS → LIKE → title)
-│   ├── ebeccoRag.js        — RAG generation (Edge Function + fallback)
+│   ├── ebeccoSearch.js     — 4-tier search (semantic → FTS → LIKE → title) + click feedback boost
+│   ├── ebeccoRag.js        — RAG generation (Groq/Llama, context diversity)
+│   ├── ebeccoReformulate.js — Query reformulation (conversation context) + expansion (broad queries)
 │   └── ebeccoEnhance.js    — LLM chunk enhancement + embeddings
 └── styles/app.css       — All CSS, responsive breakpoints
 
@@ -81,6 +83,7 @@ client/supabase/
 - `profiles` — Auth user profiles with role
 - `ebecco_documents` — Document metadata (title, category, file info, page/chunk counts)
 - `ebecco_chunks` — Text chunks + FTS vector + pgvector embedding(384) + summary/keywords
+- `ebecco_feedback` — Source click tracking (chunk_id, query, action, timestamp)
 
 ## DEPLOYMENT
 - Vercel: https://sg-helper.vercel.app
@@ -90,14 +93,15 @@ client/supabase/
 - Embeddings: HuggingFace Inference API (all-MiniLM-L6-v2) — free
 
 ## ORPHANS & PENDING
-(empty — all milestones complete)
+- `ebecco_feedback.sql` — needs to be run in Supabase SQL Editor (new table for click tracking)
 
 ## DEPLOYMENT_STEPS
 1. Run `client/supabase/ebecco_tables.sql` in Supabase SQL Editor
 2. Run `client/supabase/ebecco_search.sql` in Supabase SQL Editor
 3. Run `client/supabase/ebecco_enhance.sql` in Supabase SQL Editor
 4. Run `client/supabase/ebecco_vector.sql` in Supabase SQL Editor (pgvector + embedding column)
-5. Create Storage bucket `ebecco-docs` (private) in Supabase Dashboard
+5. Run `client/supabase/ebecco_feedback.sql` in Supabase SQL Editor (click feedback table)
+6. Create Storage bucket `ebecco-docs` (private) in Supabase Dashboard
 6. Deploy Edge Functions:
    - `supabase functions deploy generate-answer`
    - `supabase functions deploy enhance-chunks`
