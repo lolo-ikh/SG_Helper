@@ -42,29 +42,35 @@ function InlineSource({ index, title, sources, onOpenPdf }) {
 }
 
 function SourceMarkdown({ content, sources, onOpenPdf }) {
-  const parts = content.split(/(\(Source\s*(?::\s*"[^"]*")?\))/g);
-  const sourceMap = {};
-  if (sources) {
-    sources.forEach((s, i) => {
-      const label = `(Source: "${s.document_title}")`;
-      sourceMap[label] = i + 1;
-    });
+  const SOURCE_RE = /\(Source\s*\d*\s*:\s*"([^"]*)"[^)]*\)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = SOURCE_RE.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', value: content.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'source', title: match[1], raw: match[0] });
+    lastIndex = match.index + match[0].length;
   }
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', value: content.slice(lastIndex) });
+  }
+
+  const titleToIndex = {};
+  if (sources) {
+    sources.forEach((s, i) => { titleToIndex[s.document_title] = i + 1; });
+  }
+
   return (
     <>
       {parts.map((part, i) => {
-        const match = part.match(/^\(Source\s*(?::\s*"([^"]*)")?\)$/);
-        if (match) {
-          const title = match[1] || '';
-          let idx = sourceMap[part];
-          if (!idx && sources) {
-            const found = sources.findIndex(s => s.document_title === title);
-            if (found >= 0) idx = found + 1;
-          }
-          if (!idx) idx = 1;
-          return <InlineSource key={i} index={idx} title={title} sources={sources} onOpenPdf={onOpenPdf} />;
+        if (part.type === 'source') {
+          const idx = titleToIndex[part.title] || 1;
+          return <InlineSource key={i} index={idx} title={part.title} sources={sources} onOpenPdf={onOpenPdf} />;
         }
-        return part ? <Markdown key={i}>{part}</Markdown> : null;
+        return part.value ? <Markdown key={i}>{part.value}</Markdown> : null;
       })}
     </>
   );
@@ -151,106 +157,99 @@ export default function EbeccoChat() {
       </button>
 
       {open && (
-        <div className="ebecco-chat-window">
-          <div className="ebecco-chat-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ background: 'rgba(0,113,227,0.2)', borderRadius: 8, padding: 6 }}>
-                <Bot size={16} style={{ color: '#0071e3' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>EBECO</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>EBEC Knowledge Assistant</div>
-              </div>
-            </div>
-            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4 }}>
-              <X size={16} />
-            </button>
-          </div>
-
-          <div className="ebecco-chat-messages">
-            {messages.map((msg, i) => (
-              <div key={i} className={`ebecco-msg ebecco-msg-${msg.role}`}>
-                <div className="ebecco-msg-avatar">
-                  {msg.role === 'assistant' ? <Bot size={14} /> : <User size={14} />}
+        <div className="ebecco-chat-layout">
+          <div className="ebecco-chat-window">
+            <div className="ebecco-chat-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ background: 'rgba(0,113,227,0.2)', borderRadius: 8, padding: 6 }}>
+                  <Bot size={16} style={{ color: '#0071e3' }} />
                 </div>
-                <div className="ebecco-msg-bubble">
-                  <div className="ebecco-msg-text">
-                    {msg.role === 'assistant' && msg.sources ? (
-                      <SourceMarkdown content={msg.content} sources={msg.sources} onOpenPdf={openPdf} />
-                    ) : (
-                      <Markdown>{msg.content}</Markdown>
-                    )}
-                  </div>
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div className="ebecco-sources">
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Sources</div>
-                      {msg.sources.map((s, j) => (
-                        <div key={j} style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>
-                          {s.document_title} (p.{s.page_number || '?'})
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>EBECO</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>EBEC Knowledge Assistant</div>
                 </div>
               </div>
-            ))}
-            {loading && (
-              <div className="ebecco-msg ebecco-msg-assistant">
-                <div className="ebecco-msg-avatar"><Bot size={14} /></div>
-                <div className="ebecco-msg-bubble">
-                  <Loader2 size={16} className="ebecco-spinner" /> Thinking...
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="ebecco-chat-input">
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Ask about meetings, reports..."
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={loading}
-            />
-            <button onClick={handleSend} disabled={loading || !input.trim()}>
-              <Send size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {pdfViewer && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex',
-          alignItems: 'center', justifyContent: 'center', padding: 20,
-        }} onClick={() => setPdfViewer(null)}>
-          <div style={{
-            background: '#1a1a1a', borderRadius: 16, width: '100%', maxWidth: 900,
-            height: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pdfViewer.title}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Page {pdfViewer.page || '?'}</div>
-              </div>
-              <button onClick={() => setPdfViewer(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: 4 }}>
-                <X size={18} />
+              <button onClick={() => { setOpen(false); setPdfViewer(null); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4 }}>
+                <X size={16} />
               </button>
             </div>
-            <div style={{ flex: 1, position: 'relative' }}>
-              <iframe src={`${pdfViewer.url}#page=${pdfViewer.page || 1}`} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Viewer" />
+
+            <div className="ebecco-chat-messages">
+              {messages.map((msg, i) => (
+                <div key={i} className={`ebecco-msg ebecco-msg-${msg.role}`}>
+                  <div className="ebecco-msg-avatar">
+                    {msg.role === 'assistant' ? <Bot size={14} /> : <User size={14} />}
+                  </div>
+                  <div className="ebecco-msg-bubble">
+                    <div className="ebecco-msg-text">
+                      {msg.role === 'assistant' && msg.sources ? (
+                        <SourceMarkdown content={msg.content} sources={msg.sources} onOpenPdf={openPdf} />
+                      ) : (
+                        <Markdown>{msg.content}</Markdown>
+                      )}
+                    </div>
+                    {msg.sources && msg.sources.length > 0 && (
+                      <div className="ebecco-sources">
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Sources</div>
+                        {msg.sources.map((s, j) => (
+                          <div key={j} onClick={() => openPdf(s)} style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+                            onMouseEnter={e => e.target.style.color = '#0071e3'}
+                            onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.4)'}>
+                            {s.document_title} (p.{s.page_number || '?'})
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="ebecco-msg ebecco-msg-assistant">
+                  <div className="ebecco-msg-avatar"><Bot size={14} /></div>
+                  <div className="ebecco-msg-bubble">
+                    <Loader2 size={16} className="ebecco-spinner" /> Thinking...
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
-            {pdfViewer.chunkContent && (
-              <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', maxHeight: 100, overflowY: 'auto' }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Referenced content</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{pdfViewer.chunkContent.substring(0, 300)}{pdfViewer.chunkContent.length > 300 ? '...' : ''}</div>
-              </div>
-            )}
+
+            <div className="ebecco-chat-input">
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Ask about meetings, reports..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={loading}
+              />
+              <button onClick={handleSend} disabled={loading || !input.trim()}>
+                <Send size={16} />
+              </button>
+            </div>
           </div>
+
+          {pdfViewer && (
+            <div className="ebecco-pdf-panel">
+              <div className="ebecco-pdf-header">
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pdfViewer.title}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Page {pdfViewer.page || '?'}</div>
+                </div>
+                <button onClick={() => setPdfViewer(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+                  <X size={16} />
+                </button>
+              </div>
+              <iframe src={`${pdfViewer.url}#page=${pdfViewer.page || 1}`} style={{ flex: 1, width: '100%', border: 'none' }} title="PDF Viewer" />
+              {pdfViewer.chunkContent && (
+                <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', maxHeight: 80, overflowY: 'auto', flexShrink: 0 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.5 }}>Referenced</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{pdfViewer.chunkContent.substring(0, 200)}{pdfViewer.chunkContent.length > 200 ? '...' : ''}</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </>
