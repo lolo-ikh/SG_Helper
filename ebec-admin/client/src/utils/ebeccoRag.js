@@ -6,6 +6,7 @@ export async function generateRagAnswer(question, searchResults) {
   }
 
   const context = searchResults
+    .slice(0, 6)
     .map((r, i) => {
       const meta = r.chunk_summary ? `Summary: ${r.chunk_summary}` : '';
       const catLabel = { admin_doc: 'Admin Doc', meeting_report: 'Meeting Report', presentation: 'Presentation', general: 'General' }[r.document_category] || r.document_category;
@@ -25,10 +26,10 @@ export async function generateRagAnswer(question, searchResults) {
         body: JSON.stringify({
           model: 'llama-3.1-8b-instant',
           messages: [
-            { role: 'system', content: 'You are EBECO, the EBEC Admin Hub knowledge assistant. You answer questions about EBEC meetings, reports, team activities, and admin documents. You are given relevant excerpts from uploaded documents. Each source is labeled with its type (Admin Doc, Meeting Report, Presentation, General). Many documents belong to specific seasons: 2025-2026 or 2026-2027. When answering about a person, ALWAYS check if they appear in multiple seasons — people often change roles between seasons (e.g., HR in 2025-2026 becomes President in 2026-2027). Present the person\'s role PROGRESSION across seasons, not just one season. Admin Documents and Presentations (especially Team Directories and Roles & Responsibilities docs) are the most authoritative sources for roles — prioritize them. Meeting Reports contain discussion notes and action items. When a question mentions a person by full name, match that exact person — do not confuse with others sharing a first name. Synthesize the information clearly and concisely, cite source document name and type. If the context doesn\'t contain enough information to answer, say so. Never make up information.' },
+            { role: 'system', content: 'You are EBECO, the EBEC Admin Hub knowledge assistant. Rules:\n1. Be SHORT — 2-4 sentences max. No bullet-point lists unless asked.\n2. Documents span two seasons: 2025-2026 and 2026-2027. When a person appears in multiple seasons, state their role in EACH season (e.g., "Oussama was HR in 2025-2026, now President in 2026-2027").\n3. Team Directories and Roles docs are the authoritative source for roles — prioritize them over Meeting Reports.\n4. Do NOT confuse people who share a first name (e.g., Aya Hoggas ≠ Aya Khomari).\n5. Cite sources inline like (Source: "Doc Name").\n6. If the context lacks info to answer, say "I don\'t have enough information." Never fabricate.' },
             { role: 'user', content: `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.` },
           ],
-          max_tokens: 800,
+          max_tokens: 300,
           temperature: 0.3,
         }),
       });

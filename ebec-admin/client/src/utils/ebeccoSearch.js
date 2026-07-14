@@ -197,12 +197,11 @@ export async function searchDocuments(query, limit = 10) {
 
   console.log(`[EBECO] Merged ${merged.length} unique results from all tiers`);
 
-  // Targeted category fetch: if important categories missing, fetch directly
-  const hasCategory = (cat) => merged.some(r => r.document_category === cat);
+  // Targeted category fetch: always run to pull additional admin_doc/presentation chunks
   const PRIORITY_CATS = ['admin_doc', 'presentation'];
 
   for (const cat of PRIORITY_CATS) {
-    if (!hasCategory(cat) && allKeywords.length > 0) {
+    if (allKeywords.length > 0) {
       try {
         const orFilters = allKeywords.map(kw => `content.ilike.%${kw}%`);
         const { data: catChunks } = await supabase
@@ -233,7 +232,7 @@ export async function searchDocuments(query, limit = 10) {
               rank: scoreChunk(row.content),
             }))
             .sort((a, b) => b.rank - a.rank)
-            .slice(0, 5);
+            .slice(0, 2);
 
           for (const r of catResults) {
             merged.push(r);
