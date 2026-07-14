@@ -12,11 +12,12 @@ export default function TechCardForm() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('tech_cards').select('*').order('id', { ascending: false });
+      const { data } = await supabase.from('tech_cards').select('*').eq('season', '2026-2027').order('id', { ascending: false });
       setTechCards(data || []);
       if (data && data.length > 0) {
         const refs = data.map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; });
-        setRefCounter(Math.max(...refs) + 1);
+        const maxRef = Math.max(...refs);
+        setRefCounter(maxRef > 0 ? maxRef + 1 : 1);
       }
     }
     load();
