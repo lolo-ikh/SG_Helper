@@ -32,7 +32,8 @@ export default function EbeccoDocuments() {
   const [dragActive, setDragActive] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadCategory, setUploadCategory] = useState('general');
-  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadFiles, setUploadFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -51,95 +52,90 @@ export default function EbeccoDocuments() {
 
   useEffect(() => { loadDocuments(); }, []);
 
+  const uploadOneFile = async (file, title, category) => {
+    const filePath = `docs/${Date.now()}-${file.name}`;
+    const { error: storageErr } = await supabase.storage.from('ebecco-docs').upload(filePath, file);
+    if (storageErr) throw storageErr;
+
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      try {
+        const extracted = await extractPdfText(file);
+        const { chunks } = chunkDocument(extracted.fullText);
+
+        const { data: docRow, error: dbErr } = await supabase.from('ebecco_documents').insert([{
+          title, category, file_name: file.name, file_path: filePath,
+          file_size: file.size, page_count: extracted.pageCount, chunk_count: chunks.length,
+          uploaded_by: user?.id,
+        }]).select().single();
+        if (dbErr) throw dbErr;
+
+        if (chunks.length > 0) {
+          const rows = chunks.map(c => ({
+            document_id: docRow.id, chunk_index: c.chunk_index,
+            content: c.content, page_number: c.page_number,
+          }));
+          const { error: chunkErr } = await supabase.from('ebecco_chunks').insert(rows);
+          if (chunkErr) console.error('[EBECO] Chunk insert failed:', chunkErr.message);
+
+          enhanceChunks(docRow.id).then(n => {
+            if (n > 0) console.log(`[EBECO] Enhanced ${n} chunks for doc ${docRow.id}`);
+          });
+        }
+        return { ok: true, chunks: chunks.length };
+      } catch (extractErr) {
+        console.error('[EBECO] PDF extraction failed:', extractErr);
+        await supabase.from('ebecco_documents').insert([{
+          title, category, file_name: file.name, file_path: filePath,
+          file_size: file.size, uploaded_by: user?.id,
+        }]);
+        return { ok: true, chunks: 0 };
+      }
+    } else {
+      const { error: dbErr } = await supabase.from('ebecco_documents').insert([{
+        title, category, file_name: file.name, file_path: filePath,
+        file_size: file.size, uploaded_by: user?.id,
+      }]);
+      if (dbErr) throw dbErr;
+      return { ok: true, chunks: 0 };
+    }
+  };
+
   const handleUpload = async () => {
-    if (!uploadFile || !uploadTitle.trim()) {
-      showNotification('Please fill in title and select a file', 'error');
+    if (uploadFiles.length === 0 || !uploadTitle.trim()) {
+      showNotification('Please fill in title and select files', 'error');
       return;
     }
     setUploading(true);
-    try {
-      const filePath = `docs/${Date.now()}-${uploadFile.name}`;
-      const { error: storageErr } = await supabase.storage.from('ebecco-docs').upload(filePath, uploadFile);
-      if (storageErr) throw storageErr;
+    const total = uploadFiles.length;
+    let succeeded = 0;
+    let failed = 0;
+    let totalChunks = 0;
 
-      let pageCount = 0;
-      let chunkCount = 0;
-      let pdfNotified = false;
-
-      if (uploadFile.type === 'application/pdf' || uploadFile.name.endsWith('.pdf')) {
-        try {
-          showNotification('Extracting and parsing PDF...', 'info');
-          const extracted = await extractPdfText(uploadFile);
-          pageCount = extracted.pageCount;
-          const { chunks } = chunkDocument(extracted.fullText);
-          chunkCount = chunks.length;
-
-          const { data: docRow, error: dbErr } = await supabase.from('ebecco_documents').insert([{
-            title: uploadTitle.trim(),
-            category: uploadCategory,
-            file_name: uploadFile.name,
-            file_path: filePath,
-            file_size: uploadFile.size,
-            page_count: pageCount,
-            chunk_count: chunkCount,
-            uploaded_by: user?.id,
-          }]).select().single();
-          if (dbErr) throw dbErr;
-
-          if (chunks.length > 0) {
-            const rows = chunks.map(c => ({
-              document_id: docRow.id,
-              chunk_index: c.chunk_index,
-              content: c.content,
-              page_number: c.page_number,
-            }));
-            const { error: chunkErr } = await supabase.from('ebecco_chunks').insert(rows);
-            if (chunkErr) {
-              console.error('[EBECO] Chunk insert failed:', chunkErr.message);
-              showNotification('Document saved but indexing failed: ' + chunkErr.message, 'error');
-            } else {
-              showNotification(`Document uploaded — ${chunkCount} chunks indexed`);
-            }
-            pdfNotified = true;
-
-            enhanceChunks(docRow.id).then(n => {
-              if (n > 0) console.log(`[EBECO] Enhanced ${n} chunks for doc ${docRow.id}`);
-            });
-          }
-        } catch (extractErr) {
-          console.error('[EBECO] PDF extraction failed:', extractErr);
-          await supabase.from('ebecco_documents').insert([{
-            title: uploadTitle.trim(),
-            category: uploadCategory,
-            file_name: uploadFile.name,
-            file_path: filePath,
-            file_size: uploadFile.size,
-            uploaded_by: user?.id,
-          }]);
-          showNotification('PDF text extraction failed — file saved without indexing', 'error');
-        }
-      } else {
-        const { error: dbErr } = await supabase.from('ebecco_documents').insert([{
-          title: uploadTitle.trim(),
-          category: uploadCategory,
-          file_name: uploadFile.name,
-          file_path: filePath,
-          file_size: uploadFile.size,
-          uploaded_by: user?.id,
-        }]);
-        if (dbErr) throw dbErr;
+    for (let i = 0; i < total; i++) {
+      const file = uploadFiles[i];
+      setUploadProgress({ current: i + 1, total, name: file.name });
+      const title = total === 1 ? uploadTitle.trim() : file.name.replace(/\.[^/.]+$/, '');
+      try {
+        const result = await uploadOneFile(file, title, uploadCategory);
+        succeeded++;
+        totalChunks += result.chunks;
+      } catch (err) {
+        console.error('[EBECO] Upload failed:', file.name, err.message);
+        failed++;
       }
-
-      if (!pdfNotified) showNotification('Document uploaded successfully');
-      setUploadTitle('');
-      setUploadCategory('general');
-      setUploadFile(null);
-      setShowUpload(false);
-      loadDocuments();
-    } catch (err) {
-      console.error('[EBECO] Upload failed:', err.message);
-      showNotification('Upload failed: ' + err.message, 'error');
     }
+
+    setUploadProgress(null);
+    if (failed === 0) {
+      showNotification(`${succeeded} file${total > 1 ? 's' : ''} uploaded — ${totalChunks} chunks indexed`);
+    } else {
+      showNotification(`${succeeded} uploaded, ${failed} failed — ${totalChunks} chunks indexed`, failed === total ? 'error' : 'success');
+    }
+    setUploadTitle('');
+    setUploadCategory('general');
+    setUploadFiles([]);
+    setShowUpload(false);
+    loadDocuments();
     setUploading(false);
   };
 
@@ -185,42 +181,69 @@ export default function EbeccoDocuments() {
 
       {showUpload && (
         <div className="glass-panel-wide" style={{ padding: 24, marginBottom: 32 }}>
-          <h3 style={{ color: '#fff', margin: '0 0 16px', fontSize: 16 }}>Upload Document</h3>
+          <h3 style={{ color: '#fff', margin: '0 0 16px', fontSize: 16 }}>Upload Document{uploadFiles.length > 1 ? 's' : ''}</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input type="text" placeholder="Document title..." className="premium-input"
-              value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} />
+            {uploadFiles.length <= 1 && (
+              <input type="text" placeholder="Document title..." className="premium-input"
+                value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} />
+            )}
+            {uploadFiles.length > 1 && (
+              <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: 12 }}>{uploadFiles.length} files — titles will be derived from filenames</p>
+            )}
             <select className="premium-input" value={uploadCategory} onChange={e => setUploadCategory(e.target.value)}>
               {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
             <div
               onDragOver={e => { e.preventDefault(); setDragActive(true); }}
               onDragLeave={() => setDragActive(false)}
-              onDrop={e => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files[0]) { setUploadFile(e.dataTransfer.files[0]); setUploadTitle(prev => prev || e.dataTransfer.files[0].name.replace(/\.[^/.]+$/, '')); } }}
+              onDrop={e => { e.preventDefault(); setDragActive(false); const files = Array.from(e.dataTransfer.files); if (files.length) { setUploadFiles(files); setUploadTitle(prev => prev || files[0].name.replace(/\.[^/.]+$/, '')); } }}
               onClick={() => fileInputRef.current?.click()}
               style={{
                 border: `2px dashed ${dragActive ? '#0071e3' : 'rgba(255,255,255,0.15)'}`,
                 borderRadius: 16, padding: '32px 20px', textAlign: 'center', cursor: 'pointer',
                 background: dragActive ? 'rgba(0,113,227,0.05)' : 'transparent', transition: '0.2s'
               }}>
-              <input ref={fileInputRef} type="file" accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" style={{ display: 'none' }}
-                onChange={e => { if (e.target.files[0]) { setUploadFile(e.target.files[0]); setUploadTitle(prev => prev || e.target.files[0].name.replace(/\.[^/.]+$/, '')); } }} />
-              {uploadFile ? (
+              <input ref={fileInputRef} type="file" accept=".pdf,.pptx,.ppt,.docx,.doc,.txt" multiple style={{ display: 'none' }}
+                onChange={e => { const files = Array.from(e.target.files); if (files.length) { setUploadFiles(files); setUploadTitle(prev => prev || files[0].name.replace(/\.[^/.]+$/, '')); } }} />
+              {uploadFiles.length > 0 ? (
                 <div style={{ color: '#fff' }}>
                   <FileText size={24} style={{ marginBottom: 8 }} />
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{uploadFile.name}</p>
-                  <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{formatSize(uploadFile.size)}</p>
+                  {uploadFiles.length === 1 ? (
+                    <>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{uploadFiles[0].name}</p>
+                      <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{formatSize(uploadFiles[0].size)}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{uploadFiles.length} files selected</p>
+                      <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+                        {uploadFiles.reduce((s, f) => s + f.size, 0) > 0 ? formatSize(uploadFiles.reduce((s, f) => s + f.size, 0)) : ''}
+                      </p>
+                      <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 120, overflowY: 'auto' }}>
+                        {uploadFiles.map((f, i) => (
+                          <p key={i} style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{f.name}</p>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div style={{ color: 'rgba(255,255,255,0.4)' }}>
                   <Upload size={24} style={{ marginBottom: 8 }} />
                   <p style={{ margin: 0, fontSize: 14 }}>Drag & drop or click to select</p>
-                  <p style={{ margin: 0, fontSize: 11, marginTop: 4 }}>PDF, PPTX, DOCX, TXT</p>
+                  <p style={{ margin: 0, fontSize: 11, marginTop: 4 }}>Multiple files supported — PDF, PPTX, DOCX, TXT</p>
                 </div>
               )}
             </div>
-            <button className="btn-primary-premium ripple" onClick={handleUpload} disabled={uploading || !uploadFile || !uploadTitle.trim()}
+            {uploadProgress && (
+              <p style={{ color: '#0071e3', margin: 0, fontSize: 12, fontWeight: 600 }}>
+                Uploading {uploadProgress.current}/{uploadProgress.total} — {uploadProgress.name}...
+              </p>
+            )}
+            <button className="btn-primary-premium ripple" onClick={handleUpload}
+              disabled={uploading || uploadFiles.length === 0 || !uploadTitle.trim()}
               style={{ alignSelf: 'flex-end' }}>
-              {uploading ? 'Uploading...' : 'Upload Document'}
+              {uploading ? 'Uploading...' : uploadFiles.length > 1 ? `Upload ${uploadFiles.length} Files` : 'Upload Document'}
             </button>
           </div>
         </div>

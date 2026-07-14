@@ -110,6 +110,8 @@ client/src/
 - [x] REDESIGN M3: Rewrote pdfExtractor.js to use parser→chunkDocument() pipeline
 - [x] REDESIGN M4: enhance-chunks Edge Function (LLM summary + keywords)
 - [x] REDESIGN M5: Updated search_ebecco RPC to search content + summary + keywords
+- [x] BUGFIX: PDF text reconstruction using Y-position line breaks (chunks were empty)
+- [x] FEATURE: Multi-file upload — select multiple PDFs, sequential processing with progress
 
 ## DEPLOYMENT_STEPS
 1. Run `client/supabase/ebecco_tables.sql` in Supabase SQL Editor
