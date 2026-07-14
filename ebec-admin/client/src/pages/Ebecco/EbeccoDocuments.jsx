@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Upload, FileText, Trash, Download, Search, FolderOpen, X, Check, Loader2 } from 'lucide-react';
+import { Upload, FileText, Trash, Download, Search, FolderOpen, X, Check, Loader2, Square, SquareCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { extractPdfText, chunkDocument } from '../../utils/pdfExtractor';
@@ -35,6 +35,7 @@ export default function EbeccoDocuments() {
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [selected, setSelected] = useState(new Set());
   const fileInputRef = useRef(null);
 
   const showNotification = (msg, type = 'success') => {
@@ -153,6 +154,35 @@ export default function EbeccoDocuments() {
     loadDocuments();
   };
 
+  const toggleSelect = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(d => d.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`Delete ${selected.size} document${selected.size > 1 ? 's' : ''}? This cannot be undone.`)) return;
+    const docs = documents.filter(d => selected.has(d.id));
+    for (const doc of docs) {
+      await supabase.storage.from('ebecco-docs').remove([doc.file_path]);
+      await supabase.from('ebecco_documents').delete().eq('id', doc.id);
+    }
+    showNotification(`${docs.length} document${docs.length > 1 ? 's' : ''} deleted`);
+    setSelected(new Set());
+    loadDocuments();
+  };
+
   const filtered = documents.filter(d => {
     const matchSearch = d.title.toLowerCase().includes(searchTerm.toLowerCase()) || d.file_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchCat = categoryFilter === 'all' || d.category === categoryFilter;
@@ -249,7 +279,20 @@ export default function EbeccoDocuments() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+        {filtered.length > 0 && (
+          <button className="pill-btn mini" onClick={toggleSelectAll}
+            style={{ flexShrink: 0, gap: 6, background: selected.size > 0 ? 'rgba(0,113,227,0.15)' : undefined }}>
+            {selected.size === filtered.length ? <SquareCheck size={13} /> : <Square size={13} />}
+            {selected.size === filtered.length ? 'Deselect all' : 'Select all'}
+          </button>
+        )}
+        {selected.size > 0 && (
+          <button className="pill-btn mini" onClick={handleBulkDelete}
+            style={{ flexShrink: 0, gap: 6, background: 'rgba(255,59,48,0.1)', color: '#ff3b30' }}>
+            <Trash size={13} /> Delete {selected.size}
+          </button>
+        )}
         <div className="premium-search-container" style={{ flex: 1, minWidth: 200 }}>
           <div className="search-icon-wrapper"><Search size={14} /></div>
           <input type="text" placeholder="Search documents..." className="cute-search-input" style={{ width: '100%' }}
@@ -276,7 +319,11 @@ export default function EbeccoDocuments() {
       ) : (
         <div className="mgmt-grid">
           {filtered.map(doc => (
-            <div key={doc.id} className="glass-panel-wide" style={{ padding: 20 }}>
+            <div key={doc.id} className="glass-panel-wide" style={{ padding: 20, position: 'relative', border: selected.has(doc.id) ? '1px solid rgba(0,113,227,0.5)' : undefined }}>
+              <button onClick={() => toggleSelect(doc.id)}
+                style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', color: selected.has(doc.id) ? '#0071e3' : 'rgba(255,255,255,0.3)', padding: 4 }}>
+                {selected.has(doc.id) ? <SquareCheck size={18} /> : <Square size={18} />}
+              </button>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                   <div style={{ background: 'rgba(0,113,227,0.15)', borderRadius: 12, padding: 10, flexShrink: 0 }}>
