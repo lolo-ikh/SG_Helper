@@ -251,6 +251,24 @@ export async function searchDocuments(query, limit = 10) {
     rank: (r.rank || 0) * (CATEGORY_WEIGHT[r.document_category] || 1),
   }));
 
+  // Boost by click feedback
+  try {
+    const chunkIds = boosted.map(r => r.chunk_id).filter(Boolean);
+    if (chunkIds.length > 0) {
+      const { data: clickData } = await supabase.rpc('get_chunk_click_counts', { chunk_ids: chunkIds });
+      if (clickData && clickData.length > 0) {
+        const clickMap = {};
+        clickData.forEach(c => { clickMap[c.chunk_id] = Number(c.click_count); });
+        for (const r of boosted) {
+          const clicks = clickMap[r.chunk_id] || 0;
+          if (clicks > 0) r.rank += clicks * 0.1;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[EBECO] Click feedback boost failed:', err.message);
+  }
+
   // Sort by boosted rank descending
   boosted.sort((a, b) => b.rank - a.rank);
 

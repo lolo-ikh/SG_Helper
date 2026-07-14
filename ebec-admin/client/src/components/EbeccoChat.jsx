@@ -158,6 +158,13 @@ export default function EbeccoChat() {
 
   const openPdf = async (source) => {
     try {
+      if (source.chunk_id) {
+        supabase.from('ebecco_feedback').insert({
+          chunk_id: source.chunk_id,
+          query: messages[messages.length - 1]?.content || '',
+          action: 'click',
+        }).then(({ error }) => { if (error) console.warn('[EBECO] Feedback log failed:', error.message); });
+      }
       const { data: doc } = await supabase.from('ebecco_documents').select('file_path').eq('id', source.document_id).single();
       if (!doc) return;
       const { data } = await supabase.storage.from('ebecco-docs').createSignedUrl(doc.file_path, 3600);
