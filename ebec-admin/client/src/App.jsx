@@ -64,7 +64,6 @@ function AppRoutes() {
           <Route path="/activities" element={<TechCardStats />} />
           <Route path="/attendance" element={<AttendancePortal />} />
           <Route path="/archive" element={<ArchivePage />} />
-          <Route path="/ebecco" element={<EbeccoDocuments />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <Footer />
