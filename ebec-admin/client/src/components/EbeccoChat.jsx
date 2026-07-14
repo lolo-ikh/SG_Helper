@@ -101,6 +101,18 @@ export default function EbeccoChat() {
     if (!open && messages.length > 1) setUnread(true);
   }, [messages.length, open]);
 
+  const IDENTITY_RE = /^(?:who|what|how|where|tell\s+me\s+about)\s+(?:are|is|do|does|did|were|was|you|ur|u|ebeco|ebec\s*o|the\s+bot|the\s+chatbot|the\s+assistant|your\s+name|your\s+creator|your\s+purpose|this\s+app|this\s+website|this\s+system|login|sign\s*in|log\s*in|access)/i;
+  const GREETING_RE = /^(?:hi|hello|hey|yo|sup|good\s+(?:morning|afternoon|evening)|thanks|thank\s+you|bye|goodbye)\s*[!.?]*$/i;
+
+  const isIdentityQuery = (q) => {
+    const lower = q.toLowerCase().trim();
+    if (IDENTITY_RE.test(lower)) return true;
+    if (GREETING_RE.test(lower)) return true;
+    const stripped = lower.replace(/[?!.,]/g, '').trim();
+    if (['ebecco', 'ebec o', 'ebec', 'ebeco', 'who are you', 'what are you', 'who made you', 'who created you', 'what is ebeco', 'what is ebec'].includes(stripped)) return true;
+    return false;
+  };
+
   const handleSend = async () => {
     const q = input.trim();
     if (!q || loading) return;
@@ -111,12 +123,17 @@ export default function EbeccoChat() {
     setLoading(true);
 
     try {
-      const results = await searchDocuments(q, 5);
-      if (results.length === 0) {
-        setMessages(prev => [...prev, { role: 'assistant', content: "I searched through all uploaded documents but couldn't find anything related to your question. Make sure you've uploaded documents on the EBECO Documents page, and try rephrasing your question." }]);
+      if (isIdentityQuery(q)) {
+        const answer = await generateRagAnswer(q, []);
+        setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
       } else {
-        const answer = await generateRagAnswer(q, results);
-        setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.slice(0, 5) }]);
+        const results = await searchDocuments(q, 5);
+        if (results.length === 0) {
+          setMessages(prev => [...prev, { role: 'assistant', content: "I don't have enough information to answer that. Try rephrasing or upload relevant documents on the EBECO Documents page." }]);
+        } else {
+          const answer = await generateRagAnswer(q, results);
+          setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.slice(0, 5) }]);
+        }
       }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, something went wrong. Please try again." }]);
@@ -188,18 +205,27 @@ export default function EbeccoChat() {
                         <Markdown>{msg.content}</Markdown>
                       )}
                     </div>
-                    {msg.sources && msg.sources.length > 0 && (
-                      <div className="ebecco-sources">
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Sources</div>
-                        {msg.sources.map((s, j) => (
-                          <div key={j} onClick={() => openPdf(s)} style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
-                            onMouseEnter={e => e.target.style.color = '#0071e3'}
-                            onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.4)'}>
-                            {s.document_title} (p.{s.page_number || '?'})
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    {msg.sources && msg.sources.length > 0 && (() => {
+                      const seen = new Set();
+                      const deduped = msg.sources.filter(s => {
+                        const key = `${s.document_id}:${s.page_number}`;
+                        if (seen.has(key)) return false;
+                        seen.add(key);
+                        return true;
+                      });
+                      return (
+                        <div className="ebecco-sources">
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Sources</div>
+                          {deduped.map((s, j) => (
+                            <div key={j} onClick={() => openPdf(s)} style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+                              onMouseEnter={e => e.target.style.color = '#0071e3'}
+                              onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.4)'}>
+                              {s.document_title} (p.{s.page_number || '?'})
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}

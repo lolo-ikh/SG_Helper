@@ -1,11 +1,9 @@
 import { supabase } from '../lib/supabase';
 
 export async function generateRagAnswer(question, searchResults) {
-  if (!searchResults || searchResults.length === 0) {
-    return "I couldn't find any relevant information in the uploaded documents. Try rephrasing your question or upload new documents in the EBECO Documents page.";
-  }
+  const hasResults = searchResults && searchResults.length > 0;
 
-  const context = searchResults
+  const context = hasResults ? searchResults
     .slice(0, 6)
     .map((r, i) => {
       const meta = r.chunk_summary ? `Summary: ${r.chunk_summary}` : '';
@@ -14,7 +12,7 @@ export async function generateRagAnswer(question, searchResults) {
       const seasonLabel = seasonMatch ? ` [Season: ${seasonMatch[0]}]` : '';
       return `[Source ${i + 1}: "${r.document_title}" (${catLabel}${seasonLabel}, p.${r.page_number || '?'})]\n${meta}\n${r.chunk_content}`;
     })
-    .join('\n\n');
+    .join('\n\n') : '';
 
   // Try Groq (Llama 3.1) first, then Edge Function fallback
   const groqKey = import.meta.env.VITE_GROQ_API_KEY;
@@ -43,7 +41,9 @@ DOCUMENT-BASED ANSWERS (use the provided excerpts):
 - Do NOT confuse people who share a first name.
 - Be SHORT — 2-4 sentences max unless asked for detail. Cite sources inline like (Source: "Doc Name").
 - If the context lacks info to answer, say "I don't have enough information." Never fabricate.` },
-            { role: 'user', content: `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.` },
+            { role: 'user', content: hasResults
+              ? `Question: ${question}\n\nRelevant document excerpts:\n${context}\n\nAnswer the question based on the above excerpts. Synthesize the information, be concise, and cite sources.`
+              : `Question: ${question}\n\n(No document excerpts available.)\n\nAnswer based on your self-knowledge. If this is a greeting, respond warmly and briefly. If it's about your identity or purpose, answer from your built-in knowledge without citing sources.` },
           ],
           max_tokens: 300,
           temperature: 0.3,
@@ -69,8 +69,9 @@ DOCUMENT-BASED ANSWERS (use the provided excerpts):
     if (data?.error) throw new Error(data.error);
     return data.answer;
   } catch (err) {
-    console.warn('[EBECO] Edge function unavailable, using extractive fallback:', err.message);
-    return extractiveAnswer(question, searchResults);
+    console.warn('[EBECO] Edge function unavailable:', err.message);
+    if (hasResults) return extractiveAnswer(question, searchResults);
+    return "I'm EBECO, an AI assistant built by Leena Ikhlef. How can I help you with EBEC documents?";
   }
 }
 
