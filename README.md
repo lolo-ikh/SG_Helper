@@ -170,12 +170,6 @@ ebec-admin/
 
 The app is deployed on [Vercel](https://sg-helper.vercel.app) with Supabase as the backend.
 
-To deploy:
-1. Push to `main` branch
-2. Vercel auto-deploys from GitHub
-3. Ensure all SQL files have been run in Supabase
-4. Ensure API keys are set in `.env`
-
 ---
 
 ## Built By
