@@ -171,23 +171,24 @@ export async function searchDocuments(query, limit = 10) {
           .from('ebecco_chunks')
           .select('id, document_id, content, page_number')
           .or(orFilters.join(','))
-          .limit(5);
+          .limit(20);
 
         if (catChunks && catChunks.length > 0) {
-          const chunkIds = catChunks.map(c => c.id);
+          const docIds = [...new Set(catChunks.map(c => c.document_id))];
           const { data: catDocs } = await supabase
             .from('ebecco_documents')
             .select('id, title, category')
-            .in('id', [...new Set(catChunks.map(c => c.document_id))]);
+            .in('id', docIds);
 
           const docMap = {};
           (catDocs || []).forEach(d => { docMap[d.id] = d; });
 
-          for (const row of catChunks) {
-            if (docMap[row.document_id]?.category === cat && !seen.has(row.id)) {
+          const catResults = catChunks
+            .filter(row => docMap[row.document_id]?.category === cat && !seen.has(row.id))
+            .map(row => {
               const lower = row.content.toLowerCase();
               const matchCount = keywords.filter(kw => lower.includes(kw)).length;
-              merged.push({
+              return {
                 chunk_id: row.id,
                 document_id: row.document_id,
                 document_title: docMap[row.document_id]?.title || 'Unknown',
@@ -195,9 +196,14 @@ export async function searchDocuments(query, limit = 10) {
                 chunk_content: row.content,
                 page_number: row.page_number,
                 rank: matchCount / keywords.length,
-              });
-              seen.add(row.id);
-            }
+              };
+            })
+            .sort((a, b) => b.rank - a.rank)
+            .slice(0, 5);
+
+          for (const r of catResults) {
+            merged.push(r);
+            seen.add(r.chunk_id);
           }
         }
       } catch (err) {
