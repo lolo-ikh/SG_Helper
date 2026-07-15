@@ -123,6 +123,18 @@ function FeedbackButtons({ query, answerSummary, chunkIds }) {
   );
 }
 
+const SOURCE_RE = /[\[(]Source\s*\d*\s*:\s*"([^"]*)"[^\])]*[\])]|[\[(]Source\s*\d+[\])]/g;
+
+function formatContentWithSources(content, sources) {
+  if (!sources || sources.length === 0) return content;
+  const titleToIndex = {};
+  sources.forEach((s, i) => { titleToIndex[s.document_title] = i + 1; });
+  return content.replace(SOURCE_RE, (match, title) => {
+    const idx = title ? (titleToIndex[title] || 1) : 1;
+    return `[${idx}]`;
+  });
+}
+
 export default function EbeccoChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([WELCOME_MSG]);
@@ -268,7 +280,7 @@ export default function EbeccoChat() {
                   </div>
                   <div className="ebecco-msg-bubble">
                     <div className="ebecco-msg-text">
-                      <Markdown>{msg.content}</Markdown>
+                      <Markdown>{msg.role === 'assistant' && msg.sources ? formatContentWithSources(msg.content, msg.sources) : msg.content}</Markdown>
                     </div>
                     {msg.sources && msg.sources.length > 0 && (() => {
                       const seen = new Set();
