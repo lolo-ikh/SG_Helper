@@ -48,70 +48,63 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
     sources.forEach((s, i) => { titleToIndex[s.document_title] = i + 1; });
   }
 
-  const SOURCE_RE = /[\[(]Source\s*\d*\s*:\s*"([^"]*)"[^\])]*[\])]|[\[(]Source\s*\d+[\])]/g;
-  const segments = [];
-  let lastIndex = 0;
-  let match;
-
-  while ((match = SOURCE_RE.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ type: 'text', value: content.slice(lastIndex, match.index) });
-    }
-    const title = match[1] || null;
-    const idx = title ? (titleToIndex[title] || 1) : 1;
-    segments.push({ type: 'source', idx });
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < content.length) {
-    segments.push({ type: 'text', value: content.slice(lastIndex) });
-  }
-
-  const PLACEHOLDER = '\u00B7SRCREF\u00B7';
-  const textWithPlaceholders = segments.map(s =>
-    s.type === 'source' ? `${PLACEHOLDER}${s.idx}${PLACEHOLDER}` : (s.value || '')
-  ).join('');
-
-  const rendered = <Markdown>{textWithPlaceholders}</Markdown>;
-
-  const parts = rendered.props.children;
-  if (typeof parts === 'string') {
-    const result = [];
-    const re = new RegExp(`${PLACEHOLDER}(\\d+)${PLACEHOLDER}`, 'g');
-    let lastIdx = 0;
-    let m;
-    while ((m = re.exec(parts)) !== null) {
-      if (m.index > lastIdx) result.push(<span key={lastIdx}>{parts.slice(lastIdx, m.index)}</span>);
-      result.push(<InlineSource key={m.index} index={parseInt(m[1])} sources={sources} onOpenPdf={onOpenPdf} />);
-      lastIdx = m.index + m[0].length;
-    }
-    if (lastIdx < parts.length) result.push(<span key={lastIdx}>{parts.slice(lastIdx)}</span>);
-    return <>{result}</>;
-  }
-
-  return replaceInReactTree(rendered, PLACEHOLDER, sources, onOpenPdf);
+  return <Markdown components={{
+    p: ({ children }) => <p>{replaceSourcesInChildren(children, titleToIndex, sources, onOpenPdf)}</p>,
+    li: ({ children }) => <li>{replaceSourcesInChildren(children, titleToIndex, sources, onOpenPdf)}</li>,
+    li: ({ children, ...props }) => <li {...props}>{replaceSourcesInChildren(children, titleToIndex, sources, onOpenPdf)}</li>,
+    td: ({ children }) => <td>{replaceSourcesInChildren(children, titleToIndex, sources, onOpenPdf)}</td>,
+    th: ({ children }) => <th>{replaceSourcesInChildren(children, titleToIndex, sources, onOpenPdf)}</th>,
+  }}>{content}</Markdown>;
 }
 
-function replaceInReactTree(node, placeholder, sources, onOpenPdf) {
-  if (typeof node === 'string') {
-    const re = new RegExp(`${placeholder}(\\d+)${placeholder}`, 'g');
-    if (!re.test(node)) return node;
-    re.lastIndex = 0;
-    const result = [];
+function replaceSourcesInChildren(children, titleToIndex, sources, onOpenPdf) {
+  if (!children) return children;
+  if (typeof children === 'string') {
+    const SOURCE_RE = /[\[(]Source\s*\d*\s*:\s*"([^"]*)"[^\])]*[\])]|[\[(]Source\s*\d+[\])]/g;
+    if (!SOURCE_RE.test(children)) return children;
+    SOURCE_RE.lastIndex = 0;
+    const parts = [];
     let lastIdx = 0;
     let m;
-    while ((m = re.exec(node)) !== null) {
-      if (m.index > lastIdx) result.push(node.slice(lastIdx, m.index));
-      result.push(<InlineSource key={`src-${m.index}`} index={parseInt(m[1])} sources={sources} onOpenPdf={onOpenPdf} />);
+    while ((m = SOURCE_RE.exec(children)) !== null) {
+      if (m.index > lastIdx) parts.push(children.slice(lastIdx, m.index));
+      const title = m[1] || null;
+      const idx = title ? (titleToIndex[title] || 1) : 1;
+      parts.push(<InlineSource key={`s${m.index}`} index={idx} sources={sources} onOpenPdf={onOpenPdf} />);
       lastIdx = m.index + m[0].length;
     }
-    if (lastIdx < node.length) result.push(node.slice(lastIdx));
-    return result;
+    if (lastIdx < children.length) parts.push(children.slice(lastIdx));
+    return parts;
   }
-  if (!node || typeof node !== 'object' || !node.props) return node;
-  const newChildren = Array.isArray(node.props.children)
-    ? node.props.children.map(child => replaceInReactTree(child, placeholder, sources, onOpenPdf))
-    : replaceInReactTree(node.props.children, placeholder, sources, onOpenPdf);
-  return { ...node, props: { ...node.props, children: newChildren } };
+  if (Array.isArray(children)) {
+    return children.map((child, i) => {
+      if (typeof child === 'string') {
+        const SOURCE_RE = /[\[(]Source\s*\d*\s*:\s*"([^"]*)"[^\])]*[\])]|[\[(]Source\s*\d+[\])]/g;
+        if (!SOURCE_RE.test(child)) return child;
+        SOURCE_RE.lastIndex = 0;
+        const parts = [];
+        let lastIdx = 0;
+        let m;
+        while ((m = SOURCE_RE.exec(child)) !== null) {
+          if (m.index > lastIdx) parts.push(child.slice(lastIdx, m.index));
+          const title = m[1] || null;
+          const idx = title ? (titleToIndex[title] || 1) : 1;
+          parts.push(<InlineSource key={`s${i}-${m.index}`} index={idx} sources={sources} onOpenPdf={onOpenPdf} />);
+          lastIdx = m.index + m[0].length;
+        }
+        if (lastIdx < child.length) parts.push(child.slice(lastIdx));
+        return parts;
+      }
+      if (child?.props?.children) {
+        return { ...child, props: { ...child.props, children: replaceSourcesInChildren(child.props.children, titleToIndex, sources, onOpenPdf) } };
+      }
+      return child;
+    });
+  }
+  if (children?.props?.children) {
+    return { ...children, props: { ...children.props, children: replaceSourcesInChildren(children.props.children, titleToIndex, sources, onOpenPdf) } };
+  }
+  return children;
 }
 
 function FeedbackButtons({ query, answerSummary, chunkIds }) {
