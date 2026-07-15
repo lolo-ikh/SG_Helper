@@ -72,7 +72,7 @@ function SourceMarkdown({ content, sources, onOpenPdf }) {
           const idx = part.title ? (titleToIndex[part.title] || 1) : 1;
           return <InlineSource key={i} index={idx} title={part.title || ''} sources={sources} onOpenPdf={onOpenPdf} />;
         }
-        return part.value ? <span key={i}>{part.value}</span> : null;
+        return part.value ? <Markdown key={i}>{part.value}</Markdown> : null;
       })}
     </>
   );
@@ -268,11 +268,7 @@ export default function EbeccoChat() {
                   </div>
                   <div className="ebecco-msg-bubble">
                     <div className="ebecco-msg-text">
-                      {msg.role === 'assistant' && msg.sources ? (
-                        <SourceMarkdown content={msg.content} sources={msg.sources} onOpenPdf={openPdf} />
-                      ) : (
-                        <Markdown>{msg.content}</Markdown>
-                      )}
+                      <Markdown>{msg.content}</Markdown>
                     </div>
                     {msg.sources && msg.sources.length > 0 && (() => {
                       const seen = new Set();
