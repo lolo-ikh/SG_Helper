@@ -32,13 +32,11 @@ body { margin: 0; font-family: var(--system-font); background: #000; overflow-x:
 
 /* --- Glass Nav --- */
 .glass-nav {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   position: sticky;
   top: 20px;
   z-index: 9999;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   width: 65%;
   max-width: 850px;
   border-radius: 100px;
@@ -48,6 +46,12 @@ body { margin: 0; font-family: var(--system-font); background: #000; overflow-x:
   padding: 10px 32px;
   transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   margin-top: 24px;
+}
+.glass-nav.scrolled {
+  background: rgba(30, 30, 30, 0.65) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 .nav-links { display: flex; gap: 24px; align-items: center; }
 .nav-links a { text-decoration: none; }

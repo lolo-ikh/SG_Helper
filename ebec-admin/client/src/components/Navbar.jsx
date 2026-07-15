@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ebecLogo from '../assets/EBEC.jfif';
@@ -5,6 +6,18 @@ import ebecLogo from '../assets/EBEC.jfif';
 export default function Navbar() {
   const { user, isVP, signOut } = useAuth();
   const navigate = useNavigate();
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const onScroll = () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -12,7 +25,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="glass-nav">
+    <nav className="glass-nav" ref={navRef}>
       <NavLink to="/dashboard">
         <div className="logo-circle">
           <img src={ebecLogo} alt="EBEC" className="header-logo" />
