@@ -32,13 +32,13 @@ body { margin: 0; font-family: var(--system-font); background: #000; overflow-x:
 
 /* --- Glass Nav --- */
 .glass-nav {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   position: sticky;
   top: 20px;
   z-index: 9999;
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
   width: 65%;
   max-width: 850px;
   border-radius: 100px;
