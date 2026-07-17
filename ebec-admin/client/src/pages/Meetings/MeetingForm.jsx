@@ -47,13 +47,24 @@ export default function MeetingForm({ existingMeeting }) {
       setNotification({ message: '⚠️ A session title is required', type: 'error' });
       return;
     }
-    if (existingMeeting) {
-      const { id, ...updateData } = { ...formData, id: existingMeeting.id };
-      const { error } = await supabase.from('meetings').update(updateData).eq('id', existingMeeting.id);
-      if (!error) navigate('/meetings');
-    } else {
-      const { data, error } = await supabase.from('meetings').insert([{ ...formData, id: Date.now(), season: '2026-2027', checkin_token: crypto.randomUUID() }]).select();
-      if (!error && data) navigate('/meetings');
+    try {
+      if (existingMeeting) {
+        const { id, ...updateData } = { ...formData, id: existingMeeting.id };
+        const { error } = await supabase.from('meetings').update(updateData).eq('id', existingMeeting.id);
+        if (error) throw error;
+        navigate('/meetings');
+      } else {
+        const payload = { ...formData, id: Date.now(), season: '2026-2027', checkin_token: crypto.randomUUID() };
+        let { data, error } = await supabase.from('meetings').insert([payload]).select();
+        if (error && error.message?.includes('checkin_token')) {
+          delete payload.checkin_token;
+          ({ data, error } = await supabase.from('meetings').insert([payload]).select());
+        }
+        if (error) throw error;
+        navigate('/meetings');
+      }
+    } catch (err) {
+      setNotification({ message: `Failed: ${err.message}`, type: 'error' });
     }
   };
 
