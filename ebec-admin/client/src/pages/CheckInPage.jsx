@@ -1,15 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { CheckCircle, Clock, UserCheck, Shield } from 'lucide-react';
+import { CheckCircle, Clock, UserCheck, Shield, ChevronDown } from 'lucide-react';
+
+const ROLES = [
+  'President',
+  'Vice President',
+  'Secretary General',
+  'HR Manager',
+  'IT Manager',
+  'Design Manager',
+  'Marketing Manager',
+  'Logistics Manager',
+  'Events Manager',
+  'Finance Manager',
+  'Member',
+];
 
 export default function CheckInPage() {
   const { meetingId, token } = useParams();
   const [meeting, setMeeting] = useState(null);
-  const [checkins, setCheckins] = useState([]);
-  const [selected, setSelected] = useState(null);
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
+  const [form, setForm] = useState({ name: '', email: '', role: '' });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     async function load() {
@@ -27,28 +41,44 @@ export default function CheckInPage() {
         return;
       }
 
-      const { data: existingCheckins } = await supabase.rpc('get_meeting_checkins', { p_meeting_id: Number(meetingId) });
-      setCheckins(existingCheckins || []);
       setStatus('ready');
     }
     load();
   }, [meetingId, token]);
 
+  const validate = () => {
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'Name is required';
+    if (!form.email.trim() || !form.email.includes('@')) errs.email = 'Valid email is required';
+    if (!form.role) errs.role = 'Please select a role';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleCheckIn = async () => {
-    if (!selected) return;
+    if (!validate()) return;
+    const trimmedName = form.name.trim();
+
+    const attendees = meeting?.attendees || [];
+    const match = attendees.find(a => a.toLowerCase() === trimmedName.toLowerCase());
+    if (!match) {
+      setErrors({ name: 'Your name is not on the attendee list for this meeting.' });
+      return;
+    }
+
     setStatus('submitting');
-    const { data, error } = await supabase.rpc('checkin_attendee', {
+    const { error } = await supabase.rpc('checkin_attendee', {
       p_meeting_id: Number(meetingId),
-      p_name: selected
+      p_name: match,
+      p_email: form.email.trim(),
+      p_role: form.role,
     });
     if (error) {
       setMessage('Something went wrong. Try again.');
       setStatus('ready');
       return;
     }
-    setCheckins(prev => [...prev, { name: selected, checked_in_at: new Date().toISOString() }]);
     setStatus('done');
-    setMessage(`Welcome, ${selected}! Your attendance has been recorded.`);
   };
 
   if (status === 'loading') {
@@ -90,8 +120,10 @@ export default function CheckInPage() {
       <div className="checkin-page">
         <div className="checkin-card">
           <CheckCircle size={48} style={{ color: '#34c759', marginBottom: 12 }} />
-          <h2>You're Checked In!</h2>
-          <p style={{ color: '#666', marginTop: 8 }}>{message}</p>
+          <h2>Attendance Recorded</h2>
+          <p style={{ color: '#666', marginTop: 8, fontSize: 14 }}>
+            Thank you, {form.name.trim()}! Your attendance has been recorded. You can close this page.
+          </p>
         </div>
       </div>
     );
@@ -102,57 +134,72 @@ export default function CheckInPage() {
       <div className="checkin-card">
         <UserCheck size={36} style={{ color: 'var(--ebec-navy)', marginBottom: 8 }} />
         <h2>{meeting?.title}</h2>
-        <p style={{ color: '#666', fontSize: 13, marginBottom: 20 }}>
+        <p style={{ color: '#666', fontSize: 13, marginBottom: 24 }}>
           {meeting?.date} at {meeting?.time}
         </p>
 
-        <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, textAlign: 'left', width: '100%' }}>
-          Select your name to check in:
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+          <div style={{ textAlign: 'left' }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>Full Name</label>
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              style={{
+                width: '100%', padding: '12px 14px', borderRadius: 12, border: errors.name ? '1.5px solid #ff3b30' : '1.5px solid #e5e5e5',
+                fontSize: 14, outline: 'none', transition: '0.2s', boxSizing: 'border-box',
+              }}
+            />
+            {errors.name && <p style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.name}</p>}
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginBottom: 16 }}>
-          {(meeting?.attendees || []).map(name => {
-            const isChecked = checkins.some(c => c.name === name);
-            return (
-              <button
-                key={name}
-                onClick={() => !isChecked && setSelected(name)}
-                disabled={isChecked}
+          <div style={{ textAlign: 'left' }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>Email</label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              style={{
+                width: '100%', padding: '12px 14px', borderRadius: 12, border: errors.email ? '1.5px solid #ff3b30' : '1.5px solid #e5e5e5',
+                fontSize: 14, outline: 'none', transition: '0.2s', boxSizing: 'border-box',
+              }}
+            />
+            {errors.email && <p style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
+          </div>
+
+          <div style={{ textAlign: 'left' }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
+            <div style={{ position: 'relative' }}>
+              <select
+                value={form.role}
+                onChange={e => setForm({ ...form, role: e.target.value })}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '12px 16px',
-                  borderRadius: 12,
-                  border: selected === name ? '2px solid var(--ebec-navy)' : '1px solid #e5e5e5',
-                  background: isChecked ? '#f0f8f0' : selected === name ? 'rgba(29, 53, 94, 0.05)' : '#fff',
-                  cursor: isChecked ? 'default' : 'pointer',
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: isChecked ? '#34c759' : '#1d1d1f',
-                  transition: '0.2s',
-                  textAlign: 'left',
-                  width: '100%',
+                  width: '100%', padding: '12px 14px', borderRadius: 12, border: errors.role ? '1.5px solid #ff3b30' : '1.5px solid #e5e5e5',
+                  fontSize: 14, outline: 'none', transition: '0.2s', appearance: 'none', background: '#fff',
+                  color: form.role ? '#1d1d1f' : '#999', boxSizing: 'border-box', cursor: 'pointer',
                 }}
               >
-                {isChecked ? <CheckCircle size={16} /> : <div style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid #ccc' }} />}
-                {name}
-                {isChecked && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#34c759' }}>Already checked in</span>}
-              </button>
-            );
-          })}
+                <option value="" disabled>Select your role</option>
+                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <ChevronDown size={16} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#86868b', pointerEvents: 'none' }} />
+            </div>
+            {errors.role && <p style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.role}</p>}
+          </div>
         </div>
 
-        {message && status === 'ready' && <p style={{ color: '#ff3b30', fontSize: 13, marginBottom: 8 }}>{message}</p>}
+        {message && <p style={{ color: '#ff3b30', fontSize: 13, marginTop: 12 }}>{message}</p>}
 
-        {selected && status !== 'submitting' && (
-          <button className="cta" style={{ width: '100%' }} onClick={handleCheckIn}>
-            Check In as {selected}
-          </button>
-        )}
-        {status === 'submitting' && (
-          <p style={{ color: '#666', fontSize: 13 }}>Submitting...</p>
-        )}
+        <button
+          className="cta"
+          style={{ width: '100%', marginTop: 20 }}
+          onClick={handleCheckIn}
+          disabled={status === 'submitting'}
+        >
+          {status === 'submitting' ? 'Submitting...' : 'Check In'}
+        </button>
       </div>
     </div>
   );
