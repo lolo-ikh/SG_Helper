@@ -32,7 +32,7 @@ body { margin: 0; font-family: var(--system-font); background: #000; overflow-x:
 
 /* --- Glass Nav --- */
 .glass-nav {
-  background: rgba(12, 26, 51, 0.55) !important;
+  background: rgba(12, 26, 51, 0.3) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   position: sticky;
   top: 20px;
