@@ -8,7 +8,7 @@ export default function ArchivePage() {
   const navigate = useNavigate();
   const [meetings, setMeetings] = useState([]);
   const [techCards, setTechCards] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState('2025');
+  const [selectedSeason, setSelectedSeason] = useState('2025-2026');
   const [expandedSection, setExpandedSection] = useState('meetings');
   const [notification, setNotification] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,7 +16,7 @@ export default function ArchivePage() {
   const [viewTechCard, setViewTechCard] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  const seasons = ['2026-2027', '2025'];
+  const seasons = ['2026-2027', '2025-2026'];
 
   useEffect(() => {
     async function loadData() {
@@ -33,8 +33,16 @@ export default function ArchivePage() {
 
   const showNotification = (msg, type = 'success') => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 3000); };
 
-  const filteredMeetings = meetings.filter(m => (m.season || '2025') === selectedSeason && (m.title?.toLowerCase().includes(searchTerm.toLowerCase()) || m.date?.includes(searchTerm)));
-  const filteredCards = techCards.filter(c => (c.season || '2025') === selectedSeason && (c.title?.toLowerCase().includes(searchTerm.toLowerCase()) || c.reference?.toLowerCase().includes(searchTerm)));
+  const filteredMeetings = meetings.filter(m => {
+    const s = m.season || '2025-2026';
+    const matchSeason = selectedSeason === '2025-2026' ? (s === '2025-2026' || s === '2025') : s === selectedSeason;
+    return matchSeason && (m.title?.toLowerCase().includes(searchTerm.toLowerCase()) || m.date?.includes(searchTerm));
+  });
+  const filteredCards = techCards.filter(c => {
+    const s = c.season || '2025-2026';
+    const matchSeason = selectedSeason === '2025-2026' ? (s === '2025-2026' || s === '2025') : s === selectedSeason;
+    return matchSeason && (c.title?.toLowerCase().includes(searchTerm.toLowerCase()) || c.reference?.toLowerCase().includes(searchTerm));
+  });
 
   const getAttendanceSummary = (attendance) => {
     if (!attendance || Object.keys(attendance).length === 0) return null;
@@ -61,7 +69,7 @@ export default function ArchivePage() {
         <div className="season-tabs">
           {seasons.map(s => (
             <button key={s} className={`season-tab ${selectedSeason === s ? 'active' : ''}`} onClick={() => setSelectedSeason(s)}>
-              {s === '2025' ? '2025-2026 (Archived)' : `Mandate ${s}`}
+                  {s === '2025-2026' ? '2025-2026 (Archived)' : `Mandate ${s}`}
             </button>
           ))}
         </div>
