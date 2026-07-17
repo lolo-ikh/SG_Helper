@@ -887,7 +887,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
 .w-full { width: 100%; }
 
 /* --- Check-in Page --- */
-.checkin-page { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0c1a33 0%, #1D355E 50%, #0c1a33 100%); background-attachment: fixed; padding: 20px; font-family: var(--system-font); -webkit-font-smoothing: antialiased; }
+.checkin-page { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0c1a33 0%, #1D355E 50%, #0c1a33 100%); padding: 20px; font-family: var(--system-font); -webkit-font-smoothing: antialiased; overflow-y: auto; z-index: 1; }
 .checkin-glass-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 40px 28px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
 .checkin-icon-ring { width: 60px; height: 60px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; margin: 0 auto; background: rgba(255,255,255,0.05); }
 .checkin-spinner { width: 28px; height: 28px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--ebec-gold); border-radius: 50%; animation: checkin-spin 0.8s linear infinite; margin: 0 auto; }
@@ -899,7 +899,7 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
 .checkin-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
 @media (max-width: 480px) {
-  .checkin-page { padding: 16px; align-items: flex-start; padding-top: 32px; }
+  .checkin-page { padding: 16px; }
   .checkin-glass-card { padding: 32px 20px; border-radius: 20px; }
 }
 
