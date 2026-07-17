@@ -16,6 +16,7 @@ import ArchivePage from './pages/Archive/ArchivePage';
 import AttendancePredictor from './pages/Archive/AttendancePredictor';
 import EbeccoDocuments from './pages/Ebecco/EbeccoDocuments';
 import EbeccoChat from './components/EbeccoChat';
+import CheckInPage from './pages/CheckInPage';
 import EmailVerification from './pages/EmailVerification';
 import './styles/app.css';
 
@@ -41,6 +42,7 @@ function AppRoutes() {
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/meetings" element={<Navigate to="/" replace />} />
+          <Route path="/checkin/:meetingId/:token" element={<CheckInPage />} />
           <Route path="/techcards" element={<Navigate to="/" replace />} />
           <Route path="/activities" element={<Navigate to="/" replace />} />
           <Route path="/attendance" element={<Navigate to="/" replace />} />
@@ -60,10 +62,13 @@ function AppRoutes() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/meetings" element={<MeetingsPage />} />
+          <Route path="/meetings/new" element={<MeetingForm />} />
+          <Route path="/meetings/:id/edit" element={<MeetingForm />} />
           <Route path="/techcards" element={<TechCardsPage />} />
           <Route path="/activities" element={<TechCardStats />} />
           <Route path="/attendance" element={<AttendancePortal />} />
           <Route path="/archive" element={<ArchivePage />} />
+          <Route path="/checkin/:meetingId/:token" element={<CheckInPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <Footer />

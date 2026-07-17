@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, UserCheck, Clipboard, FileText, Edit3, Trash } from 'lucide-react';
+import { Plus, Search, UserCheck, Clipboard, FileText, Edit3, Trash, QrCode } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../hooks/useAuth';
 import Toast from '../../components/Toast';
 import AttendanceModal from './AttendanceModal';
 import NotesEditor from './NotesEditor';
 import ReportGenerator from './ReportGenerator';
+import MeetingQR from './MeetingQR';
 
 export default function MeetingsPage() {
   const navigate = useNavigate();
+  const { isApproved } = useAuth();
   const [meetings, setMeetings] = useState([]);
   const [search, setSearch] = useState("");
   const [openNotesFor, setOpenNotesFor] = useState(null);
   const [openAttendanceFor, setOpenAttendanceFor] = useState(null);
   const [openReportFor, setOpenReportFor] = useState(null);
+  const [openQRFor, setOpenQRFor] = useState(null);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
@@ -57,9 +61,11 @@ export default function MeetingsPage() {
           <h1 className="page-title">Meetings</h1>
           <p className="page-subtitle">All sync sessions and board meetings</p>
         </div>
+        {isApproved && (
         <button className="btn-icon-plus" onClick={() => navigate('/meetings/new')}>
           <Plus size={14} /> New Meeting
         </button>
+        )}
       </div>
 
       <div className="premium-search-container" style={{ marginBottom: 40 }}>
@@ -100,11 +106,16 @@ export default function MeetingsPage() {
                   <div className="stat-item"><FileText size={12} /> <span>{m.report ? (m.report.type === 'pdf' ? 'PDF' : 'LaTeX') : '0'}</span></div>
                 </div>
                 <div className="premium-card-footer">
+                  {isApproved && (
+                  <>
                   <button className="footer-action-btn" onClick={() => setOpenAttendanceFor(m.id)}><UserCheck size={12} /></button>
                   <button className="footer-action-btn" onClick={() => setOpenNotesFor(m.id)}><Clipboard size={12} /></button>
                   <button className="footer-action-btn" onClick={() => navigate(`/meetings/${m.id}/edit`)}><Edit3 size={12} /></button>
                   <button className="footer-action-btn report" onClick={() => setOpenReportFor(m.id)}><FileText size={12} /></button>
+                  {m.checkin_token && <button className="footer-action-btn" title="Check-in QR" onClick={() => setOpenQRFor(m)}><QrCode size={12} /></button>}
                   <button className="footer-delete-btn" onClick={() => { if (window.confirm('Delete meeting?')) handleDelete(m.id); }}><Trash size={16} /></button>
+                  </>
+                  )}
                 </div>
               </div>
             );
@@ -115,6 +126,7 @@ export default function MeetingsPage() {
       {openNotesFor && <NotesEditor meeting={meetings.find(m => m.id === openNotesFor)} onClose={() => setOpenNotesFor(null)} onSave={handleSaveNotes} />}
       {openAttendanceFor && <AttendanceModal meeting={meetings.find(m => m.id === openAttendanceFor)} onClose={() => setOpenAttendanceFor(null)} onSave={handleSaveAttendance} />}
       {openReportFor && <ReportGenerator meeting={meetings.find(m => m.id === openReportFor)} onClose={() => setOpenReportFor(null)} onSave={handleSaveReport} />}
+      {openQRFor && <MeetingQR meeting={openQRFor} onClose={() => setOpenQRFor(null)} />}
     </div>
   );
 }

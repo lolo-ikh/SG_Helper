@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Hash, ChevronLeft, ChevronRight, UserCheck, Clipboard, FileText, Trash, Edit3, Archive as ArchiveIcon, Search, Copy, ExternalLink } from 'lucide-react';
+import { Plus, Hash, ChevronLeft, ChevronRight, UserCheck, Clipboard, FileText, Trash, Edit3, Archive as ArchiveIcon, Search, Copy, ExternalLink, QrCode } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { getPhrasesForUser, getRoleLabel } from '../utils/rolePhrases';
@@ -8,12 +8,13 @@ import Toast from '../components/Toast';
 import NotesEditor from './Meetings/NotesEditor';
 import AttendanceModal from './Meetings/AttendanceModal';
 import ReportGenerator from './Meetings/ReportGenerator';
+import MeetingQR from './Meetings/MeetingQR';
 import EditMeetingModal from './Dashboard/EditMeetingModal';
 import EditTechnicalCardModal from './TechCards/TechCardEdit';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, isVP } = useAuth();
+  const { user, profile, isVP, isApproved } = useAuth();
   const [meetings, setMeetings] = useState([]);
   const [techCards, setTechCards] = useState([]);
   const [refCounter, setRefCounter] = useState(1);
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [openReportFor, setOpenReportFor] = useState(null);
   const [editMeeting, setEditMeeting] = useState(null);
   const [editTechCard, setEditTechCard] = useState(null);
+  const [openQRFor, setOpenQRFor] = useState(null);
   const [judgments, setJudgments] = useState([]);
   const [phrases, setPhrases] = useState([]);
   const [roleLabel, setRoleLabel] = useState('Team Member');
@@ -203,7 +205,7 @@ export default function Dashboard() {
   };
 
   const allCards = [
-    ...(isVP ? [
+    ...(isApproved ? [
       { title: "Add New Meeting", subtitle: "Sync with board members", icon: <Plus size={48} />, action: () => navigate('/meetings/new') },
       { title: "Add Technical Card", subtitle: "Update logistics & materials", icon: <Plus size={48} />, action: () => navigate('/techcards/new') },
       { title: "Reference Tracker", subtitle: `Next Ref: #${currentRef}`, icon: <Hash size={48} />, action: () => { const val = prompt("Update Reference Number Basis (e.g. 01):", refCounter.toString()); if (val) setRefCounter(parseInt(val) || refCounter); } },
@@ -265,7 +267,7 @@ export default function Dashboard() {
           <div className="stat-value">+</div>
           <div className="stat-label">Quick Actions</div>
           <div className="stat-note">Create meeting or card</div>
-          {isVP && (
+          {isApproved && (
           <div className="quick-actions">
             <button className="quick-btn" onClick={() => navigate('/meetings/new')}>
               <Plus size={14} /> New Meeting
@@ -343,7 +345,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="premium-card-footer">
-                        {isVP && (
+                        {isApproved && (
                         <>
                         <button className="footer-action-btn" title="Attendance" onClick={() => setOpenAttendanceFor(m.id)}>
                           <UserCheck size={12} />
@@ -357,6 +359,11 @@ export default function Dashboard() {
                         <button className="footer-action-btn report" title="Meeting Report" onClick={() => setOpenReportFor(m.id)}>
                           <FileText size={12} />
                         </button>
+                        {m.checkin_token && (
+                        <button className="footer-action-btn" title="Check-in QR" onClick={() => setOpenQRFor(m)}>
+                          <QrCode size={12} />
+                        </button>
+                        )}
                         <button className="footer-delete-btn" title="Delete Meeting" onClick={() => {
                           if (window.confirm(`Delete meeting?`)) handleDeleteMeeting(m.id);
                         }}>
@@ -543,6 +550,10 @@ export default function Dashboard() {
           onClose={() => setOpenReportFor(null)}
           onSave={handleSaveMeetingReport}
         />
+      )}
+
+      {openQRFor && (
+        <MeetingQR meeting={openQRFor} onClose={() => setOpenQRFor(null)} />
       )}
 
       {editMeeting && (

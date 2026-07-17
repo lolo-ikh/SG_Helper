@@ -52,7 +52,7 @@ export default function MeetingForm({ existingMeeting }) {
       const { error } = await supabase.from('meetings').update(updateData).eq('id', existingMeeting.id);
       if (!error) navigate('/meetings');
     } else {
-      const { data, error } = await supabase.from('meetings').insert([{ ...formData, id: Date.now(), season: '2026-2027' }]).select();
+      const { data, error } = await supabase.from('meetings').insert([{ ...formData, id: Date.now(), season: '2026-2027', checkin_token: crypto.randomUUID() }]).select();
       if (!error && data) navigate('/meetings');
     }
   };

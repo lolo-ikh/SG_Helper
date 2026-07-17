@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, Search, Copy, ExternalLink, Layout, Edit3, Clipboard, UserCheck } from 'lucide-react';
+import { Check, Search, Copy, ExternalLink, Layout, Edit3, Clipboard, UserCheck, QrCode } from 'lucide-react';
 import { getInitials } from '../../utils/helpers';
 import { LEGACY_2025_TEAM } from '../../utils/legacyData';
 import { supabase } from '../../lib/supabase';
@@ -9,6 +9,7 @@ export default function AttendanceModal({ meeting, onClose, onSave }) {
   const initialList = meeting?.attendees || [];
   const [view, setView] = useState(meeting?.attendance && Object.keys(meeting.attendance).length > 0 ? "options" : "edit");
   const [searchQuery, setSearchQuery] = useState("");
+  const [qrCheckins, setQrCheckins] = useState([]);
   const [attendance, setAttendance] = useState(() => {
     const map = {};
     initialList.forEach(n => { map[n] = meeting?.attendance?.[n] || 'absent'; });
@@ -22,6 +23,26 @@ export default function AttendanceModal({ meeting, onClose, onSave }) {
     }
     loadTeam();
   }, []);
+
+  useEffect(() => {
+    async function loadCheckins() {
+      if (!meeting?.id) return;
+      const { data } = await supabase.rpc('get_meeting_checkins', { p_meeting_id: meeting.id });
+      if (data && Array.isArray(data)) {
+        setQrCheckins(data);
+        setAttendance(prev => {
+          const updated = { ...prev };
+          data.forEach(c => {
+            if (updated[c.name] === 'absent' || !updated[c.name]) {
+              updated[c.name] = 'present';
+            }
+          });
+          return updated;
+        });
+      }
+    }
+    loadCheckins();
+  }, [meeting?.id]);
 
   useEffect(() => {
     const map = {};
@@ -86,6 +107,21 @@ export default function AttendanceModal({ meeting, onClose, onSave }) {
         <div className="form-body">
           {view === 'options' ? (
             <div className="options-panel">
+              {qrCheckins.length > 0 && (
+              <div style={{ background: 'rgba(29, 53, 94, 0.05)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <QrCode size={16} style={{ color: 'var(--ebec-navy)' }} />
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{qrCheckins.length} checked in via QR</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {qrCheckins.map(c => (
+                    <span key={c.name} style={{ background: '#34c759', color: '#fff', padding: '2px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500 }}>
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              )}
               <div className="option-row" onClick={copyAsText}>
                 <div className="option-icon email"><Clipboard size={20} /></div>
                 <div className="option-content">

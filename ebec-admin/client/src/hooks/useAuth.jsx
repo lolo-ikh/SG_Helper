@@ -46,6 +46,13 @@ export function AuthProvider({ children }) {
   }, [fetchProfile]);
 
   const VP_EMAIL = 'leena.ikhlef@ensia.edu.dz';
+  const APPROVED_EMAILS = [
+    'leena.ikhlef@ensia.edu.dz',
+    'oussama.bouzaine@ensia.edu.dz',
+    'ileena1618@gmail.com',
+    'aya.hoggas@ensia.edu.dz',
+    'dorsaf.messaoudi@ensia.edu.dz',
+  ];
 
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -75,12 +82,13 @@ export function AuthProvider({ children }) {
 
   const isVP = profile?.role === 'vp' || profile?.role === 'admin' || user?.email?.toLowerCase() === VP_EMAIL;
   const isManager = profile?.role === 'manager' || isVP;
+  const isApproved = isVP || APPROVED_EMAILS.includes(user?.email?.toLowerCase());
   const isAuthenticated = !!user;
 
   return (
     <AuthContext.Provider value={{
       user, profile, loading, signIn, signUp, signOut,
-      isVP, isManager, isAuthenticated
+      isVP, isManager, isApproved, isAuthenticated
     }}>
       {children}
     </AuthContext.Provider>

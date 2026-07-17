@@ -880,6 +880,10 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
 .sub-text { color: #666; font-size: 14px; }
 .w-full { width: 100%; }
 
+/* --- Check-in Page --- */
+.checkin-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #0c1a33 0%, #1D355E 50%, #0c1a33 100%); padding: 24px; }
+.checkin-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; padding: 40px 32px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3); }
+
 /* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 768px) {

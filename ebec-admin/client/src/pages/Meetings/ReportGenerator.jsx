@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { FileText, Layout } from 'lucide-react';
+import { FileText, Layout, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { htmlToLatex, generateLatexReport } from '../../utils/helpers';
+import { generateMeetingReport } from '../../utils/reportGenerator';
 import { LEGACY_2025_TEAM } from '../../utils/legacyData';
 
 export default function ReportGenerator({ meeting, onClose, onSave }) {
   const [reportData, setReportData] = useState(meeting?.report || { type: 'latex', content: '', fileName: '' });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState('');
   const [teamList, setTeamList] = useState(LEGACY_2025_TEAM);
 
   useEffect(() => {
@@ -19,6 +21,7 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
 
   const generateLatex = () => {
     setIsGenerating(true);
+    setAiError('');
     const attendance = meeting?.attendance || {};
     const attendeeRows = teamList.map(m => {
       const status = attendance[m.name] || 'absent';
@@ -33,6 +36,19 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
       setReportData({ ...reportData, type: 'latex', content: latex, fileName: `EBEC_Report_${meeting.id}.tex` });
       setIsGenerating(false);
     }, 2000);
+  };
+
+  const generateAI = async () => {
+    setIsGenerating(true);
+    setAiError('');
+    try {
+      const md = await generateMeetingReport(meeting?.notes, meeting?.attendance, meeting);
+      setReportData({ type: 'ai', content: md, fileName: `AI_Report_${meeting.id}.md` });
+    } catch (err) {
+      setAiError(err.message || 'Failed to generate report');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const fileInputRef = useRef(null);
@@ -66,9 +82,9 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
         <div className="form-body">
-          <p className="sub-text mb-8">Choose to upload an existing PDF or generate a professional LaTeX report using meeting notes.</p>
+          <p className="sub-text mb-8">Upload an existing PDF, generate LaTeX, or let AI create a structured report from your notes.</p>
 
-          <div className="report-grid-2col mgmt-grid">
+          <div className="report-grid-2col mgmt-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".pdf" onChange={handleFileUpload} />
             <div className={`premium-card ${reportData.type === 'pdf' ? 'selected' : ''}`}
               style={{ cursor: 'pointer', border: reportData.type === 'pdf' ? '2px solid var(--apple-blue)' : '' }}
@@ -81,10 +97,19 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
               style={{ cursor: 'pointer', border: reportData.type === 'latex' ? '2px solid var(--apple-blue)' : '' }}
               onClick={generateLatex}>
               <div className="option-icon meet"><Layout size={20} /></div>
-              <h4 className="mt-4">{isGenerating ? 'Generating...' : 'Generate LaTeX'}</h4>
+              <h4 className="mt-4">{isGenerating && reportData.type !== 'ai' ? 'Generating...' : 'Generate LaTeX'}</h4>
               <p style={{ fontSize: 12 }}>Create report from notes</p>
             </div>
+            <div className={`premium-card ${reportData.type === 'ai' ? 'selected' : ''}`}
+              style={{ cursor: 'pointer', border: reportData.type === 'ai' ? '2px solid var(--apple-blue)' : '' }}
+              onClick={generateAI}>
+              <div className="option-icon" style={{ background: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed' }}><Sparkles size={20} /></div>
+              <h4 className="mt-4">{isGenerating && reportData.type === 'ai' ? 'Generating...' : 'AI Generate'}</h4>
+              <p style={{ fontSize: 12 }}>Smart report from notes</p>
+            </div>
           </div>
+
+          {aiError && <p style={{ color: '#ff3b30', fontSize: 13, marginTop: 12 }}>{aiError}</p>}
 
           {reportData.type === 'pdf' && reportData.fileUrl && (
             <div className="mt-6 p-4" style={{ background: 'rgba(0,113,227,0.05)', borderRadius: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -96,13 +121,23 @@ export default function ReportGenerator({ meeting, onClose, onSave }) {
             </div>
           )}
 
-          {reportData.content && (
+          {reportData.content && reportData.type !== 'ai' && (
             <div className="mt-8">
               <label className="section-label">Generated LaTeX Code</label>
               <textarea readOnly className="notes-editor w-full"
                 style={{ height: 200, fontFamily: 'monospace', fontSize: 12, padding: 16, background: '#f5f5f7' }}
                 value={reportData.content} />
               <button className="pill-btn mt-4" onClick={() => { navigator.clipboard.writeText(reportData.content); alert("LaTeX Copied!"); }}>Copy LaTeX</button>
+            </div>
+          )}
+
+          {reportData.content && reportData.type === 'ai' && (
+            <div className="mt-8">
+              <label className="section-label">AI Generated Report</label>
+              <div style={{ background: '#f5f5f7', borderRadius: 16, padding: 20, fontSize: 13, lineHeight: 1.7, whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
+                {reportData.content}
+              </div>
+              <button className="pill-btn mt-4" onClick={() => { navigator.clipboard.writeText(reportData.content); alert("Report Copied!"); }}>Copy Report</button>
             </div>
           )}
 
