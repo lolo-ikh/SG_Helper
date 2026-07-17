@@ -27,8 +27,8 @@ export default function CheckInPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: m } = await supabase.from('meetings').select('*').eq('id', meetingId).single();
-      if (!m || m.checkin_token !== token) {
+      const { data: m, error: fetchErr } = await supabase.from('meetings').select('*').eq('id', meetingId).single();
+      if (fetchErr || !m || m.checkin_token !== token) {
         setStatus('invalid');
         return;
       }
@@ -49,7 +49,7 @@ export default function CheckInPage() {
   const validate = () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Name is required';
-    if (!form.email.trim() || !form.email.includes('@')) errs.email = 'Valid email is required';
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = 'Valid email is required';
     if (!form.role) errs.role = 'Please select a role';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -67,14 +67,16 @@ export default function CheckInPage() {
     }
 
     setStatus('submitting');
-    const { error } = await supabase.rpc('checkin_attendee', {
+    const { data, error } = await supabase.rpc('checkin_attendee', {
       p_meeting_id: Number(meetingId),
       p_name: match,
       p_email: form.email.trim(),
       p_role: form.role,
     });
+
     if (error) {
-      setMessage('Something went wrong. Try again.');
+      console.error('Check-in error:', error);
+      setMessage(`Error: ${error.message || 'Something went wrong. Please try again.'}`);
       setStatus('ready');
       return;
     }
@@ -85,7 +87,8 @@ export default function CheckInPage() {
     return (
       <div className="checkin-page">
         <div className="checkin-card">
-          <p>Loading meeting...</p>
+          <div className="checkin-spinner"></div>
+          <p style={{ color: '#86868b', marginTop: 16, fontSize: 14 }}>Loading meeting...</p>
         </div>
       </div>
     );
@@ -95,9 +98,11 @@ export default function CheckInPage() {
     return (
       <div className="checkin-page">
         <div className="checkin-card">
-          <Shield size={48} style={{ color: '#ff3b30', marginBottom: 12 }} />
-          <h2>Invalid Link</h2>
-          <p style={{ color: '#666', marginTop: 8 }}>This check-in link is not valid.</p>
+          <div className="checkin-icon-circle" style={{ background: 'rgba(255, 59, 48, 0.1)' }}>
+            <Shield size={32} style={{ color: '#ff3b30' }} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginTop: 16 }}>Invalid Link</h2>
+          <p style={{ color: '#86868b', marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>This check-in link is not valid or has been deactivated.</p>
         </div>
       </div>
     );
@@ -107,9 +112,11 @@ export default function CheckInPage() {
     return (
       <div className="checkin-page">
         <div className="checkin-card">
-          <Clock size={48} style={{ color: '#ff9500', marginBottom: 12 }} />
-          <h2>Check-in Closed</h2>
-          <p style={{ color: '#666', marginTop: 8 }}>This meeting has already ended.</p>
+          <div className="checkin-icon-circle" style={{ background: 'rgba(255, 149, 0, 0.1)' }}>
+            <Clock size={32} style={{ color: '#ff9500' }} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginTop: 16 }}>Check-in Closed</h2>
+          <p style={{ color: '#86868b', marginTop: 8, fontSize: 14, lineHeight: 1.5 }}>This meeting has already ended. Check-in is no longer available.</p>
         </div>
       </div>
     );
@@ -119,10 +126,12 @@ export default function CheckInPage() {
     return (
       <div className="checkin-page">
         <div className="checkin-card">
-          <CheckCircle size={48} style={{ color: '#34c759', marginBottom: 12 }} />
-          <h2>Attendance Recorded</h2>
-          <p style={{ color: '#666', marginTop: 8, fontSize: 14 }}>
-            Thank you, {form.name.trim()}! Your attendance has been recorded. You can close this page.
+          <div className="checkin-icon-circle" style={{ background: 'rgba(52, 199, 89, 0.1)' }}>
+            <CheckCircle size={32} style={{ color: '#34c759' }} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginTop: 16 }}>You're All Set</h2>
+          <p style={{ color: '#86868b', marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
+            Thank you, <strong style={{ color: '#1d1d1f' }}>{form.name.trim()}</strong>! Your attendance has been recorded. You can safely close this page.
           </p>
         </div>
       </div>
@@ -132,74 +141,79 @@ export default function CheckInPage() {
   return (
     <div className="checkin-page">
       <div className="checkin-card">
-        <UserCheck size={36} style={{ color: 'var(--ebec-navy)', marginBottom: 8 }} />
-        <h2>{meeting?.title}</h2>
-        <p style={{ color: '#666', fontSize: 13, marginBottom: 24 }}>
-          {meeting?.date} at {meeting?.time}
+        <div className="checkin-icon-circle" style={{ background: 'rgba(29, 53, 94, 0.08)' }}>
+          <UserCheck size={28} style={{ color: 'var(--ebec-navy)' }} />
+        </div>
+
+        <h2 style={{ fontSize: 22, fontWeight: 700, marginTop: 16 }}>{meeting?.title}</h2>
+        <p style={{ color: '#86868b', fontSize: 13, marginTop: 4 }}>
+          {meeting?.date} {meeting?.time && `at ${meeting.time}`}
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
+        <div className="checkin-divider"></div>
+
+        <p style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 16, textAlign: 'left', width: '100%', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          Check In
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
           <div style={{ textAlign: 'left' }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>Full Name</label>
+            <label className="checkin-label">Full Name</label>
             <input
               type="text"
-              placeholder="Enter your full name"
+              placeholder="As it appears on the invite"
               value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              style={{
-                width: '100%', padding: '12px 14px', borderRadius: 12, border: errors.name ? '1.5px solid #ff3b30' : '1.5px solid #e5e5e5',
-                fontSize: 14, outline: 'none', transition: '0.2s', boxSizing: 'border-box',
-              }}
+              onChange={e => { setForm({ ...form, name: e.target.value }); setErrors({ ...errors, name: '' }); }}
+              className={`checkin-input ${errors.name ? 'error' : ''}`}
             />
-            {errors.name && <p style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.name}</p>}
+            {errors.name && <p className="checkin-error">{errors.name}</p>}
           </div>
 
           <div style={{ textAlign: 'left' }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>Email</label>
+            <label className="checkin-label">Email Address</label>
             <input
               type="email"
               placeholder="you@example.com"
               value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              style={{
-                width: '100%', padding: '12px 14px', borderRadius: 12, border: errors.email ? '1.5px solid #ff3b30' : '1.5px solid #e5e5e5',
-                fontSize: 14, outline: 'none', transition: '0.2s', boxSizing: 'border-box',
-              }}
+              onChange={e => { setForm({ ...form, email: e.target.value }); setErrors({ ...errors, email: '' }); }}
+              className={`checkin-input ${errors.email ? 'error' : ''}`}
             />
-            {errors.email && <p style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.email}</p>}
+            {errors.email && <p className="checkin-error">{errors.email}</p>}
           </div>
 
           <div style={{ textAlign: 'left' }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#86868b', marginBottom: 4, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>Role</label>
+            <label className="checkin-label">Role</label>
             <div style={{ position: 'relative' }}>
               <select
                 value={form.role}
-                onChange={e => setForm({ ...form, role: e.target.value })}
-                style={{
-                  width: '100%', padding: '12px 14px', borderRadius: 12, border: errors.role ? '1.5px solid #ff3b30' : '1.5px solid #e5e5e5',
-                  fontSize: 14, outline: 'none', transition: '0.2s', appearance: 'none', background: '#fff',
-                  color: form.role ? '#1d1d1f' : '#999', boxSizing: 'border-box', cursor: 'pointer',
-                }}
+                onChange={e => { setForm({ ...form, role: e.target.value }); setErrors({ ...errors, role: '' }); }}
+                className={`checkin-input checkin-select ${errors.role ? 'error' : ''} ${form.role ? 'has-value' : ''}`}
               >
                 <option value="" disabled>Select your role</option>
                 {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
               <ChevronDown size={16} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#86868b', pointerEvents: 'none' }} />
             </div>
-            {errors.role && <p style={{ color: '#ff3b30', fontSize: 12, marginTop: 4 }}>{errors.role}</p>}
+            {errors.role && <p className="checkin-error">{errors.role}</p>}
           </div>
         </div>
 
-        {message && <p style={{ color: '#ff3b30', fontSize: 13, marginTop: 12 }}>{message}</p>}
+        {message && <p className="checkin-error" style={{ marginTop: 12 }}>{message}</p>}
 
         <button
-          className="cta"
-          style={{ width: '100%', marginTop: 20 }}
+          className="checkin-btn"
           onClick={handleCheckIn}
           disabled={status === 'submitting'}
         >
-          {status === 'submitting' ? 'Submitting...' : 'Check In'}
+          {status === 'submitting' ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="checkin-spinner-small"></div>
+              Submitting...
+            </span>
+          ) : 'Check In'}
         </button>
+
+        <p style={{ color: '#c7c7cc', fontSize: 11, marginTop: 16 }}>EBEC Admin Hub</p>
       </div>
     </div>
   );
