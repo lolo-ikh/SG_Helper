@@ -295,7 +295,29 @@ const EXECUTORS = {
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return `Tech card created: "${data.title}" (Ref: ${data.reference}, ${data.activityType}). (ID: ${data.id})`;
+
+    try {
+      const payload = {
+        ref_num: data.reference, date_write: new Date().toLocaleDateString('en-GB'),
+        type: data.activityType || 'scientific', title: data.title,
+        place_name: data.location || "TBD", is_inside: true,
+        day_name: '', date_activity: '', time_from: '', time_to: '',
+        target_group: 'School', coordination: "",
+        objectives: '', themes: data.theme || '', needs: '', agenda: '', is_sponsored: false
+      };
+      const res = await fetch("https://script.google.com/macros/s/AKfycbyehjXK9isbudF-O6JIRIo3Wx0KZpnKENSKJcPYlybi_79UubGsH7dJXUNnKsqQAcwGZw/exec", {
+        method: "POST", body: JSON.stringify(payload)
+      });
+      const docData = await res.json();
+      if (docData.status === 'success' && docData.url) {
+        await supabase.from('tech_cards').update({ docUrl: docData.url }).eq('id', data.id);
+        data.docUrl = docData.url;
+      }
+    } catch (docErr) {
+      console.warn('[MCPTools] Google Doc creation failed:', docErr.message);
+    }
+
+    return `Tech card created: "${data.title}" (Ref: ${data.reference}, ${data.activityType}). (ID: ${data.id})${data.docUrl ? ' Google Doc linked.' : ''}`;
   },
 
   list_tech_cards: async (args) => {

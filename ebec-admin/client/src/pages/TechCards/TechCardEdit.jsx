@@ -5,11 +5,12 @@ import { supabase } from '../../lib/supabase';
 import { formatBullets, formatNumbered } from '../../utils/helpers';
 import Toast from '../../components/Toast';
 
-export default function TechCardEdit() {
+export default function TechCardEdit({ card: propCard, onCancel, onUpdate }) {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const [card, setCard] = useState(null);
-  const [formData, setFormData] = useState({});
+  const { id: routeId } = useParams();
+  const id = propCard?.id || routeId;
+  const [card, setCard] = useState(propCard || null);
+  const [formData, setFormData] = useState(propCard || {});
   const [externalInput, setExternalInput] = useState({ name: "", email: "", phone: "", isStudent: true, school: "", year: "", studentId: "", nationalId: "" });
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
@@ -17,12 +18,17 @@ export default function TechCardEdit() {
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
+    if (propCard) {
+      setCard(propCard);
+      setFormData({ ...propCard });
+      return;
+    }
     async function loadCard() {
-      const { data } = await supabase.from('tech_cards').select('*').eq('id', id).single();
+      const { data } = await supabase.from('tech_cards').select('*').eq('id', routeId).single();
       if (data) { setCard(data); setFormData({ ...data }); }
     }
     loadCard();
-  }, [id]);
+  }, [routeId, propCard]);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -87,7 +93,14 @@ export default function TechCardEdit() {
 
     const { id: cardId, ...updateData } = { ...formData, id: parseInt(id) };
     const { error } = await supabase.from('tech_cards').update(updateData).eq('id', id);
-    if (!error) { showNotification('✓ Changes Saved'); }
+    if (!error) {
+      showNotification('✓ Changes Saved');
+      if (onUpdate) {
+        onUpdate({ ...formData, id: parseInt(id) }, () => {
+          setTimeout(() => onCancel && onCancel(), 800);
+        });
+      }
+    }
     setIsSaving(false);
   };
 
@@ -105,7 +118,7 @@ export default function TechCardEdit() {
             </div>
             <h2 style={{ margin: '8px 0 0 0' }}>{formData.title}</h2>
           </div>
-          <button className="close-btn" onClick={() => navigate(-1)}>×</button>
+          <button className="close-btn" onClick={() => onCancel ? onCancel() : navigate(-1)}>×</button>
         </div>
 
         <div className="edit-tab-bar" style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(0,0,0,0.05)', flexShrink: 0 }}>
@@ -240,7 +253,7 @@ export default function TechCardEdit() {
         </div>
 
         <div className="form-footer-premium" style={{ flexShrink: 0, borderTop: '1px solid rgba(0,0,0,0.05)', justifyContent: 'space-between' }}>
-          <div><button className="btn-tertiary" onClick={() => navigate(-1)} disabled={isSaving}>Discard Changes</button></div>
+          <div><button className="btn-tertiary" onClick={() => onCancel ? onCancel() : navigate(-1)} disabled={isSaving}>Discard Changes</button></div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button className="btn-apple-light ripple" disabled={isSaving} onClick={() => handleUpdate(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(52, 199, 89, 0.1)', color: '#34c759', border: '1px solid rgba(52, 199, 89, 0.2)' }}>

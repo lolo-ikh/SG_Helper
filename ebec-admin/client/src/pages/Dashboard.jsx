@@ -449,7 +449,34 @@ export default function Dashboard() {
                           <FileText size={14} />
                         </button>
                       ) : (
-                        <button className="footer-action-btn" title="No Doc Linked" style={{ opacity: 0.3, cursor: 'not-allowed' }}>
+                        <button className="footer-action-btn" title="Create Google Doc" onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const payload = {
+                              ref_num: tc.reference, date_write: new Date().toLocaleDateString('en-GB'),
+                              type: tc.activityType || 'scientific', title: tc.title,
+                              place_name: tc.location || "TBD", is_inside: tc.isIndoor,
+                              day_name: '', date_activity: tc.startTime ? new Date(tc.startTime).toLocaleDateString('en-GB') : '',
+                              time_from: '', time_to: '', target_group: tc.attendeeType || 'School', coordination: "",
+                              objectives: tc.objectives || '', themes: tc.theme || '',
+                              needs: tc.needs || '', agenda: tc.agenda || '', is_sponsored: tc.isSponsored || false
+                            };
+                            const res = await fetch("https://script.google.com/macros/s/AKfycbyehjXK9isbudF-O6JIRIo3Wx0KZpnKENSKJcPYlybi_79UubGsH7dJXUNnKsqQAcwGZw/exec", {
+                              method: "POST", body: JSON.stringify(payload)
+                            });
+                            const data = await res.json();
+                            if (data.status === 'success' && data.url) {
+                              await supabase.from('tech_cards').update({ docUrl: data.url }).eq('id', tc.id);
+                              setTechCards(prev => prev.map(c => c.id === tc.id ? { ...c, docUrl: data.url } : c));
+                              window.open(data.url, '_blank');
+                              showNotification('✓ Google Doc created!');
+                            } else {
+                              showNotification('⚠️ Google Doc creation failed', 'error');
+                            }
+                          } catch (err) {
+                            showNotification('⚠️ Failed to connect to Google Script', 'error');
+                          }
+                        }} style={{ background: 'rgba(52, 199, 89, 0.1)', color: '#34c759' }}>
                           <FileText size={14} />
                         </button>
                       )}
@@ -457,15 +484,6 @@ export default function Dashboard() {
                       <>
                       <button className="footer-action-btn" title="Edit Card" onClick={(e) => { e.stopPropagation(); setEditTechCard(tc); }} style={{ background: 'rgba(0, 113, 227, 0.1)', color: '#0071e3' }}>
                         <Edit3 size={14} />
-                      </button>
-                      <button className="footer-action-btn" title="Archive" onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm(`Archive "${tc.title}" documentation?`)) {
-                          handleArchiveTechCard(tc.id);
-                          showNotification('✓ Card archived successfully');
-                        }
-                      }} style={{ background: 'rgba(102, 107, 128, 0.1)', color: '#666b80' }}>
-                        <ArchiveIcon size={14} />
                       </button>
                       <button className="footer-delete-btn" title="Delete" onClick={(e) => {
                         e.stopPropagation();
