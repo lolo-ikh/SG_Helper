@@ -257,17 +257,42 @@ const EXECUTORS = {
   create_tech_card: async (args) => {
     const { data: maxRow } = await supabase.from('tech_cards').select('id').order('id', { ascending: false }).limit(1).single();
     const nextId = (maxRow?.id || 0) + 1;
+
+    const { data: existingCards } = await supabase.from('tech_cards').select('reference');
+    let nextRef = '01/26';
+    if (existingCards && existingCards.length > 0) {
+      const refs = existingCards.map(tc => {
+        if (!tc.reference) return 0;
+        return parseInt(tc.reference.split('/')[0]) || 0;
+      });
+      const maxRef = Math.max(...refs);
+      const next = (maxRef > 0 ? maxRef + 1 : 1);
+      nextRef = `${String(next).padStart(2, '0')}/26`;
+    }
+
     const { data, error } = await supabase
       .from('tech_cards')
       .insert({
         id: nextId,
         title: args.title,
+        reference: nextRef,
         theme: args.theme || null,
         activityType: args.activityType,
-        duration: args.duration || null,
+        duration: args.duration || 'One Day',
         location: args.location || null,
+        isIndoor: true,
         isArchived: false,
         isSponsored: false,
+        attendeeType: 'School',
+        externalAttendees: [],
+        objectives: '',
+        agenda: '',
+        needs: '',
+        startTime: null,
+        endTime: null,
+        sponsorName: '',
+        docUrl: '',
+        season: '2026-2027',
       })
       .select()
       .single();
@@ -276,7 +301,7 @@ const EXECUTORS = {
   },
 
   list_tech_cards: async (args) => {
-    let query = supabase.from('tech_cards').select('id, title, activityType, location, isArchived, isSponsored');
+    let query = supabase.from('tech_cards').select('id, title, reference, activityType, location, isArchived, isSponsored').eq('season', SEASON);
     if (args.status === 'active') query = query.eq('isArchived', false);
     else if (args.status === 'archived') query = query.eq('isArchived', true);
     if (args.activityType) query = query.eq('activityType', args.activityType);
