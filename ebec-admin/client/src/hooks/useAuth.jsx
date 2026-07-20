@@ -53,6 +53,10 @@ export function AuthProvider({ children }) {
     'aya.hoggas@ensia.edu.dz',
     'dorsaf.messaoudi@ensia.edu.dz',
   ];
+  const LEADERS_EMAILS = [
+    'leena.ikhlef@ensia.edu.dz',
+    'oussama.bouzaine@ensia.edu.dz',
+  ];
 
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -61,7 +65,8 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async (email, password, fullName) => {
-    const role = email.toLowerCase() === VP_EMAIL ? 'vp' : 'manager';
+    const lower = email.toLowerCase();
+    const role = lower === VP_EMAIL ? 'vp' : (LEADERS_EMAILS.includes(lower) ? 'leader' : 'manager');
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -82,13 +87,14 @@ export function AuthProvider({ children }) {
 
   const isVP = profile?.role === 'vp' || profile?.role === 'admin' || user?.email?.toLowerCase() === VP_EMAIL;
   const isManager = profile?.role === 'manager' || isVP;
-  const isApproved = isVP || APPROVED_EMAILS.includes(user?.email?.toLowerCase());
+  const isLeader = isVP || profile?.role === 'leader' || LEADERS_EMAILS.includes(user?.email?.toLowerCase());
+  const isApproved = isLeader || APPROVED_EMAILS.includes(user?.email?.toLowerCase());
   const isAuthenticated = !!user;
 
   return (
     <AuthContext.Provider value={{
       user, profile, loading, signIn, signUp, signOut,
-      isVP, isManager, isApproved, isAuthenticated
+      isVP, isManager, isLeader, isApproved, isAuthenticated
     }}>
       {children}
     </AuthContext.Provider>

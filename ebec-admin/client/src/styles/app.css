@@ -1259,3 +1259,158 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator { filter: invert(0);
   .ebecco-pdf-panel { width: calc(100vw - 24px); height: 50vh; border-radius: 16px; }
   .ebecco-fab { width: 48px; height: 48px; bottom: 16px; right: 16px; }
 }
+
+/* ActionCard */
+.action-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  animation: ebecco-slide-in 0.15s ease-out;
+}
+.action-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 8px;
+}
+.action-card-details {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  white-space: pre-line;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+}
+.action-card-actions {
+  display: flex;
+  gap: 8px;
+}
+.action-card-confirm, .action-card-cancel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.action-card-confirm {
+  background: #0071e3;
+  color: #fff;
+}
+.action-card-confirm:hover { background: #0077ed; }
+.action-card-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+.action-card-cancel {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+}
+.action-card-cancel:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+
+/* EmailPreview */
+.email-preview {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  animation: ebecco-slide-in 0.15s ease-out;
+}
+.email-preview-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.email-preview-icon { font-size: 20px; flex-shrink: 0; }
+.email-preview-meta { min-width: 0; }
+.email-preview-subject {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.email-preview-to {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+.email-preview-body {
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.email-preview-text {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  white-space: pre-line;
+  line-height: 1.6;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.email-preview-editor {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.8);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 8px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.email-preview-editor:focus { outline: none; border-color: #0071e3; }
+.email-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+.email-preview-send, .email-preview-edit, .email-preview-cancel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.email-preview-send {
+  background: #34c759;
+  color: #fff;
+}
+.email-preview-send:hover { background: #30d158; }
+.email-preview-send:disabled { opacity: 0.5; cursor: not-allowed; }
+.email-preview-edit {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+}
+.email-preview-edit:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+.email-preview-cancel {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5);
+}
+.email-preview-cancel:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+.email-preview-sent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #34c759;
+  padding: 8px;
+}

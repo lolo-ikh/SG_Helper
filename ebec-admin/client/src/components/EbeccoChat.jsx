@@ -4,7 +4,11 @@ import Markdown from 'react-markdown';
 import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
 import { isAmbiguousQuery, reformulateQuery, expandQuery } from '../utils/ebeccoReformulate';
+import { isActionIntent, detectToolCall, handleToolExecution, sendEmailViaApi } from '../utils/intentHandler';
+import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import ActionCard from './ActionCard';
+import EmailPreview from './EmailPreview';
 
 const WELCOME_MSG = { role: 'assistant', content: "Hi! I'm EBECO, your EBEC (Ensia Business and Entrepreneurship Club) knowledge assistant built by Leena Ikhlef. I can answer questions about meetings, team roles, events, and any uploaded documents. Click source badges [1] [2] to view the original PDFs." };
 
@@ -153,12 +157,14 @@ function FeedbackButtons({ query, answerSummary, chunkIds }) {
 }
 
 export default function EbeccoChat() {
+  const { isLeader } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(false);
   const [pdfViewer, setPdfViewer] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -210,6 +216,31 @@ export default function EbeccoChat() {
       if (isIdentityQuery(q)) {
         const answer = await generateRagAnswer(q, []);
         setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
+      } else if (isActionIntent(q)) {
+        const toolCall = await detectToolCall(q, messages);
+        if (toolCall) {
+          setPendingAction({ toolCall, userMessage: q });
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: `I'll ${toolCall.tool.replace(/_/g, ' ')} for you. Please confirm:`,
+            actionCard: true,
+          }]);
+        } else {
+          let searchQuery = q;
+          if (isAmbiguousQuery(q)) {
+            searchQuery = await reformulateQuery(q, messages);
+          } else if (isBroadQuery(q)) {
+            searchQuery = await expandQuery(q);
+          }
+          const searchLimit = isBroadQuery(q) ? 15 : 5;
+          const results = await searchDocuments(searchQuery, searchLimit);
+          if (results.length === 0) {
+            setMessages(prev => [...prev, { role: 'assistant', content: "I don't have enough information to answer that. Try rephrasing or upload relevant documents on the EBECO Documents page." }]);
+          } else {
+            const answer = await generateRagAnswer(searchQuery, results);
+            setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.slice(0, 5) }]);
+          }
+        }
       } else {
         let searchQuery = q;
         if (isAmbiguousQuery(q)) {
@@ -231,6 +262,40 @@ export default function EbeccoChat() {
     }
 
     setLoading(false);
+  };
+
+  const handleConfirmAction = async (toolCall) => {
+    const result = await handleToolExecution(toolCall, { isLeader });
+
+    if (result.error) {
+      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${result.error}` }]);
+      setPendingAction(null);
+      return;
+    }
+
+    if (result.type === 'email_preview') {
+      setPendingAction({ ...pendingAction, emailData: result });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Here\'s the email I composed:',
+        emailPreview: result,
+      }]);
+      return;
+    }
+
+    setMessages(prev => [...prev, { role: 'assistant', content: result.message || 'Done!' }]);
+    setPendingAction(null);
+  };
+
+  const handleSendEmail = async (emailPayload) => {
+    await sendEmailViaApi(emailPayload.to, emailPayload.subject, emailPayload.body);
+    setMessages(prev => [...prev, { role: 'assistant', content: `Email sent to ${emailPayload.to.length} recipient(s).` }]);
+    setPendingAction(null);
+  };
+
+  const handleCancelAction = () => {
+    setMessages(prev => [...prev, { role: 'assistant', content: 'Cancelled.' }]);
+    setPendingAction(null);
   };
 
   const openPdf = async (source) => {
@@ -303,6 +368,20 @@ export default function EbeccoChat() {
                         <Markdown>{msg.content}</Markdown>
                       )}
                     </div>
+                    {msg.actionCard && pendingAction && !pendingAction.emailData && (
+                      <ActionCard
+                        toolCall={pendingAction.toolCall}
+                        onConfirm={handleConfirmAction}
+                        onCancel={handleCancelAction}
+                      />
+                    )}
+                    {msg.emailPreview && (
+                      <EmailPreview
+                        emailData={msg.emailPreview}
+                        onSend={handleSendEmail}
+                        onCancel={handleCancelAction}
+                      />
+                    )}
                     {msg.sources && msg.sources.length > 0 && (() => {
                       const seen = new Set();
                       const deduped = msg.sources.filter(s => {
