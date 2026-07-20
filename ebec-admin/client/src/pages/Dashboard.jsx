@@ -82,17 +82,32 @@ export default function Dashboard() {
           .order('id', { ascending: false });
 
         setMeetings(meetingsData || []);
-        setTechCards(techCardsData || []);
 
-        if (techCardsData && techCardsData.length > 0) {
-          const refs = techCardsData.map(tc => {
-            if (!tc.reference) return 0;
-            return parseInt(tc.reference.split('/')[0]) || 0;
-          }).filter(n => n >= 8);
-          setRefCounter(refs.length > 0 ? Math.max(...refs) + 1 : 8);
-        } else {
-          setRefCounter(8);
+        const allCards = techCardsData || [];
+        const archived = allCards.filter(tc => {
+          if (!tc.reference) return false;
+          const num = parseInt(tc.reference.split('/')[0]) || 0;
+          return num < 8 && !tc.isArchived;
+        });
+        for (const tc of archived) {
+          await supabase.from('tech_cards').update({ isArchived: true }).eq('id', tc.id);
         }
+        const updatedCards = allCards.map(tc => {
+          if (archived.find(a => a.id === tc.id)) return { ...tc, isArchived: true };
+          return tc;
+        });
+        setTechCards(updatedCards.filter(tc => {
+          if (!tc.reference) return true;
+          const num = parseInt(tc.reference.split('/')[0]) || 0;
+          return num >= 8;
+        }));
+
+        const occupiedRefs = updatedCards
+          .map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; })
+          .filter(n => n >= 8);
+        let nextRef = 8;
+        while (occupiedRefs.includes(nextRef)) nextRef++;
+        setRefCounter(nextRef);
       } catch (err) {
         console.error("Failed to fetch data:", err);
       }
@@ -150,15 +165,12 @@ export default function Dashboard() {
     if (!error) {
       const updatedCards = techCards.filter(tc => tc.id !== id);
       setTechCards(updatedCards);
-      if (updatedCards.length > 0) {
-        const refs = updatedCards.map(tc => {
-          if (!tc.reference) return 0;
-          return parseInt(tc.reference.split('/')[0]) || 0;
-        }).filter(n => n >= 8);
-        setRefCounter(refs.length > 0 ? Math.max(...refs) + 1 : 8);
-      } else {
-        setRefCounter(8);
-      }
+      const occupiedRefs = updatedCards
+        .map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; })
+        .filter(n => n >= 8);
+      let nextRef = 8;
+      while (occupiedRefs.includes(nextRef)) nextRef++;
+      setRefCounter(nextRef);
     }
   };
 
@@ -176,10 +188,12 @@ export default function Dashboard() {
       const saved = data[0];
       const updatedCards = techCards.map(tc => tc.id === saved.id ? saved : tc);
       setTechCards(updatedCards);
-      if (updatedCards.length > 0) {
-        const refs = updatedCards.map(tc => parseInt(tc.reference?.split('/')[0]) || 0).filter(n => n >= 8);
-        setRefCounter(refs.length > 0 ? Math.max(...refs) + 1 : 8);
-      }
+      const occupiedRefs = updatedCards
+        .map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; })
+        .filter(n => n >= 8);
+      let nextRef = 8;
+      while (occupiedRefs.includes(nextRef)) nextRef++;
+      setRefCounter(nextRef);
     }
   };
 

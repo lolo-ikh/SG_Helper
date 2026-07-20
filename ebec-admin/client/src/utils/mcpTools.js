@@ -261,17 +261,12 @@ const EXECUTORS = {
     const { data: existingCards } = await supabase.from('tech_cards').select('reference');
     let nextRef = '08/26';
     if (existingCards && existingCards.length > 0) {
-      const refs2027 = existingCards
-        .map(tc => {
-          if (!tc.reference) return 0;
-          const num = parseInt(tc.reference.split('/')[0]) || 0;
-          return num;
-        })
+      const occupiedRefs = existingCards
+        .map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; })
         .filter(n => n >= 8);
-      if (refs2027.length > 0) {
-        const maxRef = Math.max(...refs2027);
-        nextRef = `${String(maxRef + 1).padStart(2, '0')}/26`;
-      }
+      let next = 8;
+      while (occupiedRefs.includes(next)) next++;
+      nextRef = `${String(next).padStart(2, '0')}/26`;
     }
 
     const { data, error } = await supabase
