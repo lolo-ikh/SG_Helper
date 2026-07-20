@@ -259,15 +259,19 @@ const EXECUTORS = {
     const nextId = (maxRow?.id || 0) + 1;
 
     const { data: existingCards } = await supabase.from('tech_cards').select('reference');
-    let nextRef = '01/26';
+    let nextRef = '08/26';
     if (existingCards && existingCards.length > 0) {
-      const refs = existingCards.map(tc => {
-        if (!tc.reference) return 0;
-        return parseInt(tc.reference.split('/')[0]) || 0;
-      });
-      const maxRef = Math.max(...refs);
-      const next = (maxRef > 0 ? maxRef + 1 : 1);
-      nextRef = `${String(next).padStart(2, '0')}/26`;
+      const refs2027 = existingCards
+        .map(tc => {
+          if (!tc.reference) return 0;
+          const num = parseInt(tc.reference.split('/')[0]) || 0;
+          return num;
+        })
+        .filter(n => n >= 8);
+      if (refs2027.length > 0) {
+        const maxRef = Math.max(...refs2027);
+        nextRef = `${String(maxRef + 1).padStart(2, '0')}/26`;
+      }
     }
 
     const { data, error } = await supabase
@@ -297,7 +301,7 @@ const EXECUTORS = {
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return `Tech card created: "${data.title}" (${data.activityType}). (ID: ${data.id})`;
+    return `Tech card created: "${data.title}" (Ref: ${data.reference}, ${data.activityType}). (ID: ${data.id})`;
   },
 
   list_tech_cards: async (args) => {

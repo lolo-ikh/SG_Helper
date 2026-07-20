@@ -222,7 +222,9 @@ export default function EbeccoChat() {
           setPendingAction({ toolCall, userMessage: q });
           setMessages(prev => [...prev, {
             role: 'assistant',
-            content: `I'll ${toolCall.tool.replace(/_/g, ' ')} for you. Please confirm:`,
+            content: toolCall.tool === 'create_tech_card'
+              ? `I'll create the tech card for you. The ref number will be auto-assigned. Please confirm:`
+              : `I'll ${toolCall.tool.replace(/_/g, ' ')} for you. Please confirm:`,
             actionCard: true,
           }]);
         } else {
