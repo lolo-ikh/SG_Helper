@@ -12,12 +12,14 @@ export default function TechCardForm() {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase.from('tech_cards').select('*').eq('season', '2026-2027').order('id', { ascending: false });
+      const { data } = await supabase.from('tech_cards').select('*').order('id', { ascending: false });
       setTechCards(data || []);
       if (data && data.length > 0) {
-        const refs = data.map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; });
-        const maxRef = Math.max(...refs);
-        setRefCounter(maxRef > 0 ? maxRef + 1 : 1);
+        const refs = data.map(tc => { if (!tc.reference) return 0; return parseInt(tc.reference.split('/')[0]) || 0; }).filter(n => n >= 8);
+        const maxRef = refs.length > 0 ? Math.max(...refs) : 7;
+        setRefCounter(maxRef + 1);
+      } else {
+        setRefCounter(8);
       }
     }
     load();
@@ -90,7 +92,7 @@ export default function TechCardForm() {
       else { showNotification('⚠️ Google Doc not generated. Card saved without link.', 'error'); }
     } catch (e) { console.error("Google Doc Sync Failed", e); }
 
-    const { error } = await supabase.from('tech_cards').insert([{ ...formData, id: Date.now(), docUrl, season: '2026-2027' }]);
+    const { error } = await supabase.from('tech_cards').insert([{ ...formData, id: Date.now(), docUrl }]);
     if (!error) navigate('/techcards');
     else showNotification('Error saving card', 'error');
     setIsSaving(false);

@@ -296,7 +296,6 @@ const EXECUTORS = {
         endTime: null,
         sponsorName: '',
         docUrl: '',
-        season: '2026-2027',
       })
       .select()
       .single();
@@ -305,7 +304,7 @@ const EXECUTORS = {
   },
 
   list_tech_cards: async (args) => {
-    let query = supabase.from('tech_cards').select('id, title, reference, activityType, location, isArchived, isSponsored').eq('season', SEASON);
+    let query = supabase.from('tech_cards').select('id, title, reference, activityType, location, isArchived, isSponsored');
     if (args.status === 'active') query = query.eq('isArchived', false);
     else if (args.status === 'archived') query = query.eq('isArchived', true);
     if (args.activityType) query = query.eq('activityType', args.activityType);

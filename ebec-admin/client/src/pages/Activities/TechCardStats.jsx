@@ -7,7 +7,7 @@ export default function TechCardStats() {
 
   useEffect(() => {
     async function loadCards() {
-      const { data } = await supabase.from('tech_cards').select('*').eq('season', '2026-2027');
+      const { data } = await supabase.from('tech_cards').select('*');
       setTechCards(data || []);
     }
     loadCards();

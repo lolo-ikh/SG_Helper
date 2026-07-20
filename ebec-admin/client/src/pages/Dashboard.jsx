@@ -79,7 +79,6 @@ export default function Dashboard() {
         const { data: techCardsData } = await supabase
           .from('tech_cards')
           .select('*')
-          .eq('season', '2026-2027')
           .order('id', { ascending: false });
 
         setMeetings(meetingsData || []);
@@ -88,10 +87,11 @@ export default function Dashboard() {
         if (techCardsData && techCardsData.length > 0) {
           const refs = techCardsData.map(tc => {
             if (!tc.reference) return 0;
-            const parts = tc.reference.split('/');
-            return parseInt(parts[0]) || 0;
-          });
-          setRefCounter(Math.max(...refs) + 1);
+            return parseInt(tc.reference.split('/')[0]) || 0;
+          }).filter(n => n >= 8);
+          setRefCounter(refs.length > 0 ? Math.max(...refs) + 1 : 8);
+        } else {
+          setRefCounter(8);
         }
       } catch (err) {
         console.error("Failed to fetch data:", err);
@@ -154,10 +154,10 @@ export default function Dashboard() {
         const refs = updatedCards.map(tc => {
           if (!tc.reference) return 0;
           return parseInt(tc.reference.split('/')[0]) || 0;
-        });
-        setRefCounter(Math.max(...refs) + 1);
+        }).filter(n => n >= 8);
+        setRefCounter(refs.length > 0 ? Math.max(...refs) + 1 : 8);
       } else {
-        setRefCounter(1);
+        setRefCounter(8);
       }
     }
   };
@@ -177,8 +177,8 @@ export default function Dashboard() {
       const updatedCards = techCards.map(tc => tc.id === saved.id ? saved : tc);
       setTechCards(updatedCards);
       if (updatedCards.length > 0) {
-        const refs = updatedCards.map(tc => parseInt(tc.reference?.split('/')[0]) || 0);
-        setRefCounter(Math.max(...refs) + 1);
+        const refs = updatedCards.map(tc => parseInt(tc.reference?.split('/')[0]) || 0).filter(n => n >= 8);
+        setRefCounter(refs.length > 0 ? Math.max(...refs) + 1 : 8);
       }
     }
   };
