@@ -104,10 +104,10 @@ export default function TechCardEdit({ card: propCard, onCancel, onUpdate }) {
     setIsSaving(false);
   };
 
-  if (!card) return <div className="dashboard-content fade-in"><p style={{ color: '#fff' }}>Loading...</p></div>;
+  if (!card) return <div className="form-overlay" style={{ zIndex: 9000 }}><div className="premium-form fade-in"><p style={{ color: '#fff', padding: 40, textAlign: 'center' }}>Loading...</p></div></div>;
 
   return (
-    <div className="dashboard-content fade-in" style={{ maxWidth: 950 }}>
+    <div className="form-overlay" style={{ zIndex: 9000 }}>
       <Toast message={notification?.message} type={notification?.type} onDone={() => setNotification(null)} />
       <div className="premium-form" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
         <div className="form-header" style={{ flexShrink: 0 }}>
@@ -268,5 +268,3 @@ export default function TechCardEdit({ card: propCard, onCancel, onUpdate }) {
     </div>
   );
 }
-
-export { default as EditTechnicalCardModal } from './TechCardEdit';
