@@ -77,7 +77,8 @@ export default function TechCardEdit({ card: propCard, onCancel, onUpdate }) {
           target_group: formData.attendeeType, coordination: "",
           objectives: formatBullets(formData.objectives), themes: formData.theme,
           needs: formatNumbered(formData.needs), agenda: formatBullets(formData.agenda),
-          is_sponsored: formData.isSponsored
+          is_sponsored: formData.isSponsored,
+          doc_url: formData.docUrl || ''
         };
         const res = await fetch("https://script.google.com/macros/s/AKfycbyehjXK9isbudF-O6JIRIo3Wx0KZpnKENSKJcPYlybi_79UubGsH7dJXUNnKsqQAcwGZw/exec", {
           method: "POST", body: JSON.stringify(payload)
