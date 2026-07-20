@@ -162,9 +162,12 @@ const today = () => new Date().toISOString().slice(0, 10);
 const EXECUTORS = {
   create_meeting: async (args) => {
     const checkin_token = crypto.randomUUID();
+    const { data: maxRow } = await supabase.from('meetings').select('id').order('id', { ascending: false }).limit(1).single();
+    const nextId = (maxRow?.id || 0) + 1;
     const { data, error } = await supabase
       .from('meetings')
       .insert({
+        id: nextId,
         title: args.title,
         date: args.date,
         time: args.time || null,
@@ -252,9 +255,12 @@ const EXECUTORS = {
   },
 
   create_tech_card: async (args) => {
+    const { data: maxRow } = await supabase.from('tech_cards').select('id').order('id', { ascending: false }).limit(1).single();
+    const nextId = (maxRow?.id || 0) + 1;
     const { data, error } = await supabase
       .from('tech_cards')
       .insert({
+        id: nextId,
         title: args.title,
         theme: args.theme || null,
         activityType: args.activityType,
