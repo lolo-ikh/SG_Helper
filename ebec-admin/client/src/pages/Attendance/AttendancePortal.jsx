@@ -33,7 +33,7 @@ export default function AttendancePortal() {
 
       let meetingQuery = supabase.from('meetings').select('*').order('date', { ascending: false });
       if (isArchived) {
-        meetingQuery = meetingQuery.or('season.eq.2025,season.is.null');
+        meetingQuery = meetingQuery.neq('season', '2026-2027');
       } else {
         meetingQuery = meetingQuery.eq('season', selectedSeason);
       }
