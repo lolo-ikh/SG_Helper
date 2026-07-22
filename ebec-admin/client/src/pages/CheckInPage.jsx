@@ -5,9 +5,15 @@ import { CheckCircle, Clock, UserCheck, Shield, ChevronDown } from 'lucide-react
 
 const ROLES = [
   'President', 'Vice President', 'Secretary General',
-  'HR Manager', 'IT Manager', 'Design Manager',
-  'Marketing Manager', 'Logistics Manager', 'Events Manager',
-  'Finance Manager', 'Member',
+  'HR Manager', 'HR Co-Manager',
+  'IT Manager',
+  'Design Manager', 'Design Co-Manager',
+  'Marketing Manager', 'Marketing Co-Manager',
+  'Logistics Manager', 'Logistics Co-Manager',
+  'Events Manager', 'Events Co-Manager',
+  'Finance & Legal Manager', 'Finance & Legal Co-Manager',
+  'Relex Manager', 'Relex Co-Manager',
+  'Department Head', 'Member',
 ];
 
 export default function CheckInPage() {
