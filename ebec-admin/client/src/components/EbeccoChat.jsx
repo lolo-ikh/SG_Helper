@@ -248,12 +248,8 @@ export default function EbeccoChat() {
           }
           const searchLimit = isBroadQuery(q) ? 15 : 5;
           const results = await searchDocuments(searchQuery, searchLimit);
-          if (results.length === 0) {
-            setMessages(prev => [...prev, { role: 'assistant', content: "I don't have enough information to answer that. Try rephrasing or upload relevant documents on the EBECO Documents page." }]);
-          } else {
-            const answer = await generateRagAnswer(searchQuery, results);
-            setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.slice(0, 5) }]);
-          }
+          const answer = await generateRagAnswer(searchQuery, results);
+          setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.length > 0 ? results.slice(0, 5) : undefined }]);
         }
       } else {
         let searchQuery = q;
@@ -264,12 +260,8 @@ export default function EbeccoChat() {
         }
         const searchLimit = isBroadQuery(q) ? 15 : 5;
         const results = await searchDocuments(searchQuery, searchLimit);
-        if (results.length === 0) {
-          setMessages(prev => [...prev, { role: 'assistant', content: "I don't have enough information to answer that. Try rephrasing or upload relevant documents on the EBECO Documents page." }]);
-        } else {
-          const answer = await generateRagAnswer(searchQuery, results);
-          setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.slice(0, 5) }]);
-        }
+        const answer = await generateRagAnswer(searchQuery, results);
+        setMessages(prev => [...prev, { role: 'assistant', content: answer, sources: results.length > 0 ? results.slice(0, 5) : undefined }]);
       }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, something went wrong. Please try again." }]);
