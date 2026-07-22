@@ -32,7 +32,9 @@ export default function AttendancePortal() {
       setTeamList(mapped);
 
       let meetingQuery = supabase.from('meetings').select('*').order('date', { ascending: false });
-      if (!isArchived) {
+      if (isArchived) {
+        meetingQuery = meetingQuery.or('season.eq.2025,season.is.null');
+      } else {
         meetingQuery = meetingQuery.eq('season', selectedSeason);
       }
       const { data: meetingData, error: meetingErr } = await meetingQuery;
