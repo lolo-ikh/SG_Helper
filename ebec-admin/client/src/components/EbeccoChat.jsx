@@ -4,7 +4,7 @@ import Markdown from 'react-markdown';
 import { searchDocuments } from '../utils/ebeccoSearch';
 import { generateRagAnswer } from '../utils/ebeccoRag';
 import { isAmbiguousQuery, reformulateQuery, expandQuery } from '../utils/ebeccoReformulate';
-import { isActionIntent, detectToolCall, handleToolExecution, sendEmailViaApi } from '../utils/intentHandler';
+import { isActionIntent, detectToolCall, handleToolExecution, sendEmailViaApi, resolveMeetingAttendeeEmails } from '../utils/intentHandler';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import ActionCard from './ActionCard';
@@ -216,9 +216,21 @@ export default function EbeccoChat() {
       if (isIdentityQuery(q)) {
         const answer = await generateRagAnswer(q, []);
         setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
-      } else if (isActionIntent(q)) {
+      } else if (isActionIntent(q) && isLeader) {
         const toolCall = await detectToolCall(q, messages);
         if (toolCall) {
+          if (toolCall.tool === 'send_email') {
+            const { recipients: resolved, meeting } = await resolveMeetingAttendeeEmails(q.toLowerCase());
+            if (resolved.length > 0) {
+              toolCall.args.recipients = resolved.map(r => r.name);
+              toolCall._resolvedRecipients = resolved;
+              if (meeting) {
+                toolCall._meetingContext = meeting;
+                toolCall.args.extra_context = (toolCall.args.extra_context || '') +
+                  `\n\nMeeting: "${meeting.title}" on ${meeting.date} at ${meeting.time || 'TBD'}.${meeting.description ? ' ' + meeting.description : ''}`;
+              }
+            }
+          }
           setPendingAction({ toolCall, userMessage: q });
           setMessages(prev => [...prev, {
             role: 'assistant',
@@ -267,7 +279,8 @@ export default function EbeccoChat() {
   };
 
   const handleConfirmAction = async (toolCall) => {
-    const result = await handleToolExecution(toolCall, { isLeader });
+    const userMessage = pendingAction?.userMessage || '';
+    const result = await handleToolExecution(toolCall, { isLeader }, userMessage);
 
     if (result.error) {
       setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${result.error}` }]);
@@ -290,8 +303,12 @@ export default function EbeccoChat() {
   };
 
   const handleSendEmail = async (emailPayload) => {
-    await sendEmailViaApi(emailPayload.to, emailPayload.subject, emailPayload.body);
-    setMessages(prev => [...prev, { role: 'assistant', content: `Email sent to ${emailPayload.to.length} recipient(s).` }]);
+    try {
+      await sendEmailViaApi(emailPayload.to, emailPayload.subject, emailPayload.body);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Email sent to ${emailPayload.to.length} recipient(s).` }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', content: `Email failed: ${err.message}` }]);
+    }
     setPendingAction(null);
   };
 

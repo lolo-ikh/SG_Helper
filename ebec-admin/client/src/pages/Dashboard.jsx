@@ -236,6 +236,16 @@ export default function Dashboard() {
     <>
       <Toast message={notification?.message} type={notification?.type} onDone={() => setNotification(null)} />
 
+      {!user && (
+        <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 100 }}>
+          <button onClick={() => navigate('/')} style={{
+            background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+            color: '#fff', padding: '8px 16px', borderRadius: 12, cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, backdropFilter: 'blur(12px)',
+          }}>Sign In</button>
+        </div>
+      )}
+
       <div className="hero fade-in">
         <div className="phrase-container">
           <h1 className="typing-display">

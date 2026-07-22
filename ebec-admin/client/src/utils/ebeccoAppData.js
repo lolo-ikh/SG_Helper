@@ -28,10 +28,16 @@ export async function fetchAppDataSummary(season = '2026-2027') {
       const totalTracked = totalPresent + totalLate + totalAbsent;
       const rate = totalTracked > 0 ? Math.round((totalPresent / totalTracked) * 100) : 0;
 
+      const meetingDetails = meetings.slice(0, 10).map(m => {
+        const attList = m.attendees && m.attendees.length > 0 ? m.attendees.join(', ') : 'none listed';
+        return `  - "${m.title}" (${m.date}${m.time ? ' ' + m.time : ''}) — attendees: ${attList}`;
+      }).join('\n');
+
       sections.push(
         `MEETINGS (${season}): ${total} meetings held.\n` +
         `Titles: ${titles.join(', ')}\n` +
-        `Attendance: ${totalPresent} present, ${totalLate} late, ${totalAbsent} absent. Attendance rate: ${rate}%.`
+        `Attendance: ${totalPresent} present, ${totalLate} late, ${totalAbsent} absent. Attendance rate: ${rate}%.\n` +
+        `Details:\n${meetingDetails}`
       );
     }
   } catch (err) {

@@ -27,8 +27,9 @@ export default function CheckInPage() {
       }
       setMeeting(m);
       const now = new Date();
-      const meetingEnd = new Date(`${m.date}T${m.time || '23:59'}`);
-      if (now > meetingEnd) { setStatus('expired'); return; }
+      const meetingStart = new Date(`${m.date}T${m.time || '00:00'}`);
+      const checkinWindow = new Date(meetingStart.getTime() + 2 * 60 * 60 * 1000);
+      if (now > checkinWindow) { setStatus('expired'); return; }
       setStatus('ready');
     }
     load();

@@ -7,8 +7,11 @@ export default function EmailPreview({ emailData, onSend, onCancel }) {
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(emailData.body);
 
+  const [error, setError] = useState(null);
+
   const handleSend = async () => {
     setSending(true);
+    setError(null);
     try {
       await onSend({
         to: emailData.recipients.map(r => r.email),
@@ -18,6 +21,7 @@ export default function EmailPreview({ emailData, onSend, onCancel }) {
       setSent(true);
     } catch (err) {
       console.warn('[EmailPreview] Send failed:', err.message);
+      setError(err.message || 'Send failed');
     }
     setSending(false);
   };
@@ -59,6 +63,7 @@ export default function EmailPreview({ emailData, onSend, onCancel }) {
       </div>
 
       <div className="email-preview-actions">
+        {error && <div style={{ width: '100%', color: '#ff3b30', fontSize: 11, marginBottom: 6 }}>{error}</div>}
         <button className="email-preview-send" onClick={handleSend} disabled={sending}>
           {sending ? <Loader2 size={12} className="ebecco-spinner" /> : <Send size={12} />}
           {sending ? 'Sending...' : 'Send Email'}

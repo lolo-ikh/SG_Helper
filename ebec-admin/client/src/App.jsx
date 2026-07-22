@@ -40,13 +40,9 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/verify-email" element={<EmailVerification />} />
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="/meetings" element={<Navigate to="/" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/meetings" element={<MeetingsPage />} />
           <Route path="/checkin/:meetingId/:token" element={<CheckInPage />} />
-          <Route path="/techcards" element={<Navigate to="/" replace />} />
-          <Route path="/activities" element={<Navigate to="/" replace />} />
-          <Route path="/attendance" element={<Navigate to="/" replace />} />
-          <Route path="/archive" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
