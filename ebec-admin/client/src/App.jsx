@@ -37,6 +37,7 @@ function AppRoutes() {
   if (!user) {
     return (
       <div className="apple-bg">
+        <EbeccoChat />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/verify-email" element={<EmailVerification />} />
